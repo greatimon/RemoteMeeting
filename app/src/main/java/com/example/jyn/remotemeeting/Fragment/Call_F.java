@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -29,6 +30,7 @@ import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.File_search;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.WebRTC.CaptureQualityController;
+import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.squareup.otto.Subscribe;
 
 import org.webrtc.RendererCommon;
@@ -83,6 +85,13 @@ public class Call_F extends Fragment {
     @BindView(R.id.back_to_menu)            public ImageView back_to_menu;
     @BindView(R.id.go_share)                public ImageView go_share;
     @BindView(R.id.close_popup)             public RelativeLayout close_popup;
+    @BindView(R.id.sequence)                public TextView sequence;
+    @BindView(R.id.file_name)               public TextView file_name;
+    @BindView(R.id.percent)                 public TextView percent;
+    @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
+
+    public static CircularProgressBar circularProgressBar;
+    @SuppressLint("StaticFieldLeak")
     public static ImageView add_files;
 
     /**
@@ -119,6 +128,12 @@ public class Call_F extends Fragment {
         mic_on_show_IV = controlView.findViewById(R.id.mic_on_show);
         mic_off_show_IV = controlView.findViewById(R.id.mic_off_show);
         add_files = controlView.findViewById(R.id.add_files);
+        circularProgressBar = controlView.findViewById(R.id.circularProgressbar);
+
+        // circularProgressBar 사용 example
+        int animationDuration = 2500; // 2500ms = 2,5s
+        circularProgressBar.setProgressWithAnimation(65, animationDuration); // Default duration = 1500ms
+        // circularProgressBar 사용 example
 
         // otto 등록
         BusProvider.getBus().register(this);
@@ -309,6 +324,16 @@ public class Call_F extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         callEvents = (OnCallEvents) activity;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> circularProgressBar show
+     ---------------------------------------------------------------------------*/
+    public void show_circularProgressBar(int Total_pdf_files_count, int current_sequence,
+                                         String file_name, int percent) {
+        circularProgressbar_REL.setVisibility(View.VISIBLE);
+
     }
 
 

@@ -68,4 +68,11 @@ dependencies {
 
     /** 플로팅 액션 버튼 */
     compile 'com.getbase:floatingactionbutton:1.10.1'
+
+    /** 원형 프로그레스 바 */
+    compile 'com.mikhaellopez:circularprogressbar:1.1.1'
+
+    /** PDF BOX  */
+    compile 'com.tom_roush:pdfbox-android:1.8.9.1'
+
 }

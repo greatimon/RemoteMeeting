@@ -4,8 +4,15 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.jyn.remotemeeting.DataClass.File_info;
@@ -13,11 +20,16 @@ import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.rendering.PDFRenderer;
+import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +56,9 @@ public class Myapp extends Application {
     Toast logToast;
     ProgressDialog progressDialog;
     HashMap<String, String> checked_files;
+    File root;
+    String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/RemoteMeeting";
+    Handler handler;
 
     public int[] back_img = {
             R.drawable.back_1,
@@ -627,39 +642,152 @@ public class Myapp extends Application {
      메소드 ==> 파일 업로드
      ---------------------------------------------------------------------------*/
     public void upload_files(String contain_padf_file_orNot, Context context) {
-//        if(contain_padf_file_orNot.equals("true")) {
-//            Iterator<String> iterator = checked_files.keySet().iterator();
-//
-//            int upload_files_count = 0;
-//
-//            while(iterator.hasNext()) {
-//                String key = iterator.next();
-//                Log.d(TAG, "key: " + key);
-//
-//                // 확장자만 분류
-//                int Idx = key.lastIndexOf(".");
-//                String format = key.substring(Idx+1);
-//                Log.d(TAG, "format: " + format);
-//
-//                // PDF 파일 걸러내기
-//                if(format.equals("pdf")) {
-//
-//                    upload_files_count ++;
-//
-//                    /** 파일 전송 로직 */
-//                    RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
-//                    Call<ResponseBody> call = rs.upload_multi_files(
-//                            Static.UPLOAD_MULTI_FILES,
-//                            user_no, meeting_no);
-//
-////                    file_name
-////                    user_no
-////                    meeting_no
-//                }
-//            }
-//        }
-//        else if(contain_padf_file_orNot.equals("false")) {
-//
-//        }
+
+        // RemoteMeeting 디렉토리가 존재하지 않으면 디렉토리 생성
+        File folder = new File(sdPath);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+
+        // PDF 파일 걸러서 ArrayList 에 담기
+        if(contain_padf_file_orNot.equals("true")) {
+
+            // Pdfbox 사용을 위한 init 메소드 호출
+            setup();
+
+            // checked_files Iterator
+            Iterator<String> iterator = checked_files.keySet().iterator();
+
+            // Pdf 파일들 리스트만 따로 담을 temp arr 생성
+            ArrayList<String> temp_pdf_files_arr = new ArrayList<>();
+
+            // 루프 돌면서 pdf 파일 찾기
+            while(iterator.hasNext()) {
+                String key = iterator.next();
+                Log.d(TAG, "key: " + key);
+
+                // 확장자만 분류
+                int Idx = key.lastIndexOf(".");
+                String format = key.substring(Idx+1);
+                Log.d(TAG, "format: " + format);
+
+                // ArrayList Add
+                if(format.equals("pdf")) {
+                    temp_pdf_files_arr.add(key);
+                }
+            }
+
+            // pdf 파일(canonicalPath) 리스트 변환 로직으로 넘기기
+            renderFile(temp_pdf_files_arr, context);
+        }
+        else if(contain_padf_file_orNot.equals("false")) {
+
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> pdfbox 라이브러리 사용을 위한 Initializes
+     ---------------------------------------------------------------------------*/
+    private void setup() {
+        // Enable Android-style asset loading (highly recommended)
+        PDFBoxResourceLoader.init(getApplicationContext());
+        // Find the root of the external storage.
+        root = android.os.Environment.getExternalStorageDirectory();
+    }
+
+
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Pdf file TO image file
+     ---------------------------------------------------------------------------*/
+    @SuppressLint({"SetTextI18n", "HandlerLeak"})
+    public void renderFile(final ArrayList<String> arr, Context context) {
+
+        // 1개의 PDF 파일의 변환이 완료됐을 때 콜백 받을 핸들러 생성
+        handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                if(msg.what == 0) {
+                    Log.d(TAG, "arr 리스트 중 한개 제거: " + arr.get(0));
+                    arr.remove(0);
+                }
+            }
+        };
+
+        try {
+
+
+            // 넘어온 PDF 파일의 개수 구하기
+            int pdf_files_count = arr.size();
+            Log.d(TAG, "pdf_files_count: " + pdf_files_count);
+
+            // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
+            while(arr.size() > 0) {
+
+                // arr pdf 파일이 모두 없어지면 break
+                if(arr.size() == 0) {
+                    break;
+                }
+
+                File target_file = new File(arr.get(0));
+                // Load in an already created PDF
+                final PDDocument document = PDDocument.load(target_file);
+                // Create a renderer for the document
+                final PDFRenderer renderer = new PDFRenderer(document);
+
+                // 확장자를 제외한 파일 이름
+                String pdf_fileName = target_file.getName();
+                int Idx = pdf_fileName.lastIndexOf(".");
+                final String without_fileName = pdf_fileName.substring(0, Idx);
+                Log.d(TAG, "without_fileName:" + without_fileName);
+
+                // PDF 파일 총 페이지 수
+                int total_pages_num = document.getNumberOfPages();
+                Log.d(TAG, "PDF 파일 총 페이지 수: " + total_pages_num);
+
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+
+                        try {
+                            for(int i=1; i<=document.getNumberOfPages(); i++) {
+
+                                if(i == 1) {
+                                    Log.d(TAG, "========================================");
+                                    Log.d(TAG, without_fileName + ".pdf: 이미지 변환 시작");
+                                }
+
+                                // Render the image to an RGB Bitmap
+                                Bitmap pageImage = renderer.renderImage(i-1, 1, Bitmap.Config.RGB_565);
+                                // Save the render result to an image
+                                String path = sdPath + "/" + without_fileName + String.valueOf(i) + ".png";
+                                File renderFile = new File(path);
+                                FileOutputStream fileOut = new FileOutputStream(renderFile);
+                                pageImage.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
+                                fileOut.close();
+
+                                Log.d(TAG, without_fileName + String.valueOf(i) + ".png" + "변환");
+
+                                // 파일 변환 완료 시에, 핸들러를 통해 변환 완료 알림
+                                if(i==document.getNumberOfPages()) {
+                                    handler.sendEmptyMessage(0);
+                                    Log.d(TAG, without_fileName + ".pdf: 이미지로 변환 완료");
+                                    // 핸들러가 동작할 시간 벌어주기
+                                    Thread.sleep(100);
+                                }
+                            }
+                        }
+                        catch(Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+            }
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
