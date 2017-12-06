@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="230dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#FFFFFF"
+        android:gravity="center|start"
+        android:paddingStart="15dp"
+        android:text="프로필 사진 변경"
+        android:textColor="#2b2b2b"
+        android:textSize="17sp"
+        tools:ignore="RtlSymmetry" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#469a49" />
+
+    <Button
+        android:id="@+id/camera"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#FFFFFF"
+        android:gravity="center|start"
+        android:paddingStart="15dp"
+        android:textAllCaps="false"
+        android:text="사진 촬영"
+        android:textColor="#696969"
+        android:textSize="15sp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.7dp"
+        android:background="#d1d1d1" />
+
+    <Button
+        android:id="@+id/album"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#FFFFFF"
+        android:gravity="center|start"
+        android:paddingStart="15dp"
+        android:textAllCaps="false"
+        android:text="앨범에서 사진 선택"
+        android:textColor="#696969"
+        android:textSize="15sp"/>
+
+</LinearLayout>

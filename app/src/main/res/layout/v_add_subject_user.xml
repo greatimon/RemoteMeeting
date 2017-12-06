@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="300dp"
+    android:layout_height="400dp"
+    android:paddingStart="15dp"
+    tools:background="#d5df9c"
+    android:background="@drawable/shape_back_round"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    tools:ignore="RtlSymmetry">
+
+    <android.support.v7.widget.RecyclerView
+        tools:visibility="visible"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        >
+    </android.support.v7.widget.RecyclerView>
+
+    <TextView
+        tools:visibility="gone"
+        android:id="@+id/no_result"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:layout_marginStart="-15dp"
+        android:text="비지니스 파트너가 없습니다\n\n파트너를 추가해주세요"
+        android:textColor="#6c6d67"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="10dp"
+        />
+
+    <LinearLayout
+        android:id="@+id/btn_layout"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp"
+        >
+        <TextView
+            android:id="@+id/register"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/shape_btn_gray"
+            android:gravity="center"
+            android:layout_marginEnd="15dp"
+            android:textSize="16sp"
+            android:textColor="#6c6d67"
+            android:text="지정"
+            />
+        <TextView
+            android:id="@+id/cancel"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/shape_btn_gray"
+            android:gravity="center"
+            android:layout_marginEnd="15dp"
+            android:textSize="16sp"
+            android:textColor="#6c6d67"
+            android:text="취소"
+            />
+    </LinearLayout>
+
+</LinearLayout>

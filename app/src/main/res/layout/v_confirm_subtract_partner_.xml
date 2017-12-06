@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="#ccc7a4"
+    android:background="@drawable/shape_dialog_activity"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:gravity="center|left"
+        android:text="확인"
+        android:textColor="#000"
+        android:textSize="17dp" />
+
+    <TextView
+        android:id="@+id/comment"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:gravity="center|left"
+        android:text="파트너 관계를 끊으시겠습니까?"
+        android:textColor="#000"
+        android:textSize="14dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:layout_marginRight="10dp"
+        android:gravity="center|right">
+        <Button
+            android:id="@+id/no"
+            android:layout_width="70dp"
+            android:layout_height="55dp"
+            android:gravity="center"
+            android:text="아니오"
+            android:background="#00ff0000"
+            android:textColor="#353535"
+            android:textSize="14dp"/>
+        <Button
+            android:id="@+id/yes"
+            android:layout_width="70dp"
+            android:layout_height="55dp"
+            android:background="#00ff0000"
+            android:gravity="center"
+            android:text="네"
+            android:textStyle="bold"
+            android:textColor="#43A047"
+            android:textSize="14dp"/>
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="#ccc7a4"
+    android:background="@drawable/shape_dialog_activity"
+    android:layout_width="430dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginLeft="15dp"
+    android:layout_marginRight="15dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:gravity="center|start"
+        android:text="확인"
+        android:textColor="#000"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/comment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="40dp"
+        android:paddingRight="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center|start"
+        tools:text="6개의 파일을 업로드 하시겠습니까?6개의 파일을 업로드 하시겠습니까?6개의 파일을 업로드 하시겠습니까?"
+        android:lineSpacingMultiplier="1.8"
+        android:textColor="#000"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:orientation="horizontal"
+        android:layout_marginEnd="10dp"
+        android:gravity="center|end">
+        <Button
+            android:id="@+id/no"
+            android:layout_width="70dp"
+            android:layout_height="55dp"
+            android:gravity="center"
+            android:text="아니오"
+            android:background="#00ff0000"
+            android:textColor="#353535"
+            android:textSize="14sp"/>
+        <Button
+            android:id="@+id/yes"
+            android:layout_width="70dp"
+            android:layout_height="55dp"
+            android:background="#00ff0000"
+            android:gravity="center"
+            android:text="네"
+            android:textStyle="bold"
+            android:textColor="#43A047"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+</LinearLayout>

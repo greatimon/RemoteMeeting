@@ -1,0 +1,45 @@
+<android.support.v4.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.jyn.remotemeeting.Fragment.Partner_F">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <android.support.v7.widget.RecyclerView
+            tools:visibility="visible"
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </android.support.v7.widget.RecyclerView>
+
+        <RelativeLayout
+            android:id="@+id/no_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <TextView
+                tools:visibility="visible"
+                android:id="@+id/comment"
+                android:layout_above="@+id/search_partner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:text="비지니스 파트너가 없습니다"
+                android:textColor="#2d2d2d"/>
+            <Button
+                tools:visibility="visible"
+                android:id="@+id/search_partner"
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="20dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/shape_normal_btn_rounded"
+                android:text="이메일로 파트너 검색"
+                android:textSize="14dp"
+                android:textColor="#fff"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+</android.support.v4.widget.SwipeRefreshLayout>

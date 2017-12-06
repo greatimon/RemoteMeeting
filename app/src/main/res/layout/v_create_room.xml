@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="300dp"
+    android:layout_height="330dp"
+    android:layout_gravity="center">
+
+    <ImageView
+        android:id="@+id/back_img"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:src="@drawable/back__2"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="18dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center|start"
+            android:paddingStart="15dp"
+            android:layout_marginBottom="5dp"
+            android:text="회의룸 생성"
+            android:textColor="#fefcfe"
+            android:textSize="17sp"
+            tools:ignore="RtlSymmetry" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/shape_edittext_back_dark"/>
+            <EditText
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:hint="회의 제목을 입력하세요"
+                android:textSize="15sp"
+                android:textColorHint="#8b8c8a"
+                android:textColor="#ebebeb"
+                android:paddingStart="15dp"
+                android:background="@null"
+                tools:ignore="RtlSymmetry" />
+        </RelativeLayout>
+
+        <!--회의 대상 지정 '전'-->
+        <LinearLayout
+            android:id="@+id/before_add_subject"
+            tools:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:alpha="0.9"
+            >
+            <ImageView
+                android:id="@+id/add_subject_img"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="7dp"
+                android:src="@drawable/add_subject"/>
+            <TextView
+                android:id="@+id/add_subject_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="회의 대상 지정"
+                android:textColor="#fbfbfb"
+                android:textSize="15sp"
+                />
+        </LinearLayout>
+        
+        <!--회의 대상 지정 '후'-->
+        <RelativeLayout
+            android:id="@+id/after_add_subject"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:alpha="0.9"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+                <ImageView
+                    android:id="@+id/profile_img"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="7dp"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/back_2"/>
+                <TextView
+                    android:id="@+id/nickName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginBottom="2dp"
+                    tools:text="그레아티"
+                    android:textColor="#ebebeb"
+                    android:textSize="15sp"
+                    />
+                <TextView
+                    android:id="@+id/email"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    tools:text="timon11@naver.com"
+                    android:textColor="#ebebeb"
+                    android:textSize="12sp"
+                    />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/comment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="9dp"
+                android:paddingEnd="9dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/shape_btn_before_partner"
+                android:text="지정 대상"
+                android:textColor="#ebebeb"
+                android:textSize="12sp"/>
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/go_meeting"
+            android:layout_width="200dp"
+            android:layout_height="45dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:background="@drawable/shape_normal_btn_rounded"
+            android:text="회의 시작"
+            android:textColor="#fbfbfb"
+            android:textSize="14sp"
+            />
+    </LinearLayout>
+</RelativeLayout>

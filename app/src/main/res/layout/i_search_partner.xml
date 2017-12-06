@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="20dp"
+    android:paddingBottom="20dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/profile_img"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="15dp"
+        android:layout_gravity="center"
+        tools:src="@drawable/back_2"
+        android:scaleType="centerCrop"
+        />
+    <TextView
+        android:id="@+id/nickName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="3dp"
+        tools:text="그레아티"
+        android:textSize="18sp"
+        android:textColor="#474747"
+        />
+    <TextView
+        android:id="@+id/email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="15dp"
+        tools:text="timon11@naver.com"
+        android:textSize="14sp"
+        android:textColor="#8e8e8e"
+        />
+
+    <!--파트너임 버튼-->
+    <LinearLayout
+        android:id="@+id/unFollow"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:orientation="horizontal"
+        android:background="@drawable/shape_add_partner"
+        >
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="3020dp"
+            android:layout_gravity="center"
+            android:src="@drawable/checked"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_marginStart="12dp"
+            android:text="파트너"
+            android:textSize="14sp"
+            android:textColor="#f5fff8"
+            />
+    </LinearLayout>
+
+    <!--파트너 아님 버튼-->
+    <TextView
+        android:id="@+id/follow"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:background="@drawable/shape_btn_before_partner"
+        android:text="파트너 추가"
+        android:textSize="14sp"
+        android:textColor="#747474"
+        />
+
+</LinearLayout>

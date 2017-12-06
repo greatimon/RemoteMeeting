@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <solid android:color="#88000000"/>
+    <corners android:topRightRadius="8dip" android:bottomRightRadius="8dip"/>
+    <!--android:topLeftRadius=""  -> top-left 코너의 반지름-->
+    <!--android:topRightRadius="" -> top-right코너의 반지름-->
+    <!--android:bottomLeftRadius="" -> bottom-left코너의 반지름-->
+    <!--android:bottomRightRadius="" -> bottom-right코너의 반지름-->
+    <padding android:left="0dp" android:top="0dip" android:right="0dip" android:bottom="0dip" />
+</shape>

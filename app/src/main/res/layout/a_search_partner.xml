@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!--상단 액션바-->
+    <LinearLayout
+        android:id="@+id/actionBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:background="#4caf50"
+        android:gravity="center|start">
+        <ImageView
+            android:id="@+id/back"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:onClick="backClicked"
+            android:padding="15dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/left_bracket"
+            android:clickable="true"/>
+        <EditText
+            android:id="@+id/search_keyword"
+            android:background="@drawable/shape_edittext"
+            android:visibility="visible"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="30dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center|start"
+            android:singleLine="true"
+            android:imeOptions="actionSearch"
+            android:inputType="textEmailAddress"
+            android:hint="검색 이메일주소 입력"
+            android:textColorHint="#A5D6A7"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:textSize="17dp" />
+
+        <ImageView
+            android:id="@+id/ini_editText"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:padding="13dp"
+            android:clickable="true"
+            android:onClick="ini_editText"
+            android:src="@drawable/cancel_none_activated"/>
+    </LinearLayout>
+    <!--상단 액션바-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <android.support.v7.widget.RecyclerView
+            tools:visibility="visible"
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </android.support.v7.widget.RecyclerView>
+
+        <RelativeLayout
+            android:id="@+id/no_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <TextView
+                android:id="@+id/comment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="검색결과가 없습니다"
+                android:textSize="18dp"
+                android:textColor="#2b2b2b"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
+
+</LinearLayout>
