@@ -68,6 +68,10 @@ public class Call_F extends Fragment {
     private RendererCommon.ScalingType scalingType;
     private boolean videoCallEnabled = true;
     Myapp myapp;
+    private int total_pdf_files_count;
+    private int current_sequence;
+    private String on_converting_filename;
+    private int pdf_pages_count;
 
     private static final String TAG = "all_"+Call_F.class.getSimpleName();
 
@@ -330,7 +334,7 @@ public class Call_F extends Fragment {
     /**---------------------------------------------------------------------------
      메소드 ==> circularProgressBar show
      ---------------------------------------------------------------------------*/
-    public void show_circularProgressBar(int Total_pdf_files_count, int current_sequence,
+    public void show_circularProgressBar(int total_pdf_files_count, int current_sequence,
                                          String file_name, int percent) {
         circularProgressbar_REL.setVisibility(View.VISIBLE);
 
@@ -494,14 +498,17 @@ public class Call_F extends Fragment {
             String contain_pdf_file_orNot = event.getData();
             Log.d(TAG, "contain_pdf_file_orNot: " + contain_pdf_file_orNot);
 
-            // pdf 파일이 하나라도 포함되어 있다면
-            if(contain_pdf_file_orNot.equals("true")) {
+            // 파일 업로드 메소드 호출
+            myapp.upload_files(contain_pdf_file_orNot, getActivity());
 
-            }
-            // pdf 파일이 없다면
-            else if(contain_pdf_file_orNot.equals("false")) {
-
-            }
+//            // pdf 파일이 하나라도 포함되어 있다면
+//            if(contain_pdf_file_orNot.equals("true")) {
+//
+//            }
+//            // pdf 파일이 없다면
+//            else if(contain_pdf_file_orNot.equals("false")) {
+//
+//            }
 
 //        //// 로컬 파일함 -> 회의파일함으로 이동
 //        // 뷰 Visibility 조절
@@ -523,6 +530,43 @@ public class Call_F extends Fragment {
             // 어댑터의 arrayList의 Extra 값을 'no'로 변경하여 체크마크 해제시키기
             rcv_call_adapter_local.init_check_mark();
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     otto ==> Myapp로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage_from_Myapp(Event.Myapp__Call_F event) {
+        String message = event.getMessage();
+        String data = event.getData();
+        Log.d(TAG, "otto 받음_ getMessage: " + event.getMessage());
+        Log.d(TAG, "otto 받음_ getData: " + event.getData());
+
+        if(message.equals("progress")) {
+            if(data.equals("start")) {
+                total_pdf_files_count = event.getTotal_pdf_files_count();
+                current_sequence = event.getCurrent_sequence();
+                on_converting_filename = event.getFile_name();
+                Log.d(TAG, "start_total_pdf_files_count: " + total_pdf_files_count);
+                Log.d(TAG, "start_current_sequence: " + current_sequence);
+                Log.d(TAG, "start_on_converting_filename: " + on_converting_filename);
+            }
+            else if(data.equals("next")) {
+                current_sequence = event.getCurrent_sequence();
+                on_converting_filename = event.getFile_name();
+                Log.d(TAG, "next_current_sequence: " + current_sequence);
+                Log.d(TAG, "next_on_converting_filename: " + on_converting_filename);
+            }
+            else if(data.equals("ing")) {
+                int percent = event.getPercent();
+                Log.d(TAG, "ing_percent: " + percent);
+            }
+            else if(data.equals("end")) {
+                Log.d(TAG, "end");
+            }
+        }
+
     }
 
 
@@ -606,6 +650,7 @@ public class Call_F extends Fragment {
                 recyclerView.setAdapter(rcv_call_adapter_project);
             }
         }
-
     }
+
+
 }

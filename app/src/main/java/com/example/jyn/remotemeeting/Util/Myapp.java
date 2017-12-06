@@ -18,6 +18,8 @@ import android.widget.Toast;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
@@ -665,6 +667,8 @@ public class Myapp extends Application {
             while(iterator.hasNext()) {
                 String key = iterator.next();
                 Log.d(TAG, "key: " + key);
+                String value = checked_files.get(key);
+                Log.d(TAG, "value: " + value);
 
                 // 확장자만 분류
                 int Idx = key.lastIndexOf(".");
@@ -673,11 +677,11 @@ public class Myapp extends Application {
 
                 // ArrayList Add
                 if(format.equals("pdf")) {
-                    temp_pdf_files_arr.add(key);
+                    temp_pdf_files_arr.add(value);
                 }
             }
 
-            // pdf 파일(canonicalPath) 리스트 변환 로직으로 넘기기
+            // pdf 파일(canonicalPath) 리스트, 변환 로직으로 넘기기
             renderFile(temp_pdf_files_arr, context);
         }
         else if(contain_padf_file_orNot.equals("false")) {
@@ -697,10 +701,8 @@ public class Myapp extends Application {
     }
 
 
-
-
     /**---------------------------------------------------------------------------
-     메소드 ==> Pdf file TO image file
+     메소드 ==> Pdf file TO image file 1.
      ---------------------------------------------------------------------------*/
     @SuppressLint({"SetTextI18n", "HandlerLeak"})
     public void renderFile(final ArrayList<String> arr, Context context) {
@@ -709,83 +711,189 @@ public class Myapp extends Application {
         handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
+                /** PDF 파일 하나 변환 완료 했을때 호출하는 콜백 */
                 if(msg.what == 0) {
-                    Log.d(TAG, "arr 리스트 중 한개 제거: " + arr.get(0));
+                    Log.d(TAG, "제거 전 arr.size(): " + arr.size());
                     arr.remove(0);
+                    Log.d(TAG, "제거 후 arr.size(): " + arr.size());
+
+                    // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
+                    if(arr.size() > 0) {
+                        over_and_over_convert(arr.get(0));
+                        // 파일 이름 추출
+                        String[] temp = arr.get(0).split("[/]");
+                        String fileName = temp[temp.length-1];
+
+                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "next",
+                                -1, 1, fileName, 0);
+                        BusProvider.getBus().post(myapp__call_f);
+                    }
+                    else if(arr.size() == 0) {
+                        logAndToast("PDF 파일 변환이 완료되었습니다");
+                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "end",
+                                -1, -1, "", -1);
+                        BusProvider.getBus().post(myapp__call_f);
+                        // otto 등록 해제
+                        BusProvider.getBus().unregister(this);
+                    }
+                }
+                /** PDF 파일 변환중 Exception 에러가 발생했을 때 호출하는 콜백 */
+                else if(msg.what == 1) {
+                    String[] temp = arr.get(0).split("[/]");
+                    String fileName = temp[temp.length-1];
+                    int Idx = fileName.lastIndexOf(".");
+                    final String only_fileName = fileName.substring(0, Idx);
+
+                    logAndToast(only_fileName + " 파일이 변환중 에러로 업로드에서 제외됩니다.");
+
+                    Log.d(TAG, "제거 전 arr.size(): " + arr.size());
+                    arr.remove(0);
+                    Log.d(TAG, "제거 후 arr.size(): " + arr.size());
+
+                    // 토스트 뜰 시간 벌기 위해 0.5초 뒤에 실행
+                    new Handler().postDelayed(new Runnable() {
+                        @Override public void run() {
+
+                            // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
+                            if(arr.size() > 0) {
+
+                                over_and_over_convert(arr.get(0));
+                                // 파일 이름 추출
+                                String[] temp = arr.get(0).split("[/]");
+                                String fileName = temp[temp.length-1];
+
+                                // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                                Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "next",
+                                        -1, 1, fileName, 0);
+                                BusProvider.getBus().post(myapp__call_f);
+                            }
+                            else if(arr.size() == 0) {
+                                logAndToast("PDF 파일 변환이 완료되었습니다");
+                                // otto 등록 해제
+                                BusProvider.getBus().unregister(this);
+                            }
+                        }
+                    }, 500);
+                }
+                /** PDF 페이지 변환 할때마다 호출하는 콜백 */
+                else {
+                    int total = msg.getData().getInt("total", 0);
+                    int current_sequence = msg.getData().getInt("current_sequence", 0);
+                    int percent = msg.getData().getInt("percent", 0);
+
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "ing",
+                            -1, -1, "", percent);
+                    BusProvider.getBus().post(myapp__call_f);
                 }
             }
         };
 
+        // 넘어온 PDF 파일의 개수 구하기
+        int pdf_files_count = arr.size();
+        Log.d(TAG, "pdf_files_count: " + pdf_files_count);
+
+        // otto 등록
+        BusProvider.getBus().register(this);
+
+        /** renderFile 최초 호출될 때 pdf 첫번째 파일 변환 실행 */
+        over_and_over_convert(arr.get(0));
+
+        // 파일 이름 추출
+        String[] temp = arr.get(0).split("[/]");
+        String fileName = temp[temp.length-1];
+
+        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "start",
+                pdf_files_count, 1, fileName, 0);
+        BusProvider.getBus().post(myapp__call_f);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Pdf file TO image file 2.
+     ---------------------------------------------------------------------------*/
+    public void over_and_over_convert(final String canonicalPath) {
         try {
+            File target_file = new File(canonicalPath);
+            Log.d(TAG, "target_file_canonicalPath: " + canonicalPath);
 
+            // Load in an already created PDF
+            final PDDocument document = PDDocument.load(target_file);
+            // Create a renderer for the document
+            final PDFRenderer renderer = new PDFRenderer(document);
 
-            // 넘어온 PDF 파일의 개수 구하기
-            int pdf_files_count = arr.size();
-            Log.d(TAG, "pdf_files_count: " + pdf_files_count);
+            // 확장자를 제외한 파일 이름
+            String pdf_fileName = target_file.getName();
+            int Idx = pdf_fileName.lastIndexOf(".");
+            final String only_fileName = pdf_fileName.substring(0, Idx);
+            Log.d(TAG, "only_fileName:" + only_fileName);
 
-            // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
-            while(arr.size() > 0) {
+            // PDF 파일 총 페이지 수
+            int total_pages_num = document.getNumberOfPages();
+            Log.d(TAG, "PDF 파일 총 페이지 수: " + total_pages_num);
 
-                // arr pdf 파일이 모두 없어지면 break
-                if(arr.size() == 0) {
-                    break;
-                }
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
 
-                File target_file = new File(arr.get(0));
-                // Load in an already created PDF
-                final PDDocument document = PDDocument.load(target_file);
-                // Create a renderer for the document
-                final PDFRenderer renderer = new PDFRenderer(document);
+                    try {
+                        for(int i=1; i<=document.getNumberOfPages(); i++) {
 
-                // 확장자를 제외한 파일 이름
-                String pdf_fileName = target_file.getName();
-                int Idx = pdf_fileName.lastIndexOf(".");
-                final String without_fileName = pdf_fileName.substring(0, Idx);
-                Log.d(TAG, "without_fileName:" + without_fileName);
+                            if(i == 1) {
+                                Log.d(TAG, "========================================");
+                                Log.d(TAG, only_fileName + ".pdf: 이미지 변환 시작");
+                            }
 
-                // PDF 파일 총 페이지 수
-                int total_pages_num = document.getNumberOfPages();
-                Log.d(TAG, "PDF 파일 총 페이지 수: " + total_pages_num);
+                            // Render the image to an RGB Bitmap
+                            Bitmap pageImage = renderer.renderImage(i-1, 1, Bitmap.Config.RGB_565);
+                            // Save the render result to an image
+                            String path = sdPath + "/" + only_fileName + String.valueOf(i) + ".png";
+                            File renderFile = new File(path);
+                            FileOutputStream fileOut = new FileOutputStream(renderFile);
+                            pageImage.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
+                            fileOut.close();
 
-                new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
+                            Log.d(TAG, only_fileName + String.valueOf(i) + ".png" + " 변환");
 
-                        try {
-                            for(int i=1; i<=document.getNumberOfPages(); i++) {
+                            // Pdf page 하나 변환 완료됐을 때, 핸들러를 통해 알림
+                            if(i != document.getNumberOfPages()) {
 
-                                if(i == 1) {
-                                    Log.d(TAG, "========================================");
-                                    Log.d(TAG, without_fileName + ".pdf: 이미지 변환 시작");
-                                }
+                                // 파일 변환 percent 구하기
+                                int value = i;
+                                int total = document.getNumberOfPages();
+                                int rate = (int)((double)((double)value/(double)total) * 100);
+                                Log.d(TAG, "PDF 파일 변환 진척도: " + rate + "%");
 
-                                // Render the image to an RGB Bitmap
-                                Bitmap pageImage = renderer.renderImage(i-1, 1, Bitmap.Config.RGB_565);
-                                // Save the render result to an image
-                                String path = sdPath + "/" + without_fileName + String.valueOf(i) + ".png";
-                                File renderFile = new File(path);
-                                FileOutputStream fileOut = new FileOutputStream(renderFile);
-                                pageImage.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
-                                fileOut.close();
+                                Message msg = new Message();
+                                Bundle data = new Bundle();
+                                data.putInt("total", total);
+                                data.putInt("current_sequence", value);
+                                data.putInt("percent", rate);
 
-                                Log.d(TAG, without_fileName + String.valueOf(i) + ".png" + "변환");
+                                msg.setData(data);
+                                handler.sendMessage(msg);
+                            }
 
-                                // 파일 변환 완료 시에, 핸들러를 통해 변환 완료 알림
-                                if(i==document.getNumberOfPages()) {
-                                    handler.sendEmptyMessage(0);
-                                    Log.d(TAG, without_fileName + ".pdf: 이미지로 변환 완료");
-                                    // 핸들러가 동작할 시간 벌어주기
-                                    Thread.sleep(100);
-                                }
+                            // 파일 변환 완료 시에, 핸들러를 통해 변환 완료 알림
+                            if(i == document.getNumberOfPages()) {
+                                handler.sendEmptyMessage(0);
+                                Log.d(TAG, only_fileName + ".pdf: 이미지로 변환 완료");
+                                // 핸들러가 동작할 시간 벌어주기
+                                Thread.sleep(100);
                             }
                         }
-                        catch(Exception e) {
-                            e.printStackTrace();
-                        }
                     }
-                }.start();
-            }
+                    catch(Exception e) {
+                        e.printStackTrace();
+                        Log.d(TAG, "Pdf 변환 에러!!!!!!!!!!! - " + e.getMessage());
+                        handler.sendEmptyMessage(1);
+                    }
+                }
+            }.start();
         } catch(Exception e) {
             e.printStackTrace();
         }

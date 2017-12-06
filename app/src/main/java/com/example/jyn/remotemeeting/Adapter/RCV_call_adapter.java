@@ -96,11 +96,22 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
                         // 체크된 파일인지 아닌지 확인
                         String checked_orNot = files.get(pos).getExtra();
                         // 파일 이름 확인 - project / local 인지에 따라 다른 변수값 가져옴
-                        String file_name = files.get(pos).getFile_name();
+                        String file_name = "";
+                        String CanonicalPath = "";
+
+                        // 프로젝트 뷰 일 때 - 파일전환할 파일을 담는다
+                        if(request.equals("project")) {
+                            file_name = files.get(pos).getFile_name();
+                        }
+                        // 로컬 뷰 일 때 - 업로드할 파일을 담는다
+                        else if(!request.equals("project")) {
+                            file_name = files.get(pos).getFile_name();
+                            CanonicalPath = files.get(pos).getCanonicalPath();
+                        }
 
                         // 체크되어 있지 않은 파일일 때 -> checked_files 에 put 하고, check 상태 'yes'로 바꾸기
                         if(checked_orNot.equals("no")) {
-                            myapp.getChecked_files().put(file_name, file_name);
+                            myapp.getChecked_files().put(file_name, CanonicalPath);
                             files.get(pos).setExtra("yes");
                             notifyItemChanged(pos);
                         }
