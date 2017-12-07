@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Fragment.Call_F;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
@@ -40,8 +41,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -58,9 +63,11 @@ public class Myapp extends Application {
     Toast logToast;
     ProgressDialog progressDialog;
     HashMap<String, String> checked_files;
+    HashMap<String, String> files_for_upload;
     File root;
     String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/RemoteMeeting";
     Handler handler;
+    int PDF_converting_exception_file_count = 0;
 
     public int[] back_img = {
             R.drawable.back_1,
@@ -215,12 +222,25 @@ public class Myapp extends Application {
         this.checked_files = checked_files;
     }
 
+    public int getPDF_converting_exception_file_count() {
+        return PDF_converting_exception_file_count;
+    }
+
+    public void setPDF_converting_exception_file_count(int PDF_converting_exception_file_count) {
+        this.PDF_converting_exception_file_count = PDF_converting_exception_file_count;
+    }
+
+    public HashMap<String, String> getFiles_for_upload() {
+        return files_for_upload;
+    }
+
     /** 생명주기 - onCreate */
     @Override
     public void onCreate() {
         super.onCreate();
         appInstance = this;
         checked_files = new HashMap<>();
+        files_for_upload = new HashMap<>();
     }
 
     /** 싱글톤 */
@@ -445,7 +465,7 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 서버 통신 -- 내 파트너 리스트 가져와서 리턴하기
+     메소드 ==> 서버 통신 -- 파트너 검색하기
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
     public ArrayList<Users> search_partners(final String with_domain, final String without_domain) {
@@ -596,12 +616,6 @@ public class Myapp extends Application {
      메소드 ==> 카메라 촬영 이미지 파일 이름 네이밍을 위한 메소드
      ---------------------------------------------------------------------------*/
     public String now() {
-//        SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.KOREA);
-//        Date currentTime = new Date();
-//        String result = mSimpleDateFormat.format(currentTime);
-//
-//        return result;
-
         SimpleDateFormat format_for_save = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.KOREA);
         long time_mil = System.currentTimeMillis();
         Date date_start_broadCast = new Date(time_mil);
@@ -641,9 +655,152 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
+     메소드 ==> 해쉬맵 files_for_upload clear(초기화)
+     ---------------------------------------------------------------------------*/
+    public void init_files_for_upload() {
+        if(files_for_upload != null) {
+            files_for_upload.clear();
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
      메소드 ==> 파일 업로드
      ---------------------------------------------------------------------------*/
-    public void upload_files(String contain_padf_file_orNot, Context context) {
+    public void upload_multi_files() {
+
+        final int total_file_nums = files_for_upload.size();
+        Long total_file_size = 0L;
+
+        // 업로드 파일 크기를 계산해서 프로그레스로 넘길 핸들러 생성
+        final int finalTotal_file_size = (int)(long)total_file_size;
+        @SuppressLint("HandlerLeak")
+        final Handler handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    /** 파일 한개 전송 시작 - 파일 한개 업로드 시작, 호출 콜백*/
+                    case 0:
+                        String uploaded_file_name = msg.getData().getString("uploaded_file_name", "");
+
+                        // otto 를 통해, 업로드하는 총 파일의 크기 전달
+                        Event.Myapp__Call_F_upload_files event = new Event.Myapp__Call_F_upload_files("upload", "start",
+                                total_file_nums, finalTotal_file_size, -1, uploaded_file_name);
+                        BusProvider.getBus().post(event);
+
+                        break;
+                    /** 파일 한개 전송 완료 - 파일 한개 업로드 완료, 호출 콜백 */
+                    case 1:
+                        int uploaded_file_size = msg.getData().getInt("uploaded_file_size", 0);
+
+                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                        Event.Myapp__Call_F_upload_files event_1 = new Event.Myapp__Call_F_upload_files("upload", "ing",
+                                -1, -1, uploaded_file_size, "");
+                        BusProvider.getBus().post(event_1);
+                        break;
+                }
+            }
+        };
+
+
+        if(files_for_upload != null) {
+            Iterator<String> iterator = files_for_upload.keySet().iterator();
+
+            // 루프 - 파일 사이즈를 구하기 위한
+            while(iterator.hasNext()) {
+                String value = files_for_upload.get(iterator.next());
+
+                File file = new File(value);
+                total_file_size = total_file_size + file.length();
+            }
+            Log.d(TAG, "업로드할 파일들의 총 개수: " + files_for_upload.size());
+            Log.d(TAG, "업로드할 파일들의 총 크기: " + total_file_size + " bytes");
+
+            // 테스트 코드
+//            files_for_upload.clear();
+
+            Iterator<String> iterator_2 = files_for_upload.keySet().iterator();
+            // 루프 - 파일 업로드를 위한
+            while(iterator_2.hasNext()) {
+                String value = files_for_upload.get(iterator_2.next());
+
+                // 파일 객체 생성
+                final File file = new File(value);
+
+                /** 파일 한개 전송 - 시작 */
+                Message msg = new Message();
+                Bundle data = new Bundle();
+                data.putString("uploaded_file_name", file.getName());
+                msg.what = 0;
+                msg.setData(data);
+                handler.sendMessage(msg);
+
+                // 확장자만 분류
+                int Idx = file.getName().lastIndexOf(".");
+                String format = file.getName().substring(Idx+1);
+                Log.d(TAG, "format: " + format);
+
+                // RequestBody 생성 from file
+                RequestBody requestFile = RequestBody.create(MediaType.parse("image/" + format), file);
+                MultipartBody.Part body =
+                        MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+
+                // user_no
+                RequestBody user_no = RequestBody.create(MediaType.parse("text/plain"), getUser_no());
+
+                // meeting_no
+                RequestBody meeting_no = RequestBody.create(MediaType.parse("text/plain"), getMeeting_no());
+
+                RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+                Call<ResponseBody> call = rs.upload_multi_files(
+                        Static.UPLOAD_MULTI_FILES,
+                        user_no, meeting_no, body);
+                final Long finalTotal_file_size1 = total_file_size;
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        try {
+                            String retrofit_result = response.body().string();
+                            Log.d(TAG, "회의 공유 파일 업로드_result: "+retrofit_result);
+
+                            if(retrofit_result.equals("fail")) {
+                                Log.d(TAG, "업로드 실패: " + retrofit_result);
+                            }
+                            else if(retrofit_result.equals("success")) {
+                                Log.d(TAG, file.getName() + "업로드 성공!!!!");
+
+                                /** 파일 한개 전송 - 완료 */
+                                int uploaded_file_size = (int)(long)file.length();
+                                Message msg = new Message();
+                                Bundle data = new Bundle();
+                                data.putInt("uploaded_file_size", uploaded_file_size);
+                                msg.what = 1;
+                                msg.setData(data);
+                                handler.sendMessage(msg);
+                            }
+                            else {
+                                logAndToast("파일 업로드 오류" + retrofit_result);
+                            }
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        logAndToast("onFailure_result" + t.getMessage());
+                    }
+                });
+            }
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> PDF 파일 있으면 이미지로 변환한 뒤, 멀티 파일 업로드 메소드 호출
+     ---------------------------------------------------------------------------*/
+    public void checed_pdf_files(String contain_padf_file_orNot, Context context) {
 
         // RemoteMeeting 디렉토리가 존재하지 않으면 디렉토리 생성
         File folder = new File(sdPath);
@@ -651,7 +808,7 @@ public class Myapp extends Application {
             folder.mkdirs();
         }
 
-        // PDF 파일 걸러서 ArrayList 에 담기
+        // PDF 파일이 있다면, PDF 파일 걸러서 ArrayList 에 담기
         if(contain_padf_file_orNot.equals("true")) {
 
             // Pdfbox 사용을 위한 init 메소드 호출
@@ -679,13 +836,37 @@ public class Myapp extends Application {
                 if(format.equals("pdf")) {
                     temp_pdf_files_arr.add(value);
                 }
+                // PDF가 아닌 파일들은 files_for_upload 해쉬맵에 추가
+                else {
+                    files_for_upload.put(key, value);
+                    Log.d(TAG, "files_for_upload 해쉬맵에 추가");
+                    Log.d(TAG, "file_name_with_format: " + key);
+                    Log.d(TAG, "canonicalPath: " + value);
+                }
             }
 
             // pdf 파일(canonicalPath) 리스트, 변환 로직으로 넘기기
             renderFile(temp_pdf_files_arr, context);
         }
-        else if(contain_padf_file_orNot.equals("false")) {
 
+        // PDF 파일이 없다면
+        else if(contain_padf_file_orNot.equals("false")) {
+            // 루프 돌면서 files_for_upload 해쉬맵으로 데이터 복사
+            // checked_files Iterator
+            Iterator<String> iterator = checked_files.keySet().iterator();
+            // 루프 돌면서 pdf 파일 찾기
+            while(iterator.hasNext()) {
+                String key = iterator.next();
+                String value = checked_files.get(key);
+
+                files_for_upload.put(key, value);
+                Log.d(TAG, "files_for_upload 해쉬맵에 추가");
+                Log.d(TAG, "file_name_with_format: " + key);
+                Log.d(TAG, "canonicalPath: " + value);
+            }
+            // todo: 이미지 업로드 로직을 호출해야할 곳 - 레트로핏
+            Call_F.comment.setText("Images, on uploading");
+            upload_multi_files();
         }
     }
 
@@ -711,8 +892,60 @@ public class Myapp extends Application {
         handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                /** PDF 파일 하나 변환 완료 했을때 호출하는 콜백 */
-                if(msg.what == 0) {
+
+                /** 파일 변환 - 시작, 호출 콜백*/
+                if(msg.what == 5) {
+                    // 넘어온 PDF 파일의 개수 구하기
+                    int pdf_files_count = arr.size();
+                    Log.d(TAG, "pdf_files_count: " + pdf_files_count);
+
+                    // 파일 이름 추출
+                    String[] temp = arr.get(0).split("[/]");
+                    String fileName = temp[temp.length-1];
+
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "start",
+                            pdf_files_count, 1, fileName, 0, 0, 0);
+                    BusProvider.getBus().post(myapp__call_f);
+                }
+
+                /** 페이지 전환율 - 한 페이지 변환 시작, 호출 콜백 */
+                else if(msg.what == 4) {
+                    int total = msg.getData().getInt("total", 0);
+                    int current_pdf_page = msg.getData().getInt("current_pdf_page", 0);
+
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "progress",
+                            -1, 1, "", 0, total, current_pdf_page);
+                    BusProvider.getBus().post(myapp__call_f);
+
+                }
+
+                /** 페이지 전환율 - 한 페이지 변환 완료, 호출 콜백 */
+                else if(msg.what == 2) {
+                    int total = msg.getData().getInt("total", 0);
+                    int current_pdf_page = msg.getData().getInt("current_pdf_page", 0);
+                    int percent = msg.getData().getInt("percent", 0);
+
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "ing",
+                            -1, -1, "", percent, total, current_pdf_page);
+                    BusProvider.getBus().post(myapp__call_f);
+                }
+
+                /** 페이지 전환율 - 100%, 호출 콜백 */
+                else if(msg.what == 3) {
+                    int total = msg.getData().getInt("total", 0);
+
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "ing",
+                            -1, -1, "", 100, total, total);
+                    BusProvider.getBus().post(myapp__call_f);
+                }
+
+                /** 파일 변환 - 파일 한개 변환 완료 했을때 호출하는 콜백 +
+                 *  파일 변환 - 파일 모두 변환 완료 했을때 호출하는 콜백 */
+                else if(msg.what == 0) {
                     Log.d(TAG, "제거 전 arr.size(): " + arr.size());
                     arr.remove(0);
                     Log.d(TAG, "제거 후 arr.size(): " + arr.size());
@@ -720,32 +953,29 @@ public class Myapp extends Application {
                     // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
                     if(arr.size() > 0) {
                         over_and_over_convert(arr.get(0));
-                        // 파일 이름 추출
-                        String[] temp = arr.get(0).split("[/]");
-                        String fileName = temp[temp.length-1];
-
-                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "next",
-                                -1, 1, fileName, 0);
-                        BusProvider.getBus().post(myapp__call_f);
                     }
                     else if(arr.size() == 0) {
-                        logAndToast("PDF 파일 변환이 완료되었습니다");
+//                        logAndToast("PDF 파일 변환이 완료되었습니다");
                         // otto 를 통해, 프래그먼트로 이벤트 전달하기
                         Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "end",
-                                -1, -1, "", -1);
+                                PDF_converting_exception_file_count, -1, "", -1, 0, 0);
                         BusProvider.getBus().post(myapp__call_f);
                         // otto 등록 해제
                         BusProvider.getBus().unregister(this);
+                        // exception 파일 개수 초기화
+                        setPDF_converting_exception_file_count(0);
                     }
                 }
-                /** PDF 파일 변환중 Exception 에러가 발생했을 때 호출하는 콜백 */
+                /** 파일 변환 - 파일 변환중 Exception 에러가 발생했을 때 호출하는 콜백 +
+                 *  파일 변환 - 파일 모두 변환 완료 했을때 호출하는 콜백 */
                 else if(msg.what == 1) {
+                    // exception 파일 개수 추가
+                    PDF_converting_exception_file_count++;
+
                     String[] temp = arr.get(0).split("[/]");
                     String fileName = temp[temp.length-1];
                     int Idx = fileName.lastIndexOf(".");
                     final String only_fileName = fileName.substring(0, Idx);
-
                     logAndToast(only_fileName + " 파일이 변환중 에러로 업로드에서 제외됩니다.");
 
                     Log.d(TAG, "제거 전 arr.size(): " + arr.size());
@@ -755,60 +985,33 @@ public class Myapp extends Application {
                     // 토스트 뜰 시간 벌기 위해 0.5초 뒤에 실행
                     new Handler().postDelayed(new Runnable() {
                         @Override public void run() {
-
                             // arr 에 pdf파일 리스트가 모두 없어질때까지 무한루프
                             if(arr.size() > 0) {
-
                                 over_and_over_convert(arr.get(0));
-                                // 파일 이름 추출
-                                String[] temp = arr.get(0).split("[/]");
-                                String fileName = temp[temp.length-1];
-
-                                // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                                Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "next",
-                                        -1, 1, fileName, 0);
-                                BusProvider.getBus().post(myapp__call_f);
                             }
                             else if(arr.size() == 0) {
-                                logAndToast("PDF 파일 변환이 완료되었습니다");
+                                // exception 파일 개수 초기화
+//                                logAndToast("PDF 파일 변환이 완료되었습니다");
+                                // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                                Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "end",
+                                        PDF_converting_exception_file_count, -1, "", -1, 0, 0);
+                                BusProvider.getBus().post(myapp__call_f);
                                 // otto 등록 해제
                                 BusProvider.getBus().unregister(this);
+                                // exception 파일 개수 초기화
+                                setPDF_converting_exception_file_count(0);
                             }
                         }
                     }, 500);
                 }
-                /** PDF 페이지 변환 할때마다 호출하는 콜백 */
-                else if(msg.what == 2) {
-                    int total = msg.getData().getInt("total", 0);
-                    int current_sequence = msg.getData().getInt("current_sequence", 0);
-                    int percent = msg.getData().getInt("percent", 0);
-
-                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "ing",
-                            -1, -1, "", percent);
-                    BusProvider.getBus().post(myapp__call_f);
-                }
             }
         };
-
-        // 넘어온 PDF 파일의 개수 구하기
-        int pdf_files_count = arr.size();
-        Log.d(TAG, "pdf_files_count: " + pdf_files_count);
 
         // otto 등록
         BusProvider.getBus().register(this);
 
         /** renderFile 최초 호출될 때 pdf 첫번째 파일 변환 실행 */
         over_and_over_convert(arr.get(0));
-
-        // 파일 이름 추출
-        String[] temp = arr.get(0).split("[/]");
-        String fileName = temp[temp.length-1];
-
-        // otto 를 통해, 프래그먼트로 이벤트 전달하기
-        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "start",
-                pdf_files_count, 1, fileName, 0);
-        BusProvider.getBus().post(myapp__call_f);
     }
 
 
@@ -843,48 +1046,81 @@ public class Myapp extends Application {
                     try {
                         for(int i=1; i<=document.getNumberOfPages(); i++) {
 
+                            /** 파일 변환 - 시작 시에, 핸들러를 통해 변환 완료 알림 */
                             if(i == 1) {
                                 Log.d(TAG, "========================================");
                                 Log.d(TAG, only_fileName + ".pdf: 이미지 변환 시작");
+                                handler.sendEmptyMessage(5);
                             }
 
+                            /** 페이지 전환율 - 진척도, 핸들러를 통해 알림 */
+                            int value_1 = i;
+                            int total_1 = document.getNumberOfPages();
+
+                            Message msg_1 = new Message();
+                            Bundle data_1 = new Bundle();
+                            data_1.putInt("current_pdf_page", value_1);
+                            data_1.putInt("total", total_1);
+                            msg_1.what = 4;
+
+                            msg_1.setData(data_1);
+                            handler.sendMessage(msg_1);
+
+                            // =================================================================
+                            // ================== 한개의 페이지 이미지 변환 시작 ==================
                             // Render the image to an RGB Bitmap
                             Bitmap pageImage = renderer.renderImage(i-1, 1, Bitmap.Config.RGB_565);
                             // Save the render result to an image
-                            String path = sdPath + "/" + only_fileName + String.valueOf(i) + ".png";
+                            String path = sdPath + "/" + only_fileName + "_" + String.valueOf(i) + ".png";
                             File renderFile = new File(path);
                             FileOutputStream fileOut = new FileOutputStream(renderFile);
                             pageImage.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
                             fileOut.close();
+                            Log.d(TAG, only_fileName + "_" + String.valueOf(i) + ".png" + " 변환");
+                            // ================== 한개의 페이지 이미지 변환 종료 ==================
+                            // =================================================================
+                            /** files_for_upload 해쉬맵에 추가 */
+                            files_for_upload.put(only_fileName + "_" + String.valueOf(i) + ".png" + String.valueOf(i), path);
+                            Log.d(TAG, "files_for_upload 해쉬맵에 추가");
+                            Log.d(TAG, "file_name_with_format: " + only_fileName + "_" + String.valueOf(i) + ".png" + String.valueOf(i));
+                            Log.d(TAG, "canonicalPath: " + path);
 
-                            Log.d(TAG, only_fileName + String.valueOf(i) + ".png" + " 변환");
-
-                            // Pdf page 하나 변환 완료됐을 때, 핸들러를 통해 알림
+                            /** 페이지 전환율 - 하나 변환 완료됐을 때, 핸들러를 통해 알림 */
                             if(i != document.getNumberOfPages()) {
 
                                 // 파일 변환 percent 구하기
-                                int value = i;
-                                int total = document.getNumberOfPages();
-                                int rate = (int)((double)((double)value/(double)total) * 100);
+                                int value_2 = i;
+                                int total_2 = document.getNumberOfPages();
+                                int rate = (int)((double)((double)value_2/(double)total_2) * 100);
                                 Log.d(TAG, "PDF 파일 변환 진척도: " + rate + "%");
 
-                                Message msg = new Message();
-                                Bundle data = new Bundle();
-                                data.putInt("total", total);
-                                data.putInt("current_sequence", value);
-                                data.putInt("percent", rate);
-                                msg.what = 2;
+                                Message msg_2 = new Message();
+                                Bundle data_2 = new Bundle();
+                                data_2.putInt("current_pdf_page", value_2);
+                                data_2.putInt("total", total_2);
+                                data_2.putInt("percent", rate);
+                                msg_2.what = 2;
 
-                                msg.setData(data);
-                                handler.sendMessage(msg);
+                                msg_2.setData(data_2);
+                                handler.sendMessage(msg_2);
                             }
 
-                            // 파일 변환 완료 시에, 핸들러를 통해 변환 완료 알림
+                            /** 페이지 전환율 - 100% 된 것도 핸들러롤 통해 변환 완료 알림 */
+                            if(i == document.getNumberOfPages()) {
+                                int value_3 = i;
+                                Message msg_3 = new Message();
+                                Bundle data_3 = new Bundle();
+                                data_3.putInt("total", value_3);
+                                msg_3.what = 3;
+                                msg_3.setData(data_3);
+                                handler.sendMessage(msg_3);
+                            }
+
+                            /** 파일 변환 - 완료 시에, 핸들러를 통해 변환 완료 알림 */
                             if(i == document.getNumberOfPages()) {
                                 handler.sendEmptyMessage(0);
                                 Log.d(TAG, only_fileName + ".pdf: 이미지로 변환 완료");
-                                // 핸들러가 동작할 시간 벌어주기
-                                Thread.sleep(100);
+
                             }
                         }
                     }

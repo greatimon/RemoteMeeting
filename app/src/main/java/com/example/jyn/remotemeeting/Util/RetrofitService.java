@@ -96,7 +96,7 @@ public interface RetrofitService {
     );
 
 
-    /** 회의 파일 업로드 */
+    /** 회의, 멀티 파일 업로드 */
     @Multipart
     @POST("/{url}")
     Call<ResponseBody> upload_multi_files(

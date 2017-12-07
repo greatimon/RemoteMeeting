@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -31,6 +33,7 @@ import com.example.jyn.remotemeeting.Util.File_search;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.WebRTC.CaptureQualityController;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+import com.pnikosis.materialishprogress.ProgressWheel;
 import com.squareup.otto.Subscribe;
 
 import org.webrtc.RendererCommon;
@@ -68,10 +71,11 @@ public class Call_F extends Fragment {
     private RendererCommon.ScalingType scalingType;
     private boolean videoCallEnabled = true;
     Myapp myapp;
-    private int total_pdf_files_count;
-    private int current_sequence;
+    private int total_pdf_files_count = -1;
+    private int current_sequence = -1;
     private String on_converting_filename;
-    private int pdf_pages_count;
+    int total_upload_file_nums = -1;
+    int total_upload_file_size = -1;
 
     private static final String TAG = "all_"+Call_F.class.getSimpleName();
 
@@ -92,11 +96,15 @@ public class Call_F extends Fragment {
     @BindView(R.id.sequence)                public TextView sequence;
     @BindView(R.id.file_name)               public TextView file_name;
     @BindView(R.id.percent)                 public TextView percent;
+    @BindView(R.id.page_status)             public TextView page_status;
     @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
 
     public static CircularProgressBar circularProgressBar;
     @SuppressLint("StaticFieldLeak")
     public static ImageView add_files;
+    @SuppressLint("StaticFieldLeak")
+    public static TextView comment;
+    public ProgressWheel progress_wheel;
 
     /**
      * Call control interface for container activity.
@@ -133,11 +141,13 @@ public class Call_F extends Fragment {
         mic_off_show_IV = controlView.findViewById(R.id.mic_off_show);
         add_files = controlView.findViewById(R.id.add_files);
         circularProgressBar = controlView.findViewById(R.id.circularProgressbar);
+        progress_wheel = controlView.findViewById(R.id.progress_wheel);
+        comment = controlView.findViewById(R.id.comment);
 
-        // circularProgressBar 사용 example
-        int animationDuration = 2500; // 2500ms = 2,5s
-        circularProgressBar.setProgressWithAnimation(65, animationDuration); // Default duration = 1500ms
-        // circularProgressBar 사용 example
+        // progress_wheel 설정
+        progress_wheel.setBarColor(Color.parseColor("#4CAF50"));
+        progress_wheel.setSpinSpeed(0.7f);
+        progress_wheel.setBarWidth(5);
 
         // otto 등록
         BusProvider.getBus().register(this);
@@ -332,22 +342,14 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> circularProgressBar show
-     ---------------------------------------------------------------------------*/
-    public void show_circularProgressBar(int total_pdf_files_count, int current_sequence,
-                                         String file_name, int percent) {
-        circularProgressbar_REL.setVisibility(View.VISIBLE);
-
-    }
-
-
-    /**---------------------------------------------------------------------------
      클릭이벤트 ==> 회의 파일함 Open
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.file_box_IV})
     public void go_file_box(View view) {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
+        myapp.init_files_for_upload();
 
         // 리사이클러뷰 동작 메소드 호출
         activate_RCV("project", "");
@@ -370,7 +372,9 @@ public class Call_F extends Fragment {
     @OnClick(R.id.back_to_menu)
     public void back_to_menu() {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
+        myapp.init_files_for_upload();
 
         popup_menu_REL.setVisibility(View.VISIBLE);
         popup_menu_icon.setVisibility(View.VISIBLE);
@@ -434,7 +438,9 @@ public class Call_F extends Fragment {
     @OnClick(R.id.close_popup)
     public void close_popup() {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
+        myapp.init_files_for_upload();
 
         popup_menu_REL.setVisibility(View.GONE);
         popup_menu_icon.setVisibility(View.VISIBLE);
@@ -456,7 +462,9 @@ public class Call_F extends Fragment {
         // otto 해제
         BusProvider.getBus().unregister(this);
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
+        myapp.init_files_for_upload();
     }
 
 
@@ -498,8 +506,8 @@ public class Call_F extends Fragment {
             String contain_pdf_file_orNot = event.getData();
             Log.d(TAG, "contain_pdf_file_orNot: " + contain_pdf_file_orNot);
 
-            // 파일 업로드 메소드 호출
-            myapp.upload_files(contain_pdf_file_orNot, getActivity());
+            // 파일 업로드 시작점 메소드 호출
+            myapp.checed_pdf_files(contain_pdf_file_orNot, getActivity());
 
 //            // pdf 파일이 하나라도 포함되어 있다면
 //            if(contain_pdf_file_orNot.equals("true")) {
@@ -534,39 +542,292 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     otto ==> Myapp로 부터 message 수신
+     otto ==> Myapp로 부터 message 수신 -- PDF 컨버팅 관련
      ---------------------------------------------------------------------------*/
+    @SuppressLint("SetTextI18n")
     @Subscribe
-    public void getMessage_from_Myapp(Event.Myapp__Call_F event) {
+    public void getMessage(final Event.Myapp__Call_F event) {
         String message = event.getMessage();
         String data = event.getData();
         Log.d(TAG, "otto 받음_ getMessage: " + event.getMessage());
         Log.d(TAG, "otto 받음_ getData: " + event.getData());
 
+//        int total_pdf_files_count     - PDF 전체 파일 개수 ('end'일 때는 exception 파일 개수를 담음)
+//        int current_sequence          - 현재 변환중인 PDF 파일의 시퀀스(변환 순번)
+//        String file_name              - PDF 파일이름
+//        int percent                   - PDF 파일 변환중 페이지 변환율
+//        int total_pdf_page_nums       - PDF 파일 총 페이지 수
+//        int current_pdf_page          - 현재 변환중인 PDF 파일 page 넘버
+
+        final int animationDuration = 1000; // 1000ms = 1.0s
+
+        /** PDF 컨버팅 관련 메세지 */
         if(message.equals("progress")) {
+            // 파일 변환 - 시작
             if(data.equals("start")) {
-                total_pdf_files_count = event.getTotal_pdf_files_count();
-                current_sequence = event.getCurrent_sequence();
+                // 프로그레스 View VISIBLE
+                comment.setText("PDF convert to images");
+                circularProgressbar_REL.setVisibility(View.VISIBLE);
+                circularProgressBar.setVisibility(View.VISIBLE);
+                // 프로그래스 바 초기화
+                circularProgressBar.setProgressWithAnimation(0, 0);
+                // close 버튼 GONE
+                close_popup.setVisibility(View.GONE);
+                progress_wheel.setVisibility(View.VISIBLE); // 조그만 프로그레스 바
+                circularProgressBar.setColor(Color.parseColor("#388E3C"));
+                circularProgressBar.setBackgroundColor(Color.parseColor("#A5D6A7"));
+
                 on_converting_filename = event.getFile_name();
+                //// PDF 변환 관련 변수 담기 - PDF 총 파일 개수와, 변환 파일 시퀀스는 최초 1번만 받는다
+                // 첫번째 Start 처리
+                if(total_pdf_files_count == -1 && current_sequence == -1) {
+                    total_pdf_files_count = event.getTotal_pdf_files_count();
+                    current_sequence = event.getCurrent_sequence();
+                    percent.setText("0%");
+                    sequence.setText(current_sequence + "번째 파일 변환 중 (총 " + String.valueOf(total_pdf_files_count) + "개 파일)");
+                    file_name.setText(on_converting_filename);
+                }
+
+                // 두번째 Start 처리
+                else  {
+                    current_sequence++;
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            percent.setText("0%");
+                            sequence.setText(current_sequence + "번째 파일 변환 중 (총 " + String.valueOf(total_pdf_files_count) + "개 파일)");
+                            file_name.setText(on_converting_filename);
+                            // 프로그레스 초기화
+                            circularProgressBar.setProgressWithAnimation(0, 0);
+                        }
+                    }, 1300);
+                }
                 Log.d(TAG, "start_total_pdf_files_count: " + total_pdf_files_count);
                 Log.d(TAG, "start_current_sequence: " + current_sequence);
                 Log.d(TAG, "start_on_converting_filename: " + on_converting_filename);
             }
-            else if(data.equals("next")) {
-                current_sequence = event.getCurrent_sequence();
-                on_converting_filename = event.getFile_name();
-                Log.d(TAG, "next_current_sequence: " + current_sequence);
-                Log.d(TAG, "next_on_converting_filename: " + on_converting_filename);
+
+            // 페이지 전환율 - 한 페이지 변환 시작
+            else if(data.equals("progress")) {
+                final int total = event.getTotal_pdf_page_nums();
+                final int current_pdf_page = event.getCurrent_pdf_page();
+                Log.d(TAG, "progress_total_pdf_page_nums: " + total);
+                Log.d(TAG, "progress_current_pdf_page: " + current_pdf_page);
+
+                // 연속된 PDF 파일 변환 시작 시, 딜레이 주기
+                if(current_sequence > 1 && current_pdf_page==1) {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            page_status.setText(String.valueOf(current_pdf_page-1) + "/" + String.valueOf(total));
+                        }
+                    }, 1300);
+                }
+                else {
+                    page_status.setText(String.valueOf(current_pdf_page-1) + "/" + String.valueOf(total));
+                }
+
+
             }
+            // 페이지 전환율 - 한 페이지 변환 완료
             else if(data.equals("ing")) {
-                int percent = event.getPercent();
-                Log.d(TAG, "ing_percent: " + percent);
+                int total = event.getTotal_pdf_page_nums();
+                int current_pdf_page = event.getCurrent_pdf_page();
+                int rate = event.getPercent();
+                Log.d(TAG, "ing_percent: " + rate);
+
+                page_status.setText(String.valueOf(current_pdf_page) + "/" + String.valueOf(total));
+                percent.setText(String.valueOf(rate) + "%");
+                circularProgressBar.setProgressWithAnimation(rate, animationDuration);
             }
+
+            // 파일 변환 - 파일 모두 변환 완료
             else if(data.equals("end")) {
                 Log.d(TAG, "end");
+                // 1초 뒤에 실행
+                new Handler().postDelayed(new Runnable() {
+                    @Override public void run() {
+                        progress_wheel.setVisibility(View.GONE); // 조그만 프로그레스 바
+                        // 정상 변환 처리된 PDF 파일 개수 계산
+                        int exceptioned_pdf_file_count = event.getTotal_pdf_files_count();
+                        int converted_pdf_file_count = total_pdf_files_count - exceptioned_pdf_file_count;
+                        Log.d(TAG, "total_pdf_files_count: " + total_pdf_files_count);
+                        Log.d(TAG, "exceptioned_pdf_file_count: " + exceptioned_pdf_file_count);
+                        Log.d(TAG, "converted_pdf_file_count: " + converted_pdf_file_count);
+
+                        int delay = 0;
+                        String result = "";
+                        String percent_str = "";
+                        int rate = 0;
+                        int ani_duration = animationDuration;
+
+                        if(exceptioned_pdf_file_count == 0) {
+                            sequence.setText("");
+                            delay = 1500;
+                            result = "총 " + String.valueOf(converted_pdf_file_count) + "개 파일 변환 완료";
+                            percent_str = "완료";
+                            rate = 100;
+                        }
+                        else if(exceptioned_pdf_file_count > 0 && total_pdf_files_count!=exceptioned_pdf_file_count) {
+                            sequence.setText(event.getTotal_pdf_files_count() + "개의 파일, 변환중 에러로 제외");
+                            delay = 3000;
+                            result = "총 " + String.valueOf(converted_pdf_file_count) + "개 파일 변환 완료";
+                            percent_str = "완료";
+                            rate = 100;
+                        }
+                        // 컨버팅한 PDF 파일이 모두 오류가 발생했다면
+                        else if(total_pdf_files_count==exceptioned_pdf_file_count) {
+                            circularProgressBar.setVisibility(View.INVISIBLE);
+                            sequence.setText("");
+                            delay = 2000;
+                            if(exceptioned_pdf_file_count == 1) {
+                                result = "파일 변환에 실패하였습니다";
+                            }
+                            else if(exceptioned_pdf_file_count > 1) {
+                                result = String.valueOf(exceptioned_pdf_file_count) + "개 파일, 모두 변환에 실패하였습니다";
+                            }
+                            percent_str = "변환 실패";
+                            rate = 0;
+                            ani_duration = 0;
+                        }
+
+                        file_name.setText(result);
+                        percent.setText(percent_str);
+                        page_status.setText("");
+                        circularProgressBar.setProgressWithAnimation(rate, ani_duration);
+
+                        // 1.5초 뒤에 프로그레스 GONE 처리
+                        new Handler().postDelayed(new Runnable() {
+                            @Override public void run() {
+                                // 프로그레스 View GONE
+                                circularProgressBar.setVisibility(View.GONE);
+                                circularProgressbar_REL.setVisibility(View.GONE);
+                                // close 버튼 VISIBLE
+                                close_popup.setVisibility(View.VISIBLE);
+
+                                // PDF 파일 개수 관련 변수 초기화
+                                total_pdf_files_count = -1;
+                                current_sequence = -1;
+
+                                // todo: 이미지 업로드 로직을 호출해야할 곳 - 레트로핏
+                                myapp.upload_multi_files();
+                            }
+                        }, delay);
+                    }
+                }, 1000);
             }
         }
+    }
 
+
+    /**---------------------------------------------------------------------------
+     otto ==> Myapp로 부터 message 수신 -- 업로드 관련
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("SetTextI18n")
+    @Subscribe
+    public void getMessage(final Event.Myapp__Call_F_upload_files event) {
+        String message = event.getMessage();
+        String data = event.getData();
+        Log.d(TAG, "otto 받음_ getMessage: " + event.getMessage());
+        Log.d(TAG, "otto 받음_ getData: " + event.getData());
+
+//        int total_file_nums           - 업로드 총 파일 개수
+//        int total_file_size           - 업로드 총 파일 크기
+//        int uploaded_file_size        - 업로드 마친 파일 한개의 크기
+//        String upload_file_name       - 업로드 대상 파일 이름
+//        int percent                   - 업로드율
+
+        final int animationDuration = 300;
+
+        /** 업로드 진행 관련 메시지 */
+        if(message.equals("upload")) {
+            // 파일 전송 - 파일 한개 업로드 시작
+            if(data.equals("start")) {
+                // todo: 프로그레스바에서 그냥 일반 프로그레스다이얼로그로 바꾸는 로직 구현하기
+//                circularProgressbar_REL.setVisibility(View.VISIBLE);
+//                circularProgressBar.setVisibility(View.VISIBLE);
+//                // 프로그래스 바 초기화
+//                circularProgressBar.setProgressWithAnimation(0, 0);
+//                circularProgressBar.setColor(Color.parseColor("#388E3C"));
+//                circularProgressBar.setBackgroundColor(Color.parseColor("#A5D6A7"));
+//                // circularProgressbar_REL 안에 View 선별적 GONE
+//                close_popup.setVisibility(View.GONE);
+//                page_status.setVisibility(View.GONE);
+//                progress_wheel.setVisibility(View.GONE);
+//                sequence.setVisibility(View.GONE);
+//                comment.setText("Images, on uploading");
+
+                // 업로드 파일 총 크기, 업로드 파일 총 개수는 최초 1회만 받기
+                if(total_upload_file_nums == -1 && total_upload_file_size == -1) {
+                    total_upload_file_nums = event.getTotal_file_nums();
+                    total_upload_file_size = event.getTotal_file_size();
+                    percent.setText("0%");
+                    Log.d(TAG, "업로드 총 파일 개수: " + total_upload_file_nums);
+                }
+
+                String upload_file_name = event.getUpload_file_name();
+                file_name.setText(upload_file_name);
+
+                Log.d(TAG, "업로드 총 파일 크기: " + total_upload_file_size);
+                Log.d(TAG, "업로드 대상 파일 이름: " + upload_file_name);
+            }
+            // 파일 전송률 - 파일 한개 업로드 완료, 호출 콜백
+            if(data.equals("ing")) {
+                int uploaded_file_size = event.getUploaded_file_size();
+
+                // 파일 진행 퍼센트 계산
+                int value = uploaded_file_size;
+                int total = total_upload_file_size;
+                int rate = (int)((double)((double)value/(double)total) * 100);
+                Log.d(TAG, "파일 업로드 진행률: " + rate + "%");
+                percent.setText(String.valueOf(rate) + "%");
+
+                // 전체 파일 사이즈, 업로드 된 파일 크기 만큼 줄이기
+                total_upload_file_size = total_upload_file_size - uploaded_file_size;
+
+                int delay = 0;
+
+                // 업로드 아직 안 끝남 - 다음 파일 전송
+                if(total_upload_file_size > 0) {
+
+                }
+                // 업로드 끝남
+                else if(total_upload_file_size <= 0) {
+                    // 1.5초 뒤에 프로그레스 GONE 처리
+                    new Handler().postDelayed(new Runnable() {
+                        @Override public void run() {
+                            // 프로그레스 View GONE
+                            circularProgressBar.setVisibility(View.GONE);
+                            circularProgressbar_REL.setVisibility(View.GONE);
+                            // close 버튼 VISIBLE
+                            close_popup.setVisibility(View.VISIBLE);
+                            // GONE 처리했던 View 다시 VISIBLE 처리
+                            close_popup.setVisibility(View.VISIBLE);
+                            page_status.setVisibility(View.VISIBLE);
+                            progress_wheel.setVisibility(View.VISIBLE);
+                            sequence.setVisibility(View.VISIBLE);
+
+                            // 파일 업로드 관련 변수 초기화
+                            total_upload_file_nums = -1;
+                            total_upload_file_size = -1;
+
+                        }
+                    }, delay);
+                }
+            }
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> circularProgressbar 컬러 조정
+     ---------------------------------------------------------------------------*/
+    private int adjustAlpha(int color, float factor) {
+        int alpha = Math.round(Color.alpha(color) * factor);
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return Color.argb(alpha, red, green, blue);
     }
 
 
@@ -575,7 +836,9 @@ public class Call_F extends Fragment {
      ---------------------------------------------------------------------------*/
     public void activate_RCV(String target, String format) {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
+        myapp.init_files_for_upload();
 
         /** 로컬 파일 어댑터가 필요할 때 */
         if(target.equals("local")) {
