@@ -361,7 +361,7 @@ public class Myapp extends Application {
                             }
                             else {
                                 // 길이가 긴 JSONString 출력하기
-                                print_long_Json_logcat(result, TAG);
+//                                print_long_Json_logcat(result, TAG);
                                 // jsonString --> jsonObject
                                 JSONObject jsonObject = new JSONObject(result);
                                 // jsonObject --> jsonArray
@@ -665,135 +665,112 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 파일 업로드
+     메소드 ==> 멀티 파일 업로드 -- 동기
      ---------------------------------------------------------------------------*/
-    public void upload_multi_files() {
+    @SuppressLint("StaticFieldLeak")
+    public void upload_multi_files_1(final Context context) {
 
         final int total_file_nums = files_for_upload.size();
-        Long total_file_size = 0L;
+        final Long[] total_file_size = {0L};
 
-        // 업로드 파일 크기를 계산해서 프로그레스로 넘길 핸들러 생성
-        final int finalTotal_file_size = (int)(long)total_file_size;
-        @SuppressLint("HandlerLeak")
-        final Handler handler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    /** 파일 한개 전송 시작 - 파일 한개 업로드 시작, 호출 콜백*/
-                    case 0:
-                        String uploaded_file_name = msg.getData().getString("uploaded_file_name", "");
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
 
-                        // otto 를 통해, 업로드하는 총 파일의 크기 전달
-                        Event.Myapp__Call_F_upload_files event = new Event.Myapp__Call_F_upload_files("upload", "start",
-                                total_file_nums, finalTotal_file_size, -1, uploaded_file_name);
-                        BusProvider.getBus().post(event);
-
-                        break;
-                    /** 파일 한개 전송 완료 - 파일 한개 업로드 완료, 호출 콜백 */
-                    case 1:
-                        int uploaded_file_size = msg.getData().getInt("uploaded_file_size", 0);
-
-                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                        Event.Myapp__Call_F_upload_files event_1 = new Event.Myapp__Call_F_upload_files("upload", "ing",
-                                -1, -1, uploaded_file_size, "");
-                        BusProvider.getBus().post(event_1);
-                        break;
+        // 동기 호출
+        try {
+            new AsyncTask<String, Void, Long>() {
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    show_progress(context, "이미지 업로드 중입니다");
                 }
-            }
-        };
 
+                @Override
+                protected Long doInBackground(String... params) {
 
-        if(files_for_upload != null) {
-            Iterator<String> iterator = files_for_upload.keySet().iterator();
+                    Iterator<String> iterator = files_for_upload.keySet().iterator();
+                    // 루프 - 파일 사이즈를 구하기 위한
+                    Long temp_total_file_size = 0L;
+                    while(iterator.hasNext()) {
+                        String value = files_for_upload.get(iterator.next());
 
-            // 루프 - 파일 사이즈를 구하기 위한
-            while(iterator.hasNext()) {
-                String value = files_for_upload.get(iterator.next());
+                        File file = new File(value);
+                        temp_total_file_size = temp_total_file_size + file.length();
+                    }
+                    total_file_size[0] = temp_total_file_size;
+                    Log.d(TAG, "업로드할 파일들의 총 개수: " + files_for_upload.size());
+                    Log.d(TAG, "업로드할 파일들의 총 크기: " + total_file_size[0] + " bytes");
 
-                File file = new File(value);
-                total_file_size = total_file_size + file.length();
-            }
-            Log.d(TAG, "업로드할 파일들의 총 개수: " + files_for_upload.size());
-            Log.d(TAG, "업로드할 파일들의 총 크기: " + total_file_size + " bytes");
+                    // 테스트 코드
+//                    files_for_upload.clear();
 
-            // 테스트 코드
-//            files_for_upload.clear();
+                    Iterator<String> iterator_2 = files_for_upload.keySet().iterator();
+                    Long uploaded_file_size = 0L;
 
-            Iterator<String> iterator_2 = files_for_upload.keySet().iterator();
-            // 루프 - 파일 업로드를 위한
-            while(iterator_2.hasNext()) {
-                String value = files_for_upload.get(iterator_2.next());
+                    // 루프 - 파일 업로드를 위한
+                    while(iterator_2.hasNext()) {
+                        String value = files_for_upload.get(iterator_2.next());
 
-                // 파일 객체 생성
-                final File file = new File(value);
+                        // 파일 객체 생성
+                        final File file = new File(value);
 
-                /** 파일 한개 전송 - 시작 */
-                Message msg = new Message();
-                Bundle data = new Bundle();
-                data.putString("uploaded_file_name", file.getName());
-                msg.what = 0;
-                msg.setData(data);
-                handler.sendMessage(msg);
+                        // 확장자만 분류
+                        int Idx = file.getName().lastIndexOf(".");
+                        String format = file.getName().substring(Idx+1);
+                        Log.d(TAG, "format: " + format);
 
-                // 확장자만 분류
-                int Idx = file.getName().lastIndexOf(".");
-                String format = file.getName().substring(Idx+1);
-                Log.d(TAG, "format: " + format);
+                        // RequestBody 생성 from file
+                        RequestBody requestFile = RequestBody.create(MediaType.parse("image/" + format), file);
+                        MultipartBody.Part body =
+                                MultipartBody.Part.createFormData("image", file.getName(), requestFile);
 
-                // RequestBody 생성 from file
-                RequestBody requestFile = RequestBody.create(MediaType.parse("image/" + format), file);
-                MultipartBody.Part body =
-                        MultipartBody.Part.createFormData("image", file.getName(), requestFile);
+                        // user_no
+                        RequestBody user_no = RequestBody.create(MediaType.parse("text/plain"), getUser_no());
 
-                // user_no
-                RequestBody user_no = RequestBody.create(MediaType.parse("text/plain"), getUser_no());
+                        // meeting_no
+                        RequestBody meeting_no = RequestBody.create(MediaType.parse("text/plain"), getMeeting_no());
 
-                // meeting_no
-                RequestBody meeting_no = RequestBody.create(MediaType.parse("text/plain"), getMeeting_no());
-
-                RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
-                Call<ResponseBody> call = rs.upload_multi_files(
-                        Static.UPLOAD_MULTI_FILES,
-                        user_no, meeting_no, body);
-                final Long finalTotal_file_size1 = total_file_size;
-                call.enqueue(new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        Call<ResponseBody> call = rs.upload_multi_files(
+                                Static.UPLOAD_MULTI_FILES,
+                                user_no, meeting_no, body);
                         try {
-                            String retrofit_result = response.body().string();
-                            Log.d(TAG, "회의 공유 파일 업로드_result: "+retrofit_result);
+                            Response<ResponseBody> call_result = call.execute();
+                            String result = call_result.body().string();
+                            Log.d(TAG, "result: " + result);
 
-                            if(retrofit_result.equals("fail")) {
-                                Log.d(TAG, "업로드 실패: " + retrofit_result);
+                            if(result.equals("fail")) {
+                                Log.d(TAG, "업로드 실패: " + result);
                             }
-                            else if(retrofit_result.equals("success")) {
+                            else if(result.equals("success")) {
                                 Log.d(TAG, file.getName() + "업로드 성공!!!!");
-
-                                /** 파일 한개 전송 - 완료 */
-                                int uploaded_file_size = (int)(long)file.length();
-                                Message msg = new Message();
-                                Bundle data = new Bundle();
-                                data.putInt("uploaded_file_size", uploaded_file_size);
-                                msg.what = 1;
-                                msg.setData(data);
-                                handler.sendMessage(msg);
+                                uploaded_file_size = uploaded_file_size + file.length();
                             }
                             else {
-                                logAndToast("파일 업로드 오류" + retrofit_result);
+                                logAndToast("파일 업로드 오류" + result);
                             }
-
                         } catch (IOException e) {
                             e.printStackTrace();
+                            return 0L;
                         }
                     }
+                    return uploaded_file_size;
+                }
 
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        logAndToast("onFailure_result" + t.getMessage());
-                    }
-                });
-            }
+                @Override
+                protected void onPostExecute(Long size) {
+                    super.onPostExecute(size);
+                    Log.d(TAG, "uploaded_file_size: " + size);
+                    Log.d(TAG, "total_file_size: " + total_file_size[0]);
+
+                    dismiss_progress();
+                    logAndToast(String.valueOf(total_file_nums) + "개 파일, 업로드 완료");
+                }
+            }.execute();
+
         }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 
@@ -866,7 +843,7 @@ public class Myapp extends Application {
             }
             // todo: 이미지 업로드 로직을 호출해야할 곳 - 레트로핏
             Call_F.comment.setText("Images, on uploading");
-            upload_multi_files();
+            upload_multi_files_1(context);
         }
     }
 
@@ -1120,7 +1097,7 @@ public class Myapp extends Application {
                             if(i == document.getNumberOfPages()) {
                                 handler.sendEmptyMessage(0);
                                 Log.d(TAG, only_fileName + ".pdf: 이미지로 변환 완료");
-
+                                document.close();
                             }
                         }
                     }

@@ -710,110 +710,11 @@ public class Call_F extends Fragment {
                                 current_sequence = -1;
 
                                 // todo: 이미지 업로드 로직을 호출해야할 곳 - 레트로핏
-                                myapp.upload_multi_files();
+                                myapp.upload_multi_files_1(getActivity());
                             }
                         }, delay);
                     }
                 }, 1000);
-            }
-        }
-    }
-
-
-    /**---------------------------------------------------------------------------
-     otto ==> Myapp로 부터 message 수신 -- 업로드 관련
-     ---------------------------------------------------------------------------*/
-    @SuppressLint("SetTextI18n")
-    @Subscribe
-    public void getMessage(final Event.Myapp__Call_F_upload_files event) {
-        String message = event.getMessage();
-        String data = event.getData();
-        Log.d(TAG, "otto 받음_ getMessage: " + event.getMessage());
-        Log.d(TAG, "otto 받음_ getData: " + event.getData());
-
-//        int total_file_nums           - 업로드 총 파일 개수
-//        int total_file_size           - 업로드 총 파일 크기
-//        int uploaded_file_size        - 업로드 마친 파일 한개의 크기
-//        String upload_file_name       - 업로드 대상 파일 이름
-//        int percent                   - 업로드율
-
-        final int animationDuration = 300;
-
-        /** 업로드 진행 관련 메시지 */
-        if(message.equals("upload")) {
-            // 파일 전송 - 파일 한개 업로드 시작
-            if(data.equals("start")) {
-                // todo: 프로그레스바에서 그냥 일반 프로그레스다이얼로그로 바꾸는 로직 구현하기
-//                circularProgressbar_REL.setVisibility(View.VISIBLE);
-//                circularProgressBar.setVisibility(View.VISIBLE);
-//                // 프로그래스 바 초기화
-//                circularProgressBar.setProgressWithAnimation(0, 0);
-//                circularProgressBar.setColor(Color.parseColor("#388E3C"));
-//                circularProgressBar.setBackgroundColor(Color.parseColor("#A5D6A7"));
-//                // circularProgressbar_REL 안에 View 선별적 GONE
-//                close_popup.setVisibility(View.GONE);
-//                page_status.setVisibility(View.GONE);
-//                progress_wheel.setVisibility(View.GONE);
-//                sequence.setVisibility(View.GONE);
-//                comment.setText("Images, on uploading");
-
-                // 업로드 파일 총 크기, 업로드 파일 총 개수는 최초 1회만 받기
-                if(total_upload_file_nums == -1 && total_upload_file_size == -1) {
-                    total_upload_file_nums = event.getTotal_file_nums();
-                    total_upload_file_size = event.getTotal_file_size();
-                    percent.setText("0%");
-                    Log.d(TAG, "업로드 총 파일 개수: " + total_upload_file_nums);
-                }
-
-                String upload_file_name = event.getUpload_file_name();
-                file_name.setText(upload_file_name);
-
-                Log.d(TAG, "업로드 총 파일 크기: " + total_upload_file_size);
-                Log.d(TAG, "업로드 대상 파일 이름: " + upload_file_name);
-            }
-            // 파일 전송률 - 파일 한개 업로드 완료, 호출 콜백
-            if(data.equals("ing")) {
-                int uploaded_file_size = event.getUploaded_file_size();
-
-                // 파일 진행 퍼센트 계산
-                int value = uploaded_file_size;
-                int total = total_upload_file_size;
-                int rate = (int)((double)((double)value/(double)total) * 100);
-                Log.d(TAG, "파일 업로드 진행률: " + rate + "%");
-                percent.setText(String.valueOf(rate) + "%");
-
-                // 전체 파일 사이즈, 업로드 된 파일 크기 만큼 줄이기
-                total_upload_file_size = total_upload_file_size - uploaded_file_size;
-
-                int delay = 0;
-
-                // 업로드 아직 안 끝남 - 다음 파일 전송
-                if(total_upload_file_size > 0) {
-
-                }
-                // 업로드 끝남
-                else if(total_upload_file_size <= 0) {
-                    // 1.5초 뒤에 프로그레스 GONE 처리
-                    new Handler().postDelayed(new Runnable() {
-                        @Override public void run() {
-                            // 프로그레스 View GONE
-                            circularProgressBar.setVisibility(View.GONE);
-                            circularProgressbar_REL.setVisibility(View.GONE);
-                            // close 버튼 VISIBLE
-                            close_popup.setVisibility(View.VISIBLE);
-                            // GONE 처리했던 View 다시 VISIBLE 처리
-                            close_popup.setVisibility(View.VISIBLE);
-                            page_status.setVisibility(View.VISIBLE);
-                            progress_wheel.setVisibility(View.VISIBLE);
-                            sequence.setVisibility(View.VISIBLE);
-
-                            // 파일 업로드 관련 변수 초기화
-                            total_upload_file_nums = -1;
-                            total_upload_file_size = -1;
-
-                        }
-                    }, delay);
-                }
             }
         }
     }
@@ -887,8 +788,10 @@ public class Call_F extends Fragment {
         else if(target.equals("project")) {
             // 서버로부터 공유 파일리스트 받기
             ArrayList<File_info> files = myapp.get_uploaded_file_list(getActivity());
-            Log.d(TAG, "어댑터에 넘길 project_files 개수: " + files.size());
             Log.d(TAG, "어댑터에 넘길 project_files.isEmpty(): " + files.isEmpty());
+            if(!files.isEmpty()) {
+                Log.d(TAG, "어댑터에 넘길 project_files 개수: " + files.size());
+            }
 
             // '파일 추가' 아이콘 item 추가하기
             File_info file_add_btn = new File_info();

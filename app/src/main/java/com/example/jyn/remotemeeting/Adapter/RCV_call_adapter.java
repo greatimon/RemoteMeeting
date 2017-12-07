@@ -159,6 +159,11 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
         String file_name = files.get(position).getFile_name();
         Log.d(TAG, "file_name: " + file_name);
 
+        if(file_name.contains("&__&")) {
+            String[] temp = file_name.split("&__&");
+            file_name = temp[temp.length-1];
+        }
+
         // 확장자 뺀 파일 이름만 뽑아오기
         int Idx = file_name.lastIndexOf(".");
         String file_name_except_format = file_name.substring(0, Idx);

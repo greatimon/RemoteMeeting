@@ -9,7 +9,7 @@ import com.example.jyn.remotemeeting.Util.File_search;
  * Created by JYN on 2017-11-17.
  */
 
-public class File_info extends Application {
+public class File_info {
 
     private int file_no = -1;
     private String file_upload_user_no = "";
