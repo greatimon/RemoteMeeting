@@ -763,6 +763,13 @@ public class Myapp extends Application {
 
                     dismiss_progress();
                     logAndToast(String.valueOf(total_file_nums) + "개 파일, 업로드 완료");
+
+                    BusProvider.getBus().register(this);        // otto 등록
+                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("upload", "end",
+                            0, 0, "", 0, 0, 0);
+                    BusProvider.getBus().post(myapp__call_f);
+                    BusProvider.getBus().unregister(this);      // otto 등록 해제
                 }
             }.execute();
 
@@ -876,26 +883,32 @@ public class Myapp extends Application {
                     int pdf_files_count = arr.size();
                     Log.d(TAG, "pdf_files_count: " + pdf_files_count);
 
-                    // 파일 이름 추출
-                    String[] temp = arr.get(0).split("[/]");
-                    String fileName = temp[temp.length-1];
+                    if(pdf_files_count > 0) {
+                        // 파일 이름 추출
+                        String[] temp = arr.get(0).split("[/]");
+                        String fileName = temp[temp.length-1];
 
-                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "start",
-                            pdf_files_count, 1, fileName, 0, 0, 0);
-                    BusProvider.getBus().post(myapp__call_f);
+                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "start",
+                                pdf_files_count, 1, fileName, 0, 0, 0);
+                        BusProvider.getBus().post(myapp__call_f);
+                    }
                 }
 
                 /** 페이지 전환율 - 한 페이지 변환 시작, 호출 콜백 */
                 else if(msg.what == 4) {
-                    int total = msg.getData().getInt("total", 0);
-                    int current_pdf_page = msg.getData().getInt("current_pdf_page", 0);
+                    int pdf_files_count = arr.size();
+                    Log.d(TAG, "pdf_files_count: " + pdf_files_count);
 
-                    // otto 를 통해, 프래그먼트로 이벤트 전달하기
-                    Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "progress",
-                            -1, 1, "", 0, total, current_pdf_page);
-                    BusProvider.getBus().post(myapp__call_f);
+                    if(pdf_files_count > 0) {
+                        int total = msg.getData().getInt("total", 0);
+                        int current_pdf_page = msg.getData().getInt("current_pdf_page", 0);
 
+                        // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                        Event.Myapp__Call_F myapp__call_f = new Event.Myapp__Call_F("progress", "progress",
+                                -1, 1, "", 0, total, current_pdf_page);
+                        BusProvider.getBus().post(myapp__call_f);
+                    }
                 }
 
                 /** 페이지 전환율 - 한 페이지 변환 완료, 호출 콜백 */
@@ -1048,18 +1061,19 @@ public class Myapp extends Application {
                             // Render the image to an RGB Bitmap
                             Bitmap pageImage = renderer.renderImage(i-1, 1, Bitmap.Config.RGB_565);
                             // Save the render result to an image
-                            String path = sdPath + "/" + only_fileName + "_" + String.valueOf(i) + ".png";
+                            String created_fileName = String.valueOf(i) + "_" + only_fileName + ".png";
+                            String path = sdPath + "/" + created_fileName;
                             File renderFile = new File(path);
                             FileOutputStream fileOut = new FileOutputStream(renderFile);
                             pageImage.compress(Bitmap.CompressFormat.PNG, 100, fileOut);
                             fileOut.close();
-                            Log.d(TAG, only_fileName + "_" + String.valueOf(i) + ".png" + " 변환");
+                            Log.d(TAG, created_fileName + " 변환");
                             // ================== 한개의 페이지 이미지 변환 종료 ==================
                             // =================================================================
                             /** files_for_upload 해쉬맵에 추가 */
-                            files_for_upload.put(only_fileName + "_" + String.valueOf(i) + ".png" + String.valueOf(i), path);
+                            files_for_upload.put(created_fileName, path);
                             Log.d(TAG, "files_for_upload 해쉬맵에 추가");
-                            Log.d(TAG, "file_name_with_format: " + only_fileName + "_" + String.valueOf(i) + ".png" + String.valueOf(i));
+                            Log.d(TAG, "file_name_with_format: " + created_fileName);
                             Log.d(TAG, "canonicalPath: " + path);
 
                             /** 페이지 전환율 - 하나 변환 완료됐을 때, 핸들러를 통해 알림 */

@@ -342,10 +342,19 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 회의 파일함 Open
+     클릭이벤트 ==> 회의 파일함 아이콘 클릭
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.file_box_IV})
     public void go_file_box(View view) {
+        // 회의 파일함 oepn 메소드 호출
+        file_box();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 회의 파일함 Open
+     ---------------------------------------------------------------------------*/
+    public void file_box() {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
         // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
@@ -367,19 +376,31 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> back_img 클릭 -- 회의 파일함 => 메뉴로 이동
+     클릭이벤트 ==> back_img 클릭 -- 로컬 파일리스트 => 회의 파일함 or 회의 파일함 => 메뉴
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back_to_menu)
     public void back_to_menu() {
-        // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
-        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
-        myapp.init_checked_files();
-        myapp.init_files_for_upload();
 
-        popup_menu_REL.setVisibility(View.VISIBLE);
-        popup_menu_icon.setVisibility(View.VISIBLE);
-        popup_file_manager_REL.setVisibility(View.GONE);
-        close_popup.setVisibility(View.GONE);
+
+        // 현재보고 있는 뷰가 project가 아니라면, 즉 로컬 파일리스트를 보고 있다면
+        // 로컬뷰 가리고, 프로젝트뷰 보여주기
+        String get_format = recyclerView.getAdapter().toString();
+        if(!get_format.equals("project")) {
+            // 회의 파일함 oepn 메소드 호출
+            file_box();
+        }
+        // 현재있는 뷰가 project 라면, 메뉴뷰로 돌아가기
+        else if(get_format.equals("project")) {
+            // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
+            // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
+            myapp.init_checked_files();
+            myapp.init_files_for_upload();
+
+            popup_menu_REL.setVisibility(View.VISIBLE);
+            popup_menu_icon.setVisibility(View.VISIBLE);
+            popup_file_manager_REL.setVisibility(View.GONE);
+            close_popup.setVisibility(View.GONE);
+        }
     }
 
 
@@ -388,7 +409,6 @@ public class Call_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.add_files)
     public void upload_files(View view) {
-        // todo: 업로드를 묻는 다이얼로그 띄우기
         // todo: 업로드 완료 후, 뷰 처리하고, 회의 파일함으로 이동하기
         // todo: 클릭할 때 로직 구분 해야함 - 서버 파일 업로드 / 파일 화면 공유
 
@@ -716,6 +736,12 @@ public class Call_F extends Fragment {
                     }
                 }, 1000);
             }
+        }
+        /** 업로드 완료 메시지 -- 회의 파일함으로 돌아가기 */
+        if(message.equals("upload") && data.equals("end")) {
+            Log.d(TAG, "파일 업로드 콜백 -- 회의 파일함으로 돌아가기");
+            // 회의 파일함 oepn 메소드 호출
+            file_box();
         }
     }
 
