@@ -778,7 +778,7 @@ public class Myapp extends Application {
                     }, 500);
                 }
                 /** PDF 페이지 변환 할때마다 호출하는 콜백 */
-                else {
+                else if(msg.what == 2) {
                     int total = msg.getData().getInt("total", 0);
                     int current_sequence = msg.getData().getInt("current_sequence", 0);
                     int percent = msg.getData().getInt("percent", 0);
@@ -873,6 +873,7 @@ public class Myapp extends Application {
                                 data.putInt("total", total);
                                 data.putInt("current_sequence", value);
                                 data.putInt("percent", rate);
+                                msg.what = 2;
 
                                 msg.setData(data);
                                 handler.sendMessage(msg);
