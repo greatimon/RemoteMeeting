@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -74,8 +75,6 @@ public class Call_F extends Fragment {
     private int total_pdf_files_count = -1;
     private int current_sequence = -1;
     private String on_converting_filename;
-    int total_upload_file_nums = -1;
-    int total_upload_file_size = -1;
 
     private static final String TAG = "all_"+Call_F.class.getSimpleName();
 
@@ -380,8 +379,6 @@ public class Call_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back_to_menu)
     public void back_to_menu() {
-
-
         // 현재보고 있는 뷰가 project가 아니라면, 즉 로컬 파일리스트를 보고 있다면
         // 로컬뷰 가리고, 프로젝트뷰 보여주기
         String get_format = recyclerView.getAdapter().toString();
@@ -409,7 +406,6 @@ public class Call_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.add_files)
     public void upload_files(View view) {
-        // todo: 업로드 완료 후, 뷰 처리하고, 회의 파일함으로 이동하기
         // todo: 클릭할 때 로직 구분 해야함 - 서버 파일 업로드 / 파일 화면 공유
 
         // 체크된 파일 중에서 pdf 파일이 있는지 확인
