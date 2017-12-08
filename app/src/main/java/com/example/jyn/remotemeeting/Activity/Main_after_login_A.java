@@ -765,10 +765,43 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         }
 
         // 프로필 상세보기 액티비티에서 돌아왔을 때
-        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL) {
+        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && requestCode==RESULT_CANCELED) {
             /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
             Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_RCV");
             BusProvider.getBus().post(event);
+
+        }
+        // 프로필 상세보기에서, 1:1 채팅을 눌렀을 때
+        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && resultCode==RESULT_OK) {
+            String target_user_no = data.getStringExtra("target_user_no");
+            if(target_user_no != null) {
+                /** 서버 통신 - 1:1 채팅방 생성 */
+                RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+                Call<ResponseBody> call_result = rs.create_chat_room_for_one(
+                        Static.CREATE_CHAT_ROOM_FOR_ONE,
+                        myapp.getUser_no(), target_user_no);
+                call_result.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        try {
+                            String retrofit_result = response.body().string();
+                            Log.d(TAG, "1:1 채팅방 생성 retrofit_result: "+retrofit_result);
+
+
+
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        myapp.logAndToast("onFailure_result" + t.getMessage());
+                    }
+                });
+
+            }
         }
 
         // 이미지 선택 방법 다이얼로그에서 돌아왔을 때
@@ -925,6 +958,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 //            // 메소드 호출
 //            got_out_from_meeting();
         }
+
     }
 
 

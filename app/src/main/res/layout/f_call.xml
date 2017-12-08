@@ -99,7 +99,7 @@
         <!--circularProgressbar 레이아웃-->
         <RelativeLayout
             android:visibility="gone"
-            tools:visibility="gone"
+            tools:visibility="visible"
             android:id="@+id/circularProgressbar_REL"
             android:layout_marginTop="-30dp"
             android:layout_width="match_parent"
@@ -107,13 +107,13 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="#000000"
+                android:background="#FFF"
                 android:alpha="0.95"/>
             <TextView
                 android:id="@+id/comment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#FFF"
+                android:textColor="#2b2b2b"
                 android:layout_above="@+id/circularProgressbar"
                 android:layout_centerHorizontal="true"
                 android:layout_marginBottom="30dp"
@@ -134,7 +134,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:textColor="#FFF"
+                android:textColor="#2b2b2b"
                 android:textSize="20dp"
                 tools:text="75%"/>
             <TextView
@@ -143,7 +143,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/percent"
                 android:layout_centerHorizontal="true"
-                android:textColor="#d1d1d1"
+                android:textColor="#383838"
                 android:textSize="10dp"
                 tools:text="1/10"/>
             <TextView
@@ -153,7 +153,7 @@
                 android:layout_below="@+id/circularProgressbar"
                 android:layout_marginTop="10dp"
                 android:layout_centerHorizontal="true"
-                android:textColor="#FFF"
+                android:textColor="#2b2b2b"
                 android:textSize="12dp"
                 tools:text="1번째 파일 변환중 (총 2개 파일)"/>
             <TextView
@@ -168,7 +168,7 @@
                 android:layout_below="@+id/sequence"
                 android:layout_marginTop="8dp"
                 android:layout_centerHorizontal="true"
-                android:textColor="#FFF"
+                android:textColor="#2b2b2b"
                 android:textSize="15dp"
                 tools:text="webrtcpeer-android-android-android-android-android-android.pdf\nwebrtcpeer-android.pdf"/>
             <com.pnikosis.materialishprogress.ProgressWheel

@@ -15,17 +15,16 @@ public class Chat_room {
     private ArrayList<Integer> user_no_arr;
     private ArrayList<String> user_nickname_arr;
     private ArrayList<String> user_img_filename_arr;
-    private int member_count;
     private Chat_log last_log;
     private String transmission_time_for_local;
-    private int unread_msg_count;
+    private int read_msg_count;
 
-    public int getUnread_msg_count() {
-        return unread_msg_count;
+    public int getRead_msg_count() {
+        return read_msg_count;
     }
 
-    public void setUnread_msg_count(int unread_msg_count) {
-        this.unread_msg_count = unread_msg_count;
+    public void setRead_msg_count(int read_msg_count) {
+        this.read_msg_count = read_msg_count;
     }
 
     public Myapp myapp;
@@ -79,14 +78,6 @@ public class Chat_room {
 
     public void setUser_no_arr(ArrayList<Integer> user_no_arr) {
         this.user_no_arr = user_no_arr;
-    }
-
-    public int getMember_count() {
-        return member_count;
-    }
-
-    public void setMember_count(int member_count) {
-        this.member_count = member_count;
     }
 
     public String getTransmission_time_for_local() {

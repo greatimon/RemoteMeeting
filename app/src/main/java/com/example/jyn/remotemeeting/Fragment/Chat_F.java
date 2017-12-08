@@ -16,7 +16,6 @@ import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_chat_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
-import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.R;
@@ -24,11 +23,6 @@ import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
-import com.google.gson.Gson;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -119,7 +113,6 @@ public class Chat_F extends Fragment {
         }
         // 서버로 부터 채팅방 리스트 받기
         ArrayList<Chat_room> rooms = get_chat_room_list();
-        Log.d(TAG, "usersArrayList 개수: " + rooms.size());
         Log.d(TAG, "usersArrayList.isEmpty(): " + rooms.isEmpty());
 
         // 채팅방 리스트가 하나도 없다면
@@ -152,7 +145,7 @@ public class Chat_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 서버 통신 -- 내 파트너 리스트 가져와서 리턴하기
+     메소드 ==> 서버 통신 -- 내 채팅방 리스트 받아와서 리턴하기
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
     public ArrayList<Chat_room> get_chat_room_list() {
@@ -184,9 +177,9 @@ public class Chat_F extends Fragment {
                             }
                             else {
                                 // php 연결 테스트
-                                Log.d(TAG, result);
+                                Log.d(TAG, "레트로핏_ 채팅방 리스트 결과: " + result);
                                 // 길이가 긴 JSONString 출력하기
-                                myapp.print_long_Json_logcat(result, TAG);
+//                                myapp.print_long_Json_logcat(result, TAG);
 //                                // jsonString --> jsonObject
 //                                JSONObject jsonObject = new JSONObject(result);
 //                                // jsonObject --> jsonArray
@@ -206,7 +199,7 @@ public class Chat_F extends Fragment {
 //                        } catch (JSONException e) {
 //                            e.printStackTrace();
 //                        }
-//                        return final_rooms;
+                        return final_rooms;
                     }
                     catch (IOException e) {
                         e.printStackTrace();

@@ -157,6 +157,10 @@ public class Profile_detail_D extends Activity {
     @OnClick(R.id.go_chat)
     public void go_chat() {
         Log.d(TAG, "채팅 하기 클릭");
+        Intent intent = new Intent();
+        intent.putExtra("target_user_no", user_no);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
 
@@ -261,6 +265,11 @@ public class Profile_detail_D extends Activity {
         }
         // 어플리케이션 객체 null 처리
         myapp = null;
+
+        Intent intent = new Intent();
+        setResult(RESULT_CANCELED, intent);
+        finish();
+
         super.onDestroy();
     }
 }

@@ -8,7 +8,7 @@ public class Static {
     public static String ROOM_ID = "53236556"; // 테스트용
     public static String WEBRTC_URL = "https://appr.tc";
 
-    public static String SPLIT = "팀노바3기전용남";
+    public static String SPLIT = "_GREATIMON_";
 
     public static String SERVER_URL = "http://52.78.88.227";
     public static String SERVER_URL_PROFILE_FOLDER = "http://52.78.88.227/profile_img/";
@@ -29,6 +29,7 @@ public class Static {
     public static String AM_I_INVITED = "am_i_invited.php";
     public static String GET_SHARE_FILE_LIST = "get_share_file_list.php";
     public static String GET_CHAT_ROOM_LIST = "get_chat_room_list.php";
+    public static String CREATE_CHAT_ROOM_FOR_ONE = "create_chat_room_for_one.php";
 
     /** 인텐트용 공유 키 */
     public static String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";

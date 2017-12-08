@@ -46,6 +46,16 @@ public interface RetrofitService {
     );
 
 
+    /** 1:1 채팅방 개설하기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> create_chat_room_for_one (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "target_user_no", encoded=true) String target_user_no
+    );
+
+
     /** 내 채팅방 리스트 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")
