@@ -28,6 +28,7 @@ public class Static {
     public static String GOT_OUT_FROM_MEETING = "got_out_from_meeting.php";
     public static String AM_I_INVITED = "am_i_invited.php";
     public static String GET_SHARE_FILE_LIST = "get_share_file_list.php";
+    public static String GET_CHAT_ROOM_LIST = "get_chat_room_list.php";
 
     /** 인텐트용 공유 키 */
     public static String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";

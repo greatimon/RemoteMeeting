@@ -134,7 +134,7 @@ public class Partner_F extends Fragment {
             recyclerView.setVisibility(View.GONE);
             no_result.setVisibility(View.VISIBLE);
         }
-        // 파트너 리스트 결과가 잇다면
+        // 파트너 리스트 결과가 있다면
         else if(!usersArrayList.isEmpty()) {
             no_result.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);

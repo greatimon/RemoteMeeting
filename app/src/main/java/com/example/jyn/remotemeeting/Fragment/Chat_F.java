@@ -2,10 +2,9 @@ package com.example.jyn.remotemeeting.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,19 +15,30 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_chat_adapter;
-import com.example.jyn.remotemeeting.Adapter.RCV_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.example.jyn.remotemeeting.Util.RetrofitService;
+import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
+import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by JYN on 2017-11-10.
@@ -37,6 +47,7 @@ import butterknife.Unbinder;
 public class Chat_F extends Fragment {
 
     private static final String TAG = "all_"+Chat_F.class.getSimpleName();
+    String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
     LayoutInflater inflater;
     ViewGroup container;
     View controlView;
@@ -48,7 +59,7 @@ public class Chat_F extends Fragment {
     @BindView(R.id.no_result)           TextView no_result;
 
     // 리사이클러뷰 관련 클래스
-    public RCV_chat_adapter rcv_partner_adapter;
+    public RCV_chat_adapter rcv_chat_adapter;
     public RecyclerView.LayoutManager layoutManager;
 
     public Chat_F() {
@@ -116,10 +127,27 @@ public class Chat_F extends Fragment {
             recyclerView.setVisibility(View.GONE);
             no_result.setVisibility(View.VISIBLE);
         }
+        // 채팅방 리스트가 있다면
         else if(!rooms.isEmpty()) {
+            no_result.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
 
+            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+            if(rcv_chat_adapter == null) {
+                // 생성자 인수
+                // 1. 액티비티
+                // 2. 인플레이팅 되는 레이아웃
+                // 3. arrayList rooms
+                // 4. extra 변수
+                rcv_chat_adapter = new RCV_chat_adapter(getActivity(), R.layout.i_chat_room, rooms, "chat");
+                recyclerView.setAdapter(rcv_chat_adapter);
+                rcv_chat_adapter.notifyDataSetChanged();
+            }
+            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+            else {
+                rcv_chat_adapter.refresh_arr(rooms);
+            }
         }
-
     }
 
 
@@ -128,11 +156,73 @@ public class Chat_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
     public ArrayList<Chat_room> get_chat_room_list() {
+
+        ArrayList<Chat_room> rooms = new ArrayList<>();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final ArrayList<Chat_room> final_rooms = rooms;
+            return new AsyncTask<Void, Void, ArrayList<Chat_room>>() {
+
+                @Override
+                protected ArrayList<Chat_room> doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call = rs.get_chat_room_list(
+                                Static.GET_CHAT_ROOM_LIST,
+                                myapp.getUser_no());
+                        Response<ResponseBody> call_result = call.execute();
+                        String result = call_result.body().string();
+
+//                        try {
+                            if(result.equals("fail")) {
+                                myapp.logAndToast("예외발생: " + result);
+                                final_rooms.clear();
+                            }
+                            else if(result.equals("no_result")) {
+                                final_rooms.clear();
+                            }
+                            else {
+                                // php 연결 테스트
+                                Log.d(TAG, result);
+                                // 길이가 긴 JSONString 출력하기
+                                myapp.print_long_Json_logcat(result, TAG);
+//                                // jsonString --> jsonObject
+//                                JSONObject jsonObject = new JSONObject(result);
+//                                // jsonObject --> jsonArray
+//                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_CHAT_ROOM_LIST);
+//                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+//
+//                                // jsonArray에서 jsonObject를 하나씩 가지고 와서,
+//                                // gson과 user 데이터클래스를 이용하여 user_arr에 add 하기
+//                                for(int i=0; i<jsonArray.length(); i++) {
+//                                    String jsonString = jsonArray.getJSONObject(i).toString();
+//                                    Gson gson = new Gson();
+//                                    Chat_room room = gson.fromJson(jsonString, Chat_room.class);
+//                                    final_rooms.add(room);
+//                                }
+                            }
+
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                        return final_rooms;
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     /**---------------------------------------------------------------------------
-     생명주기 ==> onResume -- 
+     생명주기 ==> onResume
      ---------------------------------------------------------------------------*/
     @Override
     public void onResume() {

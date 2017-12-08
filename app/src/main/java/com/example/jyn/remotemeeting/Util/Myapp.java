@@ -511,7 +511,6 @@ public class Myapp extends Application {
                                     Users user = gson.fromJson(jsonString, Users.class);
                                     finalUser_arr.add(user);
                                 }
-
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
