@@ -75,9 +75,6 @@ public class Profile_F extends Fragment {
     @BindView(R.id.modify)                      LinearLayout modify;
 
 
-    //SwipeRefreshLayout -  당겨서 새로고침
-//    private SwipeRefreshLayout layout;
-
     public Profile_F() {
         // Required empty public constructor
     }
@@ -108,12 +105,6 @@ public class Profile_F extends Fragment {
         myapp = Myapp.getInstance();
         // otto 등록
         BusProvider.getBus().register(this);
-
-//        // 새로고침 아이콘 색깔 변경
-//        layout.setColorSchemeColors(Color.parseColor("#66BB6A"), Color.parseColor("#66BB6A"));
-//        //리스너 정의
-//        layout.setOnRefreshListener(sRefresh);
-//        layout.setEnabled(true);
 
         // 뷰 Visibility 셋팅
         init.setVisibility(View.GONE);
@@ -302,15 +293,6 @@ public class Profile_F extends Fragment {
             init.setVisibility(View.VISIBLE);
         }
     }
-
-//    /**---------------------------------------------------------------------------
-//     otto ==> Main_after_login_A로 부터 data 수신 -- 이미지 셋팅
-//     ---------------------------------------------------------------------------*/
-//    @Subscribe
-//    public void getMessage(Event.Main_after_login_A__Profile_F event) {
-//        Log.d(TAG, "otto 받음_ " + event.getMessage());
-//        set_img(event.getMessage(), "local");
-//    }
 
 
     /**---------------------------------------------------------------------------
@@ -534,16 +516,6 @@ public class Profile_F extends Fragment {
             progressDialog.dismiss();
         }
     }
-
-//    /**---------------------------------------------------------------------------
-//     메소드 ==> pull to refresh 리스너 --
-//     ---------------------------------------------------------------------------*/
-//    private SwipeRefreshLayout.OnRefreshListener sRefresh = new SwipeRefreshLayout.OnRefreshListener() {
-//        @Override
-//        public void onRefresh() {
-//            Log.d(TAG, "onRefresh()");
-//        }
-//    };
 
 
     @Override

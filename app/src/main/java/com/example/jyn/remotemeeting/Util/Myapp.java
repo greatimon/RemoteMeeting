@@ -618,8 +618,22 @@ public class Myapp extends Application {
     public String now() {
         SimpleDateFormat format_for_save = new SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.KOREA);
         long time_mil = System.currentTimeMillis();
-        Date date_start_broadCast = new Date(time_mil);
-        String result = format_for_save.format(date_start_broadCast);
+        Date date = new Date(time_mil);
+        String result = format_for_save.format(date);
+        return result;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅 로그 전송 시각을 서버로부터 받아서, 기기 로컬(국가)에 맞게 출력
+     ---------------------------------------------------------------------------*/
+    public String chat_log_transmission_time(Long server_trans_time) {
+        // 기기 Locale 타입 가져오기
+        Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
+        SimpleDateFormat format_for_save = new SimpleDateFormat("HH:mm", systemLocale);
+        long time_mil = server_trans_time;
+        Date date = new Date(time_mil);
+        String result = format_for_save.format(date);
         return result;
     }
 

@@ -1,4 +1,4 @@
-<android.support.v4.widget.SwipeRefreshLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -6,19 +6,19 @@
     android:id="@+id/swipe_layout"
     tools:context="com.example.jyn.remotemeeting.Fragment.Chat_F">
 
-    <!--<ListView-->
-    <!--android:id="@+id/listView"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:divider="@null"-->
-    <!--android:headerDividersEnabled="true"-->
-    <!--android:footerDividersEnabled="true">-->
-    <!--</ListView>-->
+    <android.support.v7.widget.RecyclerView
+        tools:visibility="visible"
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v7.widget.RecyclerView>
 
     <TextView
+        android:id="@+id/no_result"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:text="Chat"
-        android:textSize="50dp"/>
-</android.support.v4.widget.SwipeRefreshLayout>
+        android:text="최근 대화가 없습니다\n새로운 대화를 시작하세요"
+        android:lineSpacingMultiplier="1.6"
+        android:textSize="16dp"/>
+</RelativeLayout>

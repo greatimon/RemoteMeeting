@@ -61,7 +61,6 @@ public class Call_F extends Fragment {
     private ImageView cameraSwitchButton;
     private ImageView mic_on_show_IV;
     private ImageView mic_off_show_IV;
-//    private ImageButton videoScalingButton;
     private ImageView toggleMuteButton;
     private ImageView popup_menu_icon;
     private TextView toggleMuteText;

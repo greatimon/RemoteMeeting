@@ -82,7 +82,7 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
                     final int pos = getAdapterPosition();
 
                     Log.d(TAG, "클릭 아이템 position: " + pos);
-                    Log.d(TAG, "getUser_no: " + users.get(pos).getUser_no());
+                    Log.d(TAG, "getUser_no_arr: " + users.get(pos).getUser_no());
                     Log.d(TAG, "getUser_email: " + users.get(pos).getUser_email());
                     Log.d(TAG, "getUser_nickName: " + users.get(pos).getUser_nickname());
                     Log.d(TAG, "getUser_img_fileName: " + users.get(pos).getUser_img_filename());
@@ -131,7 +131,7 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
                     int pos = getAdapterPosition();
 
                     Log.d(TAG, "클릭 아이템 position: " + pos);
-                    Log.d(TAG, "getUser_no: " + users.get(pos).getUser_no());
+                    Log.d(TAG, "getUser_no_arr: " + users.get(pos).getUser_no());
                     Log.d(TAG, "getUser_email: " + users.get(pos).getUser_email());
                     Log.d(TAG, "getUser_nickName: " + users.get(pos).getUser_nickname());
                     Log.d(TAG, "getUser_img_fileName: " + users.get(pos).getUser_img_filename());
