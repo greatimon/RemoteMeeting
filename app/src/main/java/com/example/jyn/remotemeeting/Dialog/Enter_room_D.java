@@ -99,7 +99,7 @@ public class Enter_room_D extends Activity {
         else if(!creator_img_fileName.equals("none")) {
             Glide
                 .with(this)
-                .load(Static.SERVER_URL_PROFILE_FOLDER + creator_img_fileName)
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + creator_img_fileName)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(this))
                 .into(profile_img);

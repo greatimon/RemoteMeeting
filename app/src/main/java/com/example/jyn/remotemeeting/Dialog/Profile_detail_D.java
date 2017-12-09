@@ -107,13 +107,13 @@ public class Profile_detail_D extends Activity {
         else if(!user_img_fileName.equals("none")) {
             Glide
                 .with(this)
-                .load(Static.SERVER_URL_PROFILE_FOLDER + user_img_fileName)
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user_img_fileName)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(this))
                 .into(profile_img);
             Glide
                 .with(this)
-                .load(Static.SERVER_URL_PROFILE_FOLDER + user_img_fileName)
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user_img_fileName)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new BlurTransformation(this))
                 .into(profile_background_img);

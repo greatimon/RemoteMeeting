@@ -183,7 +183,7 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
         else if(!img_fileName.equals("none")) {
             Glide
                 .with(context)
-                .load(Static.SERVER_URL_PROFILE_FOLDER + img_fileName)
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_fileName)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(context))
                 .into(holder.profile_img);

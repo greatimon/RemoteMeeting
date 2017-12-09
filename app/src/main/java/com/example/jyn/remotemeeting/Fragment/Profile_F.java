@@ -3,10 +3,8 @@ package com.example.jyn.remotemeeting.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -313,14 +311,14 @@ public class Profile_F extends Fragment {
             else if(!absolutePath.equals("none")) {
                 Glide
                     .with(this)
-                    .load(Static.SERVER_URL_PROFILE_FOLDER + absolutePath)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + absolutePath)
                     .placeholder(R.drawable.on_loading)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .bitmapTransform(new CropCircleTransformation(getContext()))
                     .into(profile_img);
                 Glide
                     .with(this)
-                    .load(Static.SERVER_URL_PROFILE_FOLDER + absolutePath)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + absolutePath)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .bitmapTransform(new BlurTransformation(getContext()))
                     .into(profile_background_img);

@@ -17,14 +17,14 @@ public class Chat_room {
     private ArrayList<String> user_img_filename_arr;
     private Chat_log last_log;
     private String transmission_time_for_local;
-    private int read_msg_count;
+    private int unread_msg_count;
 
-    public int getRead_msg_count() {
-        return read_msg_count;
+    public int getUnread_msg_count() {
+        return unread_msg_count;
     }
 
-    public void setRead_msg_count(int read_msg_count) {
-        this.read_msg_count = read_msg_count;
+    public void setUnread_msg_count(int unread_msg_count) {
+        this.unread_msg_count = unread_msg_count;
     }
 
     public Myapp myapp;
@@ -39,13 +39,17 @@ public class Chat_room {
         return last_log;
     }
 
-    // 마지막 로그 정보를 set 할 때, 마지막 로그 정보에서 long 타입의 메세지 전송 시각을 가져와서,
-    // 핸드폰 기기 국가(로컬) 기준으로 원하는 time type String 값으로 변환하여 set 한다
+
     public void setLast_log(Chat_log last_log) {
         this.last_log = last_log;
 
-        String transmission_time =  myapp.chat_log_transmission_time(this.last_log.getTransmission_time());
-        transmission_time_for_local = transmission_time;
+        // 마지막 로그 정보를 set 할 때, 마지막 로그 정보에서 long 타입의 메세지 전송 시각을 가져와서,
+        // 핸드폰 기기 국가(로컬) 기준으로 원하는 time type String 값으로 변환하여 set 한다
+        String last_log_transmission_time =  myapp.chat_log_transmission_time(this.last_log.getTransmission_time());
+        transmission_time_for_local = last_log_transmission_time;
+
+        // 마지막 로그의, 안읽음 숫자를 가져와서 set 한다
+//        int last_log_unread_msg_count =
     }
 
     public int getChatroom_no() {

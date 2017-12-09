@@ -160,7 +160,7 @@ public class Create_room_D extends Activity {
             else if(!subject_filename.equals("none")) {
                 Glide
                     .with(this)
-                    .load(Static.SERVER_URL_PROFILE_FOLDER + subject_filename)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + subject_filename)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .bitmapTransform(new CropCircleTransformation(this))
                     .into(profile_img);

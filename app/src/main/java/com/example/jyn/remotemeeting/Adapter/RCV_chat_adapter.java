@@ -81,7 +81,7 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
                     }
                     Log.d(TAG, "채팅방의 마지막 메세지 내용: " + rooms.get(pos).getLast_log().getContent());
                     Log.d(TAG, "채팅방의 마지막 메세지 전송 시각: " + rooms.get(pos).getTransmission_time_for_local());
-                    int unread_msg_count = rooms.get(pos).getUser_no_arr().size() - rooms.get(pos).getRead_msg_count();
+                    int unread_msg_count = rooms.get(pos).getUser_no_arr().size() - rooms.get(pos).getUnread_msg_count();
                     Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + unread_msg_count);
 
                     // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
@@ -108,7 +108,7 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
         String last_log_msg_content = rooms.get(pos).getLast_log().getContent();
         String last_log_transmission_time_for_local = rooms.get(pos).getTransmission_time_for_local();
         int member_count = rooms.get(pos).getUser_no_arr().size();
-        int unread_msg_count = member_count - rooms.get(pos).getRead_msg_count();
+        int unread_msg_count = member_count - rooms.get(pos).getUnread_msg_count();
 
         StringBuilder user_nickname_list = new StringBuilder();
         for(int i=0; i<rooms.get(pos).getUser_nickname_arr().size(); i++) {
@@ -151,7 +151,7 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
         else if(!rooms.get(pos).getUser_img_filename_arr().get(0).equals("none")) {
             Glide
                 .with(context)
-                .load(Static.SERVER_URL_PROFILE_FOLDER + rooms.get(pos).getUser_img_filename_arr().get(0))
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + rooms.get(pos).getUser_img_filename_arr().get(0))
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(context))
                 .into(holder.profile_img);

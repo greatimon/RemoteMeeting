@@ -861,7 +861,8 @@ public class Myapp extends Application {
                 Log.d(TAG, "file_name_with_format: " + key);
                 Log.d(TAG, "canonicalPath: " + value);
             }
-            // todo: 이미지 업로드 로직을 호출해야할 곳 - 레트로핏
+
+            /** 이미지 파일 업로드 메소드 호출 */
             Call_F.comment.setText("Images, on uploading");
             upload_multi_files_1(context);
         }
