@@ -15,7 +15,7 @@ public class Chat_log {
     private int target_read_count;
     private int curent_read_count;
 
-    Chat_log() {}
+    public Chat_log() {}
 
     public int getChat_log_no() {
         return chat_log_no;

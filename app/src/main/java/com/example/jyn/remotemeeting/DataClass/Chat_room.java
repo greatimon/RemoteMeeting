@@ -12,12 +12,13 @@ public class Chat_room {
 
     private int chatroom_no;
     private int last_msg_no;
-    private ArrayList<Integer> user_no_arr;
+//    private ArrayList<Integer> user_no_arr;
     private ArrayList<String> user_nickname_arr;
     private ArrayList<String> user_img_filename_arr;
-    private Chat_log last_log;
-    private String transmission_time_for_local;
+    private Chat_log last_log = null;
+    private String transmission_time_for_local = "";
     private int unread_msg_count;
+    private String chat_room_title;
 
     public int getUnread_msg_count() {
         return unread_msg_count;
@@ -31,12 +32,15 @@ public class Chat_room {
 
     public static String TAG = "all_"+Chat_room.class.getSimpleName();
 
-    Chat_room() {
+    public Chat_room() {
         myapp = Myapp.getInstance();
     }
 
     public Chat_log getLast_log() {
-        return last_log;
+        if(last_log != null) {
+            return last_log;
+        }
+        return null;
     }
 
 
@@ -47,9 +51,6 @@ public class Chat_room {
         // 핸드폰 기기 국가(로컬) 기준으로 원하는 time type String 값으로 변환하여 set 한다
         String last_log_transmission_time =  myapp.chat_log_transmission_time(this.last_log.getTransmission_time());
         transmission_time_for_local = last_log_transmission_time;
-
-        // 마지막 로그의, 안읽음 숫자를 가져와서 set 한다
-//        int last_log_unread_msg_count =
     }
 
     public int getChatroom_no() {
@@ -76,13 +77,13 @@ public class Chat_room {
         this.user_nickname_arr = user_nickname_arr;
     }
 
-    public ArrayList<Integer> getUser_no_arr() {
-        return user_no_arr;
-    }
+//    public ArrayList<Integer> getUser_no_arr() {
+//        return user_no_arr;
+//    }
 
-    public void setUser_no_arr(ArrayList<Integer> user_no_arr) {
-        this.user_no_arr = user_no_arr;
-    }
+//    public void setUser_no_arr(ArrayList<Integer> user_no_arr) {
+//        this.user_no_arr = user_no_arr;
+//    }
 
     public String getTransmission_time_for_local() {
         return transmission_time_for_local;
@@ -98,5 +99,13 @@ public class Chat_room {
 
     public void setUser_img_filename_arr(ArrayList<String> user_img_filename_arr) {
         this.user_img_filename_arr = user_img_filename_arr;
+    }
+
+    public String getChat_room_title() {
+        return chat_room_title;
+    }
+
+    public void setChat_room_title(String chat_room_title) {
+        this.chat_room_title = chat_room_title;
     }
 }

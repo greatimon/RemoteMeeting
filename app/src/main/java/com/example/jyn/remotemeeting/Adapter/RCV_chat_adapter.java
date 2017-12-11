@@ -15,6 +15,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,7 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
     private String request;
     private ArrayList<Chat_room> rooms;
     public static String TAG = "all_"+RCV_chat_adapter.class.getSimpleName();
+    public Myapp myapp;
 
     /** RecyclerAdapter 생성자 */
     public RCV_chat_adapter(Context context, int itemLayout, ArrayList<Chat_room> rooms, String request) {
@@ -41,6 +43,9 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
         this.itemLayout = itemLayout;
         this.rooms = rooms;
         this.request = request;
+
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
     }
 
     /** 뷰홀더 */
@@ -49,7 +54,7 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
         /** 버터나이프*/
         @BindView(R.id.container)       LinearLayout container;
         @BindView(R.id.profile_img)     ImageView profile_img;
-        @BindView(R.id.nickNames)       TextView nickNames;
+        @BindView(R.id.title)           TextView title;
         @BindView(R.id.counting)        TextView counting;
         @BindView(R.id.content)         TextView content;
         @BindView(R.id.time)            TextView time;
@@ -68,21 +73,21 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
                     int pos = getAdapterPosition();
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "채팅방 no: " + rooms.get(pos).getChatroom_no());
-                    Log.d(TAG, "채팅방 no: " + rooms.get(pos).getLast_log().getChatroom_no());
-                    Log.d(TAG, "채팅방 참여중인 유저 수: " + rooms.get(pos).getUser_no_arr().size());
+                    Log.d(TAG, "채팅방 참여중인 유저 수: " + rooms.get(pos).getUser_nickname_arr().size());
                     Log.d(TAG, "채팅방의 마지막 메세지 no: " + rooms.get(pos).getLast_msg_no());
-                    Log.d(TAG, "채팅방의 마지막 메세지 타입: " + rooms.get(pos).getLast_log().getType());
-                    Log.d(TAG, "채팅방의 마지막 메세지 유저번호: " + rooms.get(pos).getLast_log().getUser_no());
+                    if(rooms.get(pos).getLast_log() != null) {
+                        Log.d(TAG, "채팅방의 마지막 메세지 타입: " + rooms.get(pos).getLast_log().getType());
+                        Log.d(TAG, "채팅방의 마지막 메세지 유저번호: " + rooms.get(pos).getLast_log().getUser_no());
+                        Log.d(TAG, "채팅방의 마지막 메세지 내용: " + rooms.get(pos).getLast_log().getContent());
+                    }
                     for(int i=0; i<rooms.get(pos).getUser_nickname_arr().size(); i++) {
-                        Log.d(TAG, "채팅방의 마지막 메세지 유저 닉네임 리스트_"+ i + ": " + rooms.get(pos).getUser_nickname_arr().get(i));
+                        Log.d(TAG, "채팅방 유저 닉네임 리스트_"+ i + ": " + rooms.get(pos).getUser_nickname_arr().get(i));
                     }
                     for(int j=0; j<rooms.get(pos).getUser_img_filename_arr().size(); j++) {
-                        Log.d(TAG, "채팅방의 마지막 메세지 유저 프로필 URL: " + rooms.get(pos).getUser_img_filename_arr().get(j));
+                        Log.d(TAG, "채팅방 유저 프로필 URL_"+ j + ": " + rooms.get(pos).getUser_img_filename_arr().get(j));
                     }
-                    Log.d(TAG, "채팅방의 마지막 메세지 내용: " + rooms.get(pos).getLast_log().getContent());
                     Log.d(TAG, "채팅방의 마지막 메세지 전송 시각: " + rooms.get(pos).getTransmission_time_for_local());
-                    int unread_msg_count = rooms.get(pos).getUser_no_arr().size() - rooms.get(pos).getUnread_msg_count();
-                    Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + unread_msg_count);
+                    Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + rooms.get(pos).getUnread_msg_count());
 
                     // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
                 }
@@ -105,10 +110,17 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
     public void onBindViewHolder(ViewHolder holder, int pos) {
         Log.d(TAG, "onBindViewHolder");
 
-        String last_log_msg_content = rooms.get(pos).getLast_log().getContent();
+        String last_log_msg_content = "none exist";
+        // TODO: 나중에, 메세지가 오고 간적이 없는 채팅방은 표시하지 않도록 구현하기,
+        // TODO: 현재는 테스트를 위해서 그냥 리스트뷰에 표시되도록 함
+        if(rooms.get(pos).getLast_log() != null) {
+            last_log_msg_content = rooms.get(pos).getLast_log().getContent();
+        }
+
         String last_log_transmission_time_for_local = rooms.get(pos).getTransmission_time_for_local();
-        int member_count = rooms.get(pos).getUser_no_arr().size();
-        int unread_msg_count = member_count - rooms.get(pos).getUnread_msg_count();
+        int member_count = rooms.get(pos).getUser_nickname_arr().size();
+        int unread_msg_count = rooms.get(pos).getUnread_msg_count();
+        String chat_room_title = rooms.get(pos).getChat_room_title();
 
         StringBuilder user_nickname_list = new StringBuilder();
         for(int i=0; i<rooms.get(pos).getUser_nickname_arr().size(); i++) {
@@ -130,28 +142,57 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
             }
         }
 
-        Log.d(TAG, "채팅방의 마지막 메세지 유저 프로필 URL 리스트: " + user_img_filename_list);
-        Log.d(TAG, "채팅방의 마지막 메세지 유저들 닉네임 리스트: " + user_nickname_list);
+        Log.d(TAG, "채팅방 유저 프로필 URL 리스트: " + user_img_filename_list);
+        Log.d(TAG, "채팅방 유저 닉네임 리스트: " + user_nickname_list);
+        Log.d(TAG, "채팅방 제목: " + chat_room_title);
         Log.d(TAG, "채팅방 참여중인 유저 수: " + member_count);
         Log.d(TAG, "채팅방의 마지막 메세지 내용: " + last_log_msg_content);
         Log.d(TAG, "채팅방의 마지막 메세지 전송 시각: " + last_log_transmission_time_for_local);
         Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + unread_msg_count);
 
-        // 이미지 제외, 데이터 셋팅
-        holder.nickNames.setText(user_nickname_list);
+        // 만약 들어 있는 이미지 URL 개수가 2개라면, 즉 1:1 채팅방이라면
+        // 이미지 URL - 채팅방 표시에 들어갈 이미지 URL은 상대방이 되어야 한다
+        // 닉네임 - 채팅방 표시에 들어갈 닉네임은 상대방만 있으면 된다
+        String img_URL_for_setting = "";
+        String nickName_for_setting = "";
+        if(rooms.get(pos).getUser_img_filename_arr().size() == 2) {
+            // 이미지 URL
+            if(rooms.get(pos).getUser_img_filename_arr().get(0).equals(myapp.getUser_img_filename())) {
+                img_URL_for_setting = rooms.get(pos).getUser_img_filename_arr().get(1);
+            }
+            else if(rooms.get(pos).getUser_img_filename_arr().get(1).equals(myapp.getUser_img_filename())) {
+                img_URL_for_setting = rooms.get(pos).getUser_img_filename_arr().get(0);
+            }
+            // 닉네임
+            if(rooms.get(pos).getUser_nickname_arr().get(0).equals(myapp.getUser_nickname())) {
+                nickName_for_setting = rooms.get(pos).getUser_nickname_arr().get(1);
+            }
+            else if(rooms.get(pos).getUser_nickname_arr().get(1).equals(myapp.getUser_nickname())) {
+                nickName_for_setting = rooms.get(pos).getUser_nickname_arr().get(0);
+            }
+        }
+
+        // 이미지 URL을 제외한, 데이터 셋팅
+//        holder.nickNames.setText(nickName_for_setting);
+        if(chat_room_title.equals("none")) {
+            holder.title.setText(nickName_for_setting);
+        }
+        else if(!chat_room_title.equals("none")) {
+            holder.title.setText(chat_room_title);
+        }
         holder.content.setText(last_log_msg_content);
         holder.counting.setText(String.valueOf(member_count));
         holder.time.setText(last_log_transmission_time_for_local);
         holder.unread_msg.setText(String.valueOf(unread_msg_count));
 
-        // 이미지 셋팅, 지금은 첫번째 이미지만 일단 셋팅
-        if(rooms.get(pos).getUser_img_filename_arr().get(0).equals("none")) {
+        // 이미지 셋팅, 일단 지금은 1:1 기준으로만 셋팅
+        if(img_URL_for_setting.equals("none")) {
             holder.profile_img.setImageResource(R.drawable.default_profile);
         }
-        else if(!rooms.get(pos).getUser_img_filename_arr().get(0).equals("none")) {
+        else if(!img_URL_for_setting.equals("none")) {
             Glide
                 .with(context)
-                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + rooms.get(pos).getUser_img_filename_arr().get(0))
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_URL_for_setting)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(context))
                 .into(holder.profile_img);

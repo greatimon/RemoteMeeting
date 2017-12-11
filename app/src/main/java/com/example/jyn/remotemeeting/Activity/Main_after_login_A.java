@@ -807,8 +807,6 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                 Log.d(TAG, "retrofit_result_ 생성한 채팅방 번호: " + temp[1]);
                             }
 
-
-
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

@@ -190,7 +190,11 @@ public class Profile_F extends Fragment {
         String edit_nickname = nickName_ET.getText().toString();
         myapp.setTemp_nickname(edit_nickname);
 
-        // 수정 조건 체크 - 닉네임, 이미지 변경됐는지
+        Log.d(TAG, "edit_nickname: " + edit_nickname);
+        Log.d(TAG, "myapp.getTemp_nickname(): " + myapp.getTemp_nickname());
+        Log.d(TAG, "myapp.getUser_nickname(): " + myapp.getUser_nickname());
+
+        // 닉네임, 이미지 둘다 변경되지 않은 경우
         if(myapp.getTemp_nickname().equals(myapp.getUser_nickname()) &&
                 myapp.getTemp_img_filename().equals(myapp.getUser_img_filename())) {
             myapp.logAndToast("변경된 정보가 없습니다");
@@ -207,6 +211,10 @@ public class Profile_F extends Fragment {
         if(!myapp.getTemp_img_filename().equals(myapp.getUser_img_filename())) {
             Log.d(TAG, "서버 비동기 이미지 업로드 로직 구현");
             upload_profile_img(myapp.getTemp_img_absolutePath());
+
+            // 닉네임은 원래대로
+            nickName.setText(myapp.getUser_nickname());
+            nickName.setVisibility(View.VISIBLE);
         }
 
         // 뷰 Visibility 조절
@@ -442,8 +450,13 @@ public class Profile_F extends Fragment {
         // 파일 객체 생성
         File file = new File(absolutePath);
 
+        // 확장자만 분류
+        int Idx = file.getName().lastIndexOf(".");
+        String format = file.getName().substring(Idx+1);
+        Log.d(TAG, "format: " + format);
+
         // RequestBody 생성 from file
-        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/" + format), file);
         MultipartBody.Part body =
                 MultipartBody.Part.createFormData("image", file.getName(), requestFile);
 

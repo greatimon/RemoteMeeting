@@ -15,7 +15,9 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_chat_adapter;
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.R;
@@ -23,6 +25,11 @@ import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -167,7 +174,7 @@ public class Chat_F extends Fragment {
                         Response<ResponseBody> call_result = call.execute();
                         String result = call_result.body().string();
 
-//                        try {
+                        try {
                             if(result.equals("fail")) {
                                 myapp.logAndToast("예외발생: " + result);
                                 final_rooms.clear();
@@ -180,25 +187,90 @@ public class Chat_F extends Fragment {
 //                                Log.d(TAG, "레트로핏_ 채팅방 리스트 결과: " + result);
                                 // 길이가 긴 JSONString 출력하기
                                 myapp.print_long_Json_logcat(result, TAG);
-//                                // jsonString --> jsonObject
-//                                JSONObject jsonObject = new JSONObject(result);
-//                                // jsonObject --> jsonArray
-//                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_CHAT_ROOM_LIST);
-//                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
-//
-//                                // jsonArray에서 jsonObject를 하나씩 가지고 와서,
-//                                // gson과 user 데이터클래스를 이용하여 user_arr에 add 하기
-//                                for(int i=0; i<jsonArray.length(); i++) {
-//                                    String jsonString = jsonArray.getJSONObject(i).toString();
-//                                    Gson gson = new Gson();
-//                                    Chat_room room = gson.fromJson(jsonString, Chat_room.class);
-//                                    final_rooms.add(room);
-//                                }
+                                // jsonString --> jsonObject
+                                JSONObject jsonObject = new JSONObject(result);
+                                // jsonObject --> jsonArray
+                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_CHAT_ROOM_LIST);
+                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+                                // jsonArray에서 jsonObject를 하나씩 가지고 와서, parsing 하기
+                                for(int i=0; i<jsonArray.length(); i++) {
+                                    String jsonString = jsonArray.getJSONObject(i).toString();
+                                    Log.d(TAG, "jsonString_ " + i + ": " + jsonString);
+
+                                    // Chat_room 객체안의 세부 ArrayList 객체들 생성
+                                    ArrayList<String> user_nickname_arr = new ArrayList<>();
+                                    ArrayList<String> user_img_filename_arr = new ArrayList<>();
+
+                                    // 채팅방 번호
+                                    int chatroom_no = jsonArray.getJSONObject(i).getInt("chatroom_no");
+                                    // 채팅방 방장 번호
+                                    int chat_room_authority_user_no = jsonArray.getJSONObject(i).getInt("chat_room_authority_user_no");
+                                    // 해당 채팅방의 마지막 메세지 번호
+                                    int last_msg_no = jsonArray.getJSONObject(i).getInt("last_msg_no");
+                                    // 해당 채팅방의 메시지들 중에서 내가 안 읽은 메세지의 개수
+                                    int unread_msg_count = jsonArray.getJSONObject(i).getInt("unread_msg_count");
+                                    // 채팅방 제목
+                                    String chat_room_title = jsonArray.getJSONObject(i).getString("chat_room_title");
+
+                                    Log.d(TAG, "chatroom_no: " + chatroom_no);
+                                    Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
+                                    Log.d(TAG, "last_msg_no: " + last_msg_no);
+                                    Log.d(TAG, "unread_msg_count: " + unread_msg_count);
+
+                                    // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+                                    Gson gson = new Gson();
+
+                                    // 'user_ob' JSONString을 JSONObect로 파싱
+                                    JSONArray jsonArray_for_user = new JSONArray(jsonArray.getJSONObject(i).getString("user_ob"));
+                                    Log.d(TAG, "jsonArray_for_user.toString(): " + jsonArray_for_user.toString());
+                                    Log.d(TAG, "jsonArray_for_user.length(): " + jsonArray_for_user.length());
+
+                                    // gson 이용해서 user 객체로 변환해서, 그 user 객체 안에서 닉네임과, 이미지 URL 값을 가져와서,
+                                    // 각 ArrayList 값에 add 한다
+                                    for(int k=0; k<jsonArray_for_user.length(); k++) {
+                                        Users user = gson.fromJson(jsonArray_for_user.get(k).toString(), Users.class);
+                                        Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
+                                        Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+                                        user_nickname_arr.add(user.getUser_nickname());
+                                        user_img_filename_arr.add(user.getUser_img_filename());
+                                    }
+
+                                    // 채팅방 마지막 메세지, JSONArray를 파싱
+                                    JSONArray jsonArray_for_last_log = jsonArray.getJSONObject(i).getJSONArray("last_chat_log_ob");
+                                    Log.d(TAG, "jsonArray_for_last_log.toString(): " + jsonArray_for_last_log.toString());
+                                    Log.d(TAG, "jsonArray_for_last_log.length(): " + jsonArray_for_last_log.length());
+
+                                    // Chat_log 객체 생성
+                                    Chat_log last_chat_log = new Chat_log();
+
+                                    // 채팅방 마지막 메세지가 있는지 확인하기
+                                    if(jsonArray_for_last_log.length() > 0) {
+                                        last_chat_log = gson.fromJson(String.valueOf(jsonArray_for_last_log), Chat_log.class);
+                                    }
+                                    else if(jsonArray_for_last_log.length() == 0) {
+                                        Log.d(TAG, "last_chat_log is NULL ");
+                                    }
+
+                                    /** Chat_room 객체에 데이터 넣기 */
+                                    Chat_room room = new Chat_room();
+                                    room.setChatroom_no(chatroom_no);
+                                    room.setLast_msg_no(last_msg_no);
+                                    room.setUser_nickname_arr(user_nickname_arr);
+                                    room.setUser_img_filename_arr(user_img_filename_arr);
+                                    if(jsonArray_for_last_log.length() > 0) {
+                                        room.setLast_log(last_chat_log);
+                                    }
+                                    room.setUnread_msg_count(unread_msg_count);
+                                    room.setChat_room_title(chat_room_title);
+
+                                    final_rooms.add(room);
+                                }
                             }
 
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                         return final_rooms;
                     }
                     catch (IOException e) {
