@@ -11,7 +11,7 @@ public class Event {
 
     /** 이벤트
      *    Main_after_login_A --> Partner_F
-     *    : 파트너 리스트를 서버로부터 받아 리사이클러뷰를 갱신
+     *    : 파트너 리스트를 서버로부터 받아 리사이클러뷰를 갱신하라는 이벤트 메시지를 전달
      * */
     public static class Main_after_login_A__Partner_F {
         private String message;
@@ -27,10 +27,27 @@ public class Event {
 
 
     /** 이벤트
+     *    Main_after_login_A --> Chat_F
+     *    : 채팅방 리스트를 서버로부터 받아 리사이클러뷰를 갱신하라는 이벤트 메시지를 전달
+     * */
+    public static class Main_after_login_A__Chat_F {
+        private String message;
+
+        public Main_after_login_A__Chat_F(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+
+    /** 이벤트
      *    Call_A --> Call_F
      *    : 이 메소드를 통해 여러 기능이 작동하는데,
-     *    1) 사용자가 선택하는 포맷의 종류에 따라 로컬 파일들을 가져와서 리스트를 보여줌
-     *    2) 업로드 확인을 받는 다이얼로그로 부터 '예, 아니오'를 선택받아, 그에 따른 로직을 진행
+     *    1) 사용자가 선택하는 포맷의 종류에 따라 로컬 파일들을 가져와서 리스트를 보여주라는 이벤트 메시지를 전달
+     *    2) 업로드 확인을 받는 다이얼로그로 부터 '예, 아니오'를 선택받아, 그에 따른 로직을 진행하라는 이벤트 메시지를 전달
      *    (1번째 파라미터인 'message'를 통해 위 상황을 구별한다)
      * */
     public static class Call_A__Call_F {
@@ -54,7 +71,7 @@ public class Event {
 
     /** 이벤트
      *    Main_after_login_A --> Profile_F
-     *    : 이미지 셋팅 이벤트를 전달한다
+     *    : 이미지 셋팅하라는 이벤트 메시지를 전달
      * */
     public static class Main_after_login_A__Profile_F {
         private String message;
@@ -71,29 +88,6 @@ public class Event {
 
         public String getData() {
             return data;
-        }
-    }
-
-
-    /** 이벤트
-     *    RCV_chat_adapter --> Chat_A
-     *    : Chat_room 객체를 전달한다
-     * */
-    public static class RCV_chat_adapter__Chat_A {
-        private String message;
-        private Chat_room chat_room;
-
-        public RCV_chat_adapter__Chat_A(String message, Chat_room chat_room) {
-            this.message = message;
-            this.chat_room = chat_room;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public Chat_room getChat_room() {
-            return chat_room;
         }
     }
 

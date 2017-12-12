@@ -62,6 +62,9 @@ public class Chat_A extends Activity {
         // otto 등록
         BusProvider.getBus().register(this);
 
+        Intent intent = getIntent();
+        String from = intent.getStringExtra("from");
+
         // CachePot 이용해서 room 객체 받아오기
         chat_room = CachePot.getInstance().pop("chat_room");
         CachePot.getInstance().clear("chat_room");
@@ -69,8 +72,17 @@ public class Chat_A extends Activity {
         Log.d(TAG, "getChat_room_title(): " + chat_room.getChat_room_title());
         Log.d(TAG, "getUser_nickname_arr().toString(): " + chat_room.getUser_nickname_arr().toString());
         Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
-        Log.d(TAG, "getLast_msg_no(): " + chat_room.getLast_msg_no());
-        Log.d(TAG, "getTransmission_time_for_local(): " + chat_room.getTransmission_time_for_local());
+
+        // 채팅방 리스트로부터 채팅방을 열었을 때
+        if(from.equals("list")) {
+            Log.d(TAG, "채팅방 리스트로부터 채팅방을 열었다!");
+        }
+        // 상대방 프로필로부터 채팅방을 열었을 때
+        else if(from.equals("profile")) {
+            Log.d(TAG, "상대방 프로필로로부터 채팅방을 열었다!");
+        }
+
+
 
         // inner 메소드 호출
         set_title_and_counting();
@@ -86,8 +98,13 @@ public class Chat_A extends Activity {
         chat_room_title = chat_room.getChat_room_title();
         nickName_for_setting = "";
 
-        // 1:1 채팅일 떄
-        if(chat_room.getUser_img_filename_arr().size() == 2) {
+        // 1:1 채팅일 때 - 상대방 프로필로부터 들어왔을 때
+        if(chat_room.getUser_img_filename_arr().size() == 1) {
+            nickName_for_setting = chat_room.getUser_nickname_arr().get(0);
+        }
+
+        // 1:1 채팅일 때 - 채팅방 리스트로부터 들어왔을 때
+        else if(chat_room.getUser_img_filename_arr().size() == 2) {
             // 닉네임
             if(chat_room.getUser_nickname_arr().get(0).equals(myapp.getUser_nickname())) {
                 nickName_for_setting = chat_room.getUser_nickname_arr().get(1);

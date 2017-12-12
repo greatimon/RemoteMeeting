@@ -20,12 +20,14 @@ import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
 import com.google.gson.Gson;
+import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -107,6 +109,19 @@ public class Chat_F extends Fragment {
         activate_RCV();
 
         return controlView;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     otto ==> Main_after_login_A로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage(Event.Main_after_login_A__Chat_F event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+        if(event.getMessage().equals("activate_RCV")) {
+            // 리사이클러뷰 동작 메소드 호출
+            activate_RCV();
+        }
     }
 
 

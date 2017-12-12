@@ -96,12 +96,14 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
                     Log.d(TAG, "채팅방의 마지막 메세지 전송 시각: " + rooms.get(pos).getTransmission_time_for_local());
                     Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + rooms.get(pos).getUnread_msg_count());
 
-                    // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
+                    // TODO: 해당 채팅방 액티비티로 이동
                     // CachePot 이용해서 클릭한 rooms 객체 전달
                     CachePot.getInstance().push("chat_room", rooms.get(pos));
 
                     // Chat_A 액티비티(채팅방) 열기
+                    // 채팅방 리스트로부터 채팅방을 여는 것임을 intent 값으로 알린다
                     Intent intent = new Intent(context, Chat_A.class);
+                    intent.putExtra("from", "list");
                     ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_CHAT_ROOM);
                 }
             });

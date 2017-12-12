@@ -23,6 +23,9 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.example.jyn.remotemeeting.Adapter.Main_viewpager_adapter;
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
+import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -37,6 +40,8 @@ import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
+import com.github.kimkevin.cachepot.CachePot;
+import com.google.gson.Gson;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -62,6 +67,7 @@ import retrofit2.Response;
 public class Main_after_login_A extends AppCompatActivity implements TabLayout.OnTabSelectedListener {
 
     private static final String TAG = "all_"+Main_after_login_A.class.getSimpleName();
+    String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
     private static final int CONNECTION_REQUEST = 1;
     public static int REQUEST_SEARCH_PARTNER = 1318;
     public static int REQUEST_SHOW_PROFILE_DETAIL = 7894;
@@ -751,12 +757,90 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         }
     }
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> 프로필 상세보기에서 1:1 채팅 버튼을 눌렀을 때,
+               서버로부터 방 정보에 대한 jsonString을 받아서 Chat_room 객체 형식에 맞게 변환하고
+               CachePot 이용 해서 Chat_room 객체를 전달한 뒤, 채팅방 액티비티로 이동
+     ---------------------------------------------------------------------------*/
+    public void form_to_chat_room_ob(String result_jsonString) {
+        try {
+            // jsonString --> jsonObject
+            JSONObject jsonObject = new JSONObject(result_jsonString);
+            // jsonObject --> jsonArray
+            JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_CHAT_ROOM_LIST);
+            Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+            String temp = jsonArray.getJSONObject(0).toString();
+            Log.d(TAG, "jsonString: " + temp);
+
+            // Chat_room 객체안의 세부 ArrayList 객체들 생성
+            ArrayList<String> user_nickname_arr = new ArrayList<>();
+            ArrayList<String> user_img_filename_arr = new ArrayList<>();
+
+            // 1. 채팅방 번호
+            int chatroom_no = jsonArray.getJSONObject(0).getInt("chatroom_no");
+            // 채팅방 방장 번호
+            int chat_room_authority_user_no = jsonArray.getJSONObject(0).getInt("chat_room_authority_user_no");
+            // 2. 채팅방 제목
+            String chat_room_title = jsonArray.getJSONObject(0).getString("chat_room_title");
+
+            Log.d(TAG, "chatroom_no: " + chatroom_no);
+            Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
+            Log.d(TAG, "chat_room_title: " + chat_room_title);
+
+            // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+            Gson gson = new Gson();
+
+            // 3. user 정보를 가지고 있는 JsonString을 가져와서 gson을 이용해서 user 객체로 변환
+            String temp1 =  jsonArray.getJSONObject(0).getString("user_ob");
+            Users user = gson.fromJson(temp1, Users.class);
+            Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
+            Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+
+            // 변환한 user 객체에서 닉네임과 이미지 URL 값을 가져와서 해당 ArrayList 에 add.
+            user_nickname_arr.add(user.getUser_nickname());
+            user_img_filename_arr.add(user.getUser_img_filename());
+
+            /** Chat_room 객체에 데이터 넣기 */
+            Chat_room room = new Chat_room();
+            room.setChatroom_no(chatroom_no);
+            room.setUser_nickname_arr(user_nickname_arr);
+            room.setUser_img_filename_arr(user_img_filename_arr);
+            room.setChat_room_title(chat_room_title);
+
+            // TODO: 채팅방 액티비티로 이동
+            // CachePot 이용해서 클릭한 rooms 객체 전달
+            CachePot.getInstance().push("chat_room", room);
+
+            // Chat_A 액티비티(채팅방) 열기
+            // 상대방 프로필로부터 채팅방을 여는 것임을 intent 값으로 알린다
+            Intent intent = new Intent(getBaseContext(), Chat_A.class);
+            intent.putExtra("from", "profile");
+            startActivityForResult(intent, REQUEST_CHAT_ROOM);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+
 
     /**---------------------------------------------------------------------------
      오버라이드 ==> onActivityResult
      ---------------------------------------------------------------------------*/
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // 채팅방 액티비티에서 돌아왔을 때
+        if(requestCode==REQUEST_CHAT_ROOM) {
+            viewpager.setCurrentItem(2);
+            /** otto 를 통해, Chat_F로 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
+            Event.Main_after_login_A__Chat_F event = new Event.Main_after_login_A__Chat_F("activate_RCV");
+            BusProvider.getBus().post(event);
+            Log.d(TAG, "otto 전달_ onActivityResult");
+        }
+
         // 파트너 검색 액티비티에서 돌아왔을 때
         if(requestCode==REQUEST_SEARCH_PARTNER) {
             viewpager.setCurrentItem(1);
@@ -794,23 +878,29 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                 Log.d(TAG, "retrofit_result_ 1:1 채팅방 생성 fail" + retrofit_result);
                             }
 
+                            // 레트로핏 결과가 'fail'이 아니라면,
                             else if(!retrofit_result.equals("fail")) {
-                                String[] temp = retrofit_result.split(Static.SPLIT);
-                                // 이미 채팅방이 존재할 때
-                                if(temp[0].equals("overlap")) {
-                                    Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
-                                    Log.d(TAG, "retrofit_result_ 존재하는 채팅방 번호: " + temp[1]);
-                                }
-                                // 존재하는 채팅방이 없을 때
-                                else if(!temp[0].equals("overlap")) {
-                                    Log.d(TAG, "retrofit_result_ 채팅방 신규 생성!!");
-                                    Log.d(TAG, "retrofit_result_ 채팅방 상대 user_no: " + temp[0]);
-                                    Log.d(TAG, "retrofit_result_ 생성한 채팅방 번호: " + temp[1]);
-                                }
+                                // SPLIT 상수를 포함하고 있다면, 채팅방이 이미 있는 것임
+                                if(retrofit_result.contains(Static.SPLIT)) {
+                                    String[] temp = retrofit_result.split(Static.SPLIT);
+                                    // 이미 채팅방이 존재할 때
+                                    if(temp[0].equals("overlap")) {
+                                        Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
+                                        Log.d(TAG, "temp[1]: " + temp[1]);
 
-                                // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
-                                Intent intent = new Intent(getBaseContext(), Chat_A.class);
-                                startActivityForResult(intent, REQUEST_CHAT_ROOM);
+                                        // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
+                                        // 그리고, 채팅방 액티비티로 이동함
+                                        form_to_chat_room_ob(temp[1]);
+                                    }
+
+                                }
+                                // SPLIT 상수를 포함하고 있지 않다면, 채팅방을 생성한 것임
+                                else {
+                                    Log.d(TAG, "retrofit_result: " + retrofit_result);
+                                    // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
+                                    // 그리고, 채팅방 액티비티로 이동함
+                                    form_to_chat_room_ob(retrofit_result);
+                                }
                             }
 
 
@@ -983,48 +1073,6 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 //            got_out_from_meeting();
         }
 
-    }
-
-
-    /**---------------------------------------------------------------------------
-     메소드 ==> 회의 종료하고 돌아왔을 때, 여러 정보 그에 맞게 업데이트 -- Call_A: onDestroy() 부분으로 이동
-     ---------------------------------------------------------------------------*/
-    public void got_out_from_meeting() {
-        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
-        Call<ResponseBody> call_result = rs.got_out_from_meeting(
-                Static.GOT_OUT_FROM_MEETING,
-                myapp.getUser_no(), myapp.getMeeting_no());
-        call_result.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    String retrofit_result = response.body().string();
-                    Log.d(TAG, "GOT_OUT_FROM_MEETING_result: "+retrofit_result);
-
-                    if(retrofit_result.equals("success")) {
-                        // 내 회의 정보 정보 변경
-                        myapp.setPresent_meeting_in_ornot("");
-                        myapp.setMeeting_no("");
-                        myapp.setReal_meeting_title("");
-                        myapp.setMeeting_creator_user_no("");
-                        myapp.setMeeting_subject_user_no("");
-                        myapp.setMeeting_authority_user_no("");
-                        myapp.setProject_no("");
-                        myapp.setMeeting_status("");
-                    }
-                    else if(retrofit_result.equals("fail")) {
-                        myapp.logAndToast("onResponse_fail" + response.errorBody().string());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                myapp.logAndToast("onFailure_result" + t.getMessage());
-            }
-        });
     }
 
 
