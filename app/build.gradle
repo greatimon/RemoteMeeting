@@ -75,4 +75,7 @@ dependencies {
     /** PDF BOX  */
     compile 'com.tom_roush:pdfbox-android:1.8.9.1'
 
+    /** cachePot - 안드로이드 요소간 객체 전달하기 위해 사용함 */
+    compile 'com.github.kimkevin:cachepot:1.2.0'
+
 }

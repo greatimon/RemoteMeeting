@@ -11,8 +11,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
+import android.widget.SectionIndexer;
 import android.widget.Toast;
 
 import com.example.jyn.remotemeeting.DataClass.File_info;
@@ -34,6 +33,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,7 +46,6 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -98,6 +97,7 @@ public class Myapp extends Application {
     public String present_meeting_in_ornot = "";
     public String user_img_filename = "";
 
+    /** 프로필 변경에서 사용하는 임시 변수 */
     public String temp_nickname="";
     public String temp_img_filename="";
     public String temp_img_absolutePath="";
@@ -1139,5 +1139,10 @@ public class Myapp extends Application {
         } catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
     }
 }

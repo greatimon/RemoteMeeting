@@ -2,13 +2,14 @@ package com.example.jyn.remotemeeting.DataClass;
 
 import com.example.jyn.remotemeeting.Util.Myapp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Created by JYN on 2017-12-09.
  */
 
-public class Chat_room {
+public class Chat_room implements Serializable {
 
     private int chatroom_no;
     private int last_msg_no;

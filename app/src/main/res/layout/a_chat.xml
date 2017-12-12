@@ -3,84 +3,145 @@
     android:id="@+id/main_layout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:wheel="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
 
-    <!--상단 액션바-->
+    <!--채팅 레이아웃-->
     <LinearLayout
-        android:id="@+id/actionBar"
+        android:id="@+id/chatting_layout"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:background="#4caf50"
-        android:gravity="center|start">
-        <ImageView
-            android:id="@+id/back"
-            android:layout_width="50dp"
-            android:layout_height="match_parent"
-            android:onClick="backClicked"
-            android:padding="13dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/left_arrow_1"
-            android:clickable="true"/>
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center_vertical|start"
-            android:singleLine="true"
-            android:ellipsize="end"
-            tools:text="그레아티, 티몬, 아이언맨, 토르, 캡틴 아메리카"
-            android:textColor="#FFFFFF"
-            android:textSize="17dp"
-            />
-        <TextView
-            android:visibility="gone"
-            tools:visibility="visible"
-            android:id="@+id/counting"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            tools:text="21"
-            android:textColor="#e3e03f"
-            android:textSize="17dp"
-            />
-
-        <ImageView
-            android:id="@+id/setting"
-            android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+        <!--상단 액션바-->
+        <LinearLayout
+            android:id="@+id/actionBar"
+            android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:padding="13dp"
-            android:src="@drawable/chat_menu_1"/>
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:background="#4caf50"
+            android:gravity="center|start">
+            <ImageView
+                android:id="@+id/back"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/left_arrow_1"/>
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:maxWidth="200dp"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical|start"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="그레아티, 티몬, 토르, 아이언맨, 캡틴 아메리카, 블랙 위도우"
+                android:textColor="#FFFFFF"
+                android:textSize="15dp"
+                />
+            <TextView
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:id="@+id/counting"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="4dp"
+                tools:text="21"
+                android:textColor="#e3e03f"
+                android:textSize="17dp"
+                />
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                />
+
+            <ImageView
+                android:id="@+id/setting"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="16dp"
+                android:src="@drawable/chat_menu_1"/>
+        </LinearLayout>
+        <!--상단 액션바-->
+
+        <!--약간 검은색 표시하는 View-->
+        <View
+            android:id="@+id/gradient"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="@drawable/shape_shadow"
+            />
+
+        <!--채팅 리사이클러뷰-->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="5dp"
+            >
+        </android.support.v7.widget.RecyclerView>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="#cecece"
+            />
+
+        <!--채팅 입력 창 UI-->
+        <LinearLayout
+            android:id="@+id/message_input_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:layout_gravity="center|bottom"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="horizontal"
+            android:paddingBottom="6dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="6dp">
+
+            <ImageView
+                android:id="@+id/attach"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:padding="8dp"
+                android:layout_gravity="center|bottom"
+                android:layout_marginEnd="2dp"
+                android:src="@drawable/attach_3"
+                android:scaleType="centerInside"/>
+
+            <EditText
+                android:id="@+id/send_msg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:minHeight="38dp"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:maxLines="4"
+                android:scrollbars="vertical"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/send_btn"
+                android:layout_width="50dp"
+                android:layout_height="38dp"
+                android:gravity="center"
+                android:layout_gravity="center|bottom"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="전송"
+                android:textColor="#999999"/>
+        </LinearLayout>
     </LinearLayout>
-    <!--상단 액션바-->
-
-    <!--약간 검은색 표시하는 View-->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="5dp"
-        android:layout_below="@+id/actionBar"
-        android:background="@drawable/shape_shadow"
-        />
-
-
-
-
-    <com.pnikosis.materialishprogress.ProgressWheel
-        android:visibility="gone"
-        tools:visibility="gone"
-        android:id="@+id/progress_wheel"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_centerHorizontal="true"
-        android:layout_centerInParent="true"
-        wheel:matProg_barColor="#4CAF50"
-        wheel:matProg_progressIndeterminate="true"/>
-
 </RelativeLayout>

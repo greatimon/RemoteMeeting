@@ -1,6 +1,8 @@
 package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,10 +14,15 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.Activity.Chat_A;
+import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.github.kimkevin.cachepot.CachePot;
 
 import java.util.ArrayList;
 
@@ -90,6 +97,12 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
                     Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + rooms.get(pos).getUnread_msg_count());
 
                     // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
+                    // CachePot 이용해서 클릭한 rooms 객체 전달
+                    CachePot.getInstance().push("chat_room", rooms.get(pos));
+
+                    // Chat_A 액티비티(채팅방) 열기
+                    Intent intent = new Intent(context, Chat_A.class);
+                    ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_CHAT_ROOM);
                 }
             });
         }

@@ -82,6 +82,23 @@
             tools:ignore="InnerclassSeparator">
         </activity>
 
+        // 채팅 액티비티
+        <activity
+            android:name=".Activity.Chat_A"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="InnerclassSeparator">
+        </activity>
+
+        // 채팅 슬라이드 메뉴
+        <activity
+            android:name=".Dialog.Chat_draw_menu_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // 프로필 자세히 보기
         <activity
             android:name=".Dialog.Profile_detail_D"

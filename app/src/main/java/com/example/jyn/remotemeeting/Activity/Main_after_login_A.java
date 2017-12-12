@@ -46,6 +46,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import okhttp3.RequestBody;
@@ -70,6 +71,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     public static int REQUEST_CHOOSE_OR_NOT = 2367;
     public static int REQUEST_CREATE_ROOM = 1235;
     public static int REQUEST_ENTER_ROOM = 9862;
+    public static int REQUEST_CHAT_ROOM = 8548;
     private SharedPreferences sharedPref;
     String JSON_TAG = "am_i_invited";
     Myapp myapp;
@@ -787,25 +789,30 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                             String retrofit_result = response.body().string();
                             Log.d(TAG, "1:1 채팅방 생성 관련 retrofit_result: "+retrofit_result);
 
-                            // TODO: 채팅방 Activity 만들어서 이동시키기
-
                             // 오류
                             if(retrofit_result.equals("fail")) {
                                 Log.d(TAG, "retrofit_result_ 1:1 채팅방 생성 fail" + retrofit_result);
                             }
 
-                            String[] temp = retrofit_result.split(Static.SPLIT);
-                            // 이미 채팅방이 존재할 때
-                            if(temp[0].equals("overlap")) {
-                                Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
-                                Log.d(TAG, "retrofit_result_ 존재하는 채팅방 번호: " + temp[1]);
+                            else if(!retrofit_result.equals("fail")) {
+                                String[] temp = retrofit_result.split(Static.SPLIT);
+                                // 이미 채팅방이 존재할 때
+                                if(temp[0].equals("overlap")) {
+                                    Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
+                                    Log.d(TAG, "retrofit_result_ 존재하는 채팅방 번호: " + temp[1]);
+                                }
+                                // 존재하는 채팅방이 없을 때
+                                else if(!temp[0].equals("overlap")) {
+                                    Log.d(TAG, "retrofit_result_ 채팅방 신규 생성!!");
+                                    Log.d(TAG, "retrofit_result_ 채팅방 상대 user_no: " + temp[0]);
+                                    Log.d(TAG, "retrofit_result_ 생성한 채팅방 번호: " + temp[1]);
+                                }
+
+                                // TODO: 클릭 시, 해당 채팅방 액티비티로 이동
+                                Intent intent = new Intent(getBaseContext(), Chat_A.class);
+                                startActivityForResult(intent, REQUEST_CHAT_ROOM);
                             }
-                            // 존재하는 채팅방이 없을 때
-                            else if(!temp[0].equals("overlap")) {
-                                Log.d(TAG, "retrofit_result_ 채팅방 신규 생성!!");
-                                Log.d(TAG, "retrofit_result_ 채팅방 상대 user_no: " + temp[0]);
-                                Log.d(TAG, "retrofit_result_ 생성한 채팅방 번호: " + temp[1]);
-                            }
+
 
                         } catch (IOException e) {
                             e.printStackTrace();

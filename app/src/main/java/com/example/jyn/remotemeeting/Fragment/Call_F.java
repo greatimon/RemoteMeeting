@@ -557,7 +557,7 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     otto ==> Myapp로 부터 message 수신 -- PDF 컨버팅 관련
+     otto ==> Myapp로 부터 message 수신 -- PDF 컨버팅 +  업로드 관련
      ---------------------------------------------------------------------------*/
     @SuppressLint("SetTextI18n")
     @Subscribe
