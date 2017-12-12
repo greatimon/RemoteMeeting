@@ -834,7 +834,16 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // 채팅방 액티비티에서 돌아왔을 때
         if(requestCode==REQUEST_CHAT_ROOM) {
-            viewpager.setCurrentItem(2);
+            // 채팅방 액티비티를 어디에서 열었는지 확인해서, 해당 'from'에 해당하는 뷰페이저 페이지를 보여주기
+            String from = data.getStringExtra("from");
+            Log.d(TAG, "from: " + from);
+            if(from.equals("list")) {
+                viewpager.setCurrentItem(2);
+            }
+            else if(from.equals("profile")) {
+                viewpager.setCurrentItem(1);
+            }
+
             /** otto 를 통해, Chat_F로 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
             Event.Main_after_login_A__Chat_F event = new Event.Main_after_login_A__Chat_F("activate_RCV");
             BusProvider.getBus().post(event);

@@ -271,11 +271,14 @@ public class Partner_F extends Fragment {
         }
         // 어플리케이션 객체 null 처리
         myapp = null;
-        super.onDestroyView();
         // otto 해제
         BusProvider.getBus().unregister(this);
+
+        // onDestroyView() 시에 어댑터를 null 처리 해주어야,
+        // 다음 onCreateView 시에 제대로 뷰에 채팅방 리스트가 나온다
         rcv_partner_adapter = null;
 
+        super.onDestroyView();
     }
 
     @Override

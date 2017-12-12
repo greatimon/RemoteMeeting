@@ -35,6 +35,7 @@ public class Chat_A extends Activity {
     int member_count;
     String chat_room_title;
     String nickName_for_setting;
+    String from;
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -63,7 +64,7 @@ public class Chat_A extends Activity {
         BusProvider.getBus().register(this);
 
         Intent intent = getIntent();
-        String from = intent.getStringExtra("from");
+        from = intent.getStringExtra("from");
 
         // CachePot 이용해서 room 객체 받아오기
         chat_room = CachePot.getInstance().pop("chat_room");
@@ -152,11 +153,35 @@ public class Chat_A extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> back 클릭 -- onBackPressed 연결
+     클릭이벤트 ==> back 클릭 -- setResult_and_finish() 메소드 호출
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
     public void back() {
-        onBackPressed();
+        setResult_and_finish();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     오버라이드 ==> onBackPressed -- setResult_and_finish() 메소드 호출
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onBackPressed() {
+        setResult_and_finish();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==>
+            -- 상대방 프로필로부터 들어는지, 채팅방 리스트로 들어왔는지,
+            -- 그 경로가 담긴 값을 intent로 넣어 반환함
+            -- Main_after_login_A 액티비티에서 해당 'from'에 해당하는 뷰페이저 페이지를 보여주기 위함
+     ---------------------------------------------------------------------------*/
+    public void setResult_and_finish() {
+        Intent intent = new Intent();
+        intent.putExtra("from", from);
+        Log.d(TAG, "from: " + from);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
 

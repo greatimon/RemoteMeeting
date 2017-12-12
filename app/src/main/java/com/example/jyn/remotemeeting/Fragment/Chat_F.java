@@ -358,6 +358,11 @@ public class Chat_F extends Fragment {
         myapp = null;
         // otto 해제
         BusProvider.getBus().unregister(this);
+
+        // onDestroyView() 시에 어댑터를 null 처리 해주어야,
+        // 다음 onCreateView 시에 제대로 뷰에 채팅방 리스트가 나온다
+        rcv_chat_adapter = null;
+
         super.onDestroyView();
     }
 
