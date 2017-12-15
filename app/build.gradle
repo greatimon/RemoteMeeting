@@ -15,6 +15,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -65,6 +66,6 @@ dependencies {
     compile 'com.tom_roush:pdfbox-android:1.8.9.1'
     /** cachePot - 안드로이드 요소간 객체 전달하기 위해 사용함 */
     compile 'com.github.kimkevin:cachepot:1.2.0'
-    implementation project(':netty-all-4.1.17.Final')
-    implementation project(':netty-all-4.1.17.Final-sources')
+    /** Netty */
+    compile 'io.netty:netty-all:4.1.18.Final'
 }

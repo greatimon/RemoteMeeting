@@ -4,6 +4,7 @@ package com.example.jyn.remotemeeting.DataClass;
  * Created by JYN on 2017-12-09.
  */
 
+// 서버쪽 데이터 클래스 이름은 'Message' 로 네이밍 되어 있음
 public class Chat_log {
     private int chat_log_no;
     private int chatroom_no;
@@ -13,7 +14,7 @@ public class Chat_log {
     private String content;
     private String attachment;
     private int target_read_count;
-    private int curent_read_count;
+    private int current_read_count;
 
     public Chat_log() {}
 
@@ -81,11 +82,11 @@ public class Chat_log {
         this.target_read_count = target_read_count;
     }
 
-    public int getCurent_read_count() {
-        return curent_read_count;
+    public int getCurrent_read_count() {
+        return current_read_count;
     }
 
-    public void setCurent_read_count(int curent_read_count) {
-        this.curent_read_count = curent_read_count;
+    public void setCurrent_read_count(int current_read_count) {
+        this.current_read_count = current_read_count;
     }
 }

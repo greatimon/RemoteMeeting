@@ -1,9 +1,12 @@
 package com.example.jyn.remotemeeting.Util;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,13 +14,14 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.SectionIndexer;
 import android.widget.Toast;
 
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
+import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
@@ -33,7 +37,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 
+import io.netty.channel.Channel;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -102,7 +106,7 @@ public class Myapp extends Application {
     public String temp_img_filename="";
     public String temp_img_absolutePath="";
 
-    /** 참여 회의 정보 */
+    /** 참여중인 회의 정보 */
     public String meeting_no = "";
     public String real_meeting_title = "";
     public String meeting_creator_user_no = "";
@@ -111,6 +115,11 @@ public class Myapp extends Application {
     public String project_no = "";
     public String meeting_status = "";
 
+    /** 참여중인 채팅방 정보 */
+    public int chatroom_no = -1;
+
+    /** Netty - Channel : 서비스 구동 후, 서버와 연결된 channel을 어플리케이션 객체에 보관*/
+    Channel channel;
 
     /** GET, SET */
     public String getUser_no() {
@@ -234,6 +243,22 @@ public class Myapp extends Application {
         return files_for_upload;
     }
 
+    public int getChatroom_no() {
+        return chatroom_no;
+    }
+
+    public void setChatroom_no(int chatroom_no) {
+        this.chatroom_no = chatroom_no;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
+    }
+
     /** 생명주기 - onCreate */
     @Override
     public void onCreate() {
@@ -293,7 +318,9 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 내 user 객체 정보 저장
+     메소드 ==> 내 user 객체 정보 저장 -- 정상적으로 로그인이 완료 됐을 때,
+                서버로부터 내 정보를 받아와서 어플리케이션 객체에 정보 저장
+                + netty 서버 접속 서비스 구동
      ---------------------------------------------------------------------------*/
     public void set_myInfo(JSONObject user_object) {
         try {
@@ -311,9 +338,26 @@ public class Myapp extends Application {
             Log.d(TAG, "user_nickname: " + user_nickname);
             Log.d(TAG, "present_meeting_in_ornot: " + present_meeting_in_ornot);
             Log.d(TAG, "user_img_filename: " + user_img_filename);
+
+            /** 채팅 서버 접속 서비스 구동 메소드 호출 */
+            // 현재 서비스가 구동중인지 확인하는 메소드 호출 - 자세한 설명은 해당 메소드에 주석처리
+            if(!isServiceRunningCheck()) {
+                chat_server_conn_service_run();
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅 서버 접속 서비스 구동
+     ---------------------------------------------------------------------------*/
+    public void chat_server_conn_service_run() {
+        Intent serviceIntent = new Intent(this, Chat_service.class);
+        serviceIntent.putExtra("user_no", user_no);
+        startService(serviceIntent);
+        Log.d(TAG, "#채팅채팅#" + "채팅 서버 접속 서비스 구동");
     }
 
 
@@ -1139,6 +1183,52 @@ public class Myapp extends Application {
         } catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 현재 서비스가 구동중인지 확인하는 메소드 -- 로그인 user_no와 구동중인 서비스의 user_no 비교
+     ---------------------------------------------------------------------------*/
+    public boolean isServiceRunningCheck() {
+        // 액티비티 서비스에 대한 액티비티 매니저를 가져온다
+        ActivityManager manager = (ActivityManager) this.getSystemService(Activity.ACTIVITY_SERVICE);
+        // 가져온 서비스 목록을 돌면서 내 앱에서 구동하는 서비스 목록(Chat_service)와 일치하는지 확인한다
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            // Chat_service 가 구동중이라면
+            if (Chat_service.class.getName().equals(service.service.getClassName())) {
+                // 구동중인 Chat_service 의 user_no 와 로그인한 user_no가 일치하는지 확인한다, 일치할때만 true 반환
+                // 일치하지 않는다면, 다른 아이디로 로그인한 경우이므로 채팅 서버에 재접속하여, channel 정보를 변경/갱신한다
+                if(Chat_service.user_no.equals(user_no)) {
+                    Log.d(TAG, "#채팅채팅#" + "구동중인 서비스의 user_no와 로그인한 user_no가 일치함 --> 동일인 로그인");
+                    return true;
+                }
+                else {
+                    Log.d(TAG, "#채팅채팅#" + "구동중인 서비스의 user_no와 로그인한 user_no가 일치하지 않음 --> 다른 아이디로 로그인");
+                    // 현재 구동중인 서비스 중지시키기
+                    Chat_service.getInstance().stopSelf();
+                    // 현재 netty Channel 닫고, null 처리
+                    channel.close();
+                    channel = null;
+                    return false;
+                }
+            }
+        }
+        Log.d(TAG, "#채팅채팅#" + "Chat_service 미구동");
+        return false;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Netty 를 통해 연결된 서버로 통신메세지 보내기
+     ---------------------------------------------------------------------------*/
+    public void send_to_server(Data_for_netty data) {
+        if(!isServiceRunningCheck()) {
+            Log.d(TAG, "Netty 연결 없음");
+            return;
+        }
+        Gson gson = new Gson();
+        String data_string = gson.toJson(data);
+        getChannel().writeAndFlush(data_string);
     }
 
     @Override

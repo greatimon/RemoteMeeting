@@ -2,8 +2,11 @@ package com.example.jyn.remotemeeting.Activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -11,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Dialog.Chat_draw_menu_D;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.R;
@@ -48,6 +52,9 @@ public class Chat_A extends Activity {
     @BindView(R.id.send_btn)        TextView send_btn;
     @BindView(R.id.recyclerView)    RecyclerView recyclerView;
 
+    // 채팅 채널 - 테스트 코드
+//    ChannelFuture channelFuture;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -74,6 +81,10 @@ public class Chat_A extends Activity {
         Log.d(TAG, "getUser_nickname_arr().toString(): " + chat_room.getUser_nickname_arr().toString());
         Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
 
+        // 어플리케이션 객체: Myapp 에 채팅방 번호를 저장한다
+        myapp.setChatroom_no(chat_room.getChatroom_no());
+        Log.d(TAG, "myapp.setChatroom_no: " + myapp.getChatroom_no());
+
         // 채팅방 리스트로부터 채팅방을 열었을 때
         if(from.equals("list")) {
             Log.d(TAG, "채팅방 리스트로부터 채팅방을 열었다!");
@@ -83,12 +94,82 @@ public class Chat_A extends Activity {
             Log.d(TAG, "상대방 프로필로로부터 채팅방을 열었다!");
         }
 
+        /** 채팅 메세지 입력에 따른 '전송'버튼 활성화 여부_ 텍스트왓쳐 */
+        send_msg.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                int length = send_msg.getText().length();
+                String check_1 = send_msg.getText().toString();
+
+                String check_2 = check_1.replace(" ", "");
+                boolean check_3 = check_2.replace("\n","").equals("");
+
+                if(length==0) {
+                    send_btn.setClickable(false);
+                    send_btn.setTextColor(Color.parseColor("#999999"));
+                }
+                if(length>0) {
+                    if(check_3) {
+                        send_btn.setClickable(false);
+                        send_btn.setTextColor(Color.parseColor("#999999"));
+                    }
+                    else if(!check_3) {
+                        send_btn.setClickable(true);
+                        send_btn.setTextColor(Color.parseColor("#43A047"));
+                    }
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
 
-        // inner 메소드 호출
+        // 메소드 호출
         set_title_and_counting();
 
+        // 채팅 시작 메소드 호출 - 테스트 코드
+//        test();
     }
+
+    /** 채팅 테스트 코드 - 나중에 서비스로 돌릴 예정 */
+//    public void test() {
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                EventLoopGroup group = new NioEventLoopGroup();
+//
+//                try {
+//                    Bootstrap bootStrap = new Bootstrap();
+//                    bootStrap.group(group)
+//                            // 논블럭 방식 적용
+//                            .channel(NioSocketChannel.class)
+//                            .handler(new ChannelInitializer<SocketChannel>() {
+//                                @Override
+//                                public void initChannel(SocketChannel ch) throws Exception {
+//                                    ChannelPipeline pipeline = ch.pipeline();
+//                                    // String 인/디코더 (default인 UTF-8)
+//                                    pipeline.addLast(new StringEncoder(), new StringDecoder());
+//                                    // IO 이벤트 핸들러
+//                                    pipeline.addLast(new Chat_handler());
+//                                }
+//                            });
+//
+//                    channelFuture = bootStrap.connect("52.78.88.227", 8888).sync();
+//
+//                    channelFuture.channel().closeFuture().sync();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                } finally {
+//                    group.shutdownGracefully();
+//                }
+//            }
+//        });
+//        thread.start();
+//    }
 
 
     /**---------------------------------------------------------------------------
@@ -190,16 +271,25 @@ public class Chat_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.attach)
     public void attach() {
-        onBackPressed();
+
     }
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> send_btn 클릭 -- 메세지 전송
+     클릭이벤트 ==> send_btn 클릭 -- 메세지 전송 (through Netty)
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.send_btn)
     public void send_btn() {
-        onBackPressed();
+        String input_msg = send_msg.getText().toString();
+
+        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
+        Data_for_netty data = new Data_for_netty
+                .Builder("enter", "none", myapp.getUser_no())
+                .msg(input_msg)
+                .build();
+        myapp.send_to_server(data);
+
+//        myapp.getChannel().writeAndFlush(input_msg);
     }
 
 
@@ -245,5 +335,10 @@ public class Chat_A extends Activity {
         // otto 등록 해제
         BusProvider.getBus().unregister(this);
         super.onDestroy();
+
+//        // 채팅 채널 닫기 - 테스트 코드
+//        if(channelFuture != null) {
+//            channelFuture.channel().close();
+//        }
     }
 }

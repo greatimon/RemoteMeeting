@@ -29,6 +29,7 @@ import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
@@ -390,6 +391,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             }
         }
 
+        // 플로어 버튼 열려 있으면 닫기
         if(menuMultipleActions.isExpanded()) {
             menuMultipleActions.collapseImmediately();
         }
