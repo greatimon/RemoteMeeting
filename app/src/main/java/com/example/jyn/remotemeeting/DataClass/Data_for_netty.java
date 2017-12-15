@@ -16,7 +16,7 @@ public class Data_for_netty {
     private final String subType;         // 소분류
     private final String user_no;         // 내 user_no
     private final String target_user_no;  // 타켓 user_no
-    private final String msg;             // 채팅 메세지라면, 그 내용
+    private final Chat_log chat_log;      // 채팅 메세지라면, 그 객체
     private final String attachment;      // 첨부파일 정보
     private final String extra;           // 스페어용 변수
 
@@ -26,7 +26,7 @@ public class Data_for_netty {
         private final String subType;
         private final String user_no;
         private String target_user_no;
-        private String msg;
+        private Chat_log chat_log;
         private String attachment;
         private String extra;
 
@@ -40,8 +40,8 @@ public class Data_for_netty {
             this.target_user_no = target_user_no;
             return this;
         }
-        public Builder msg(String msg){
-            this.msg = msg;
+        public Builder chat_log(Chat_log chat_log){
+            this.chat_log = chat_log;
             return this;
         }
         public Builder attachment(String attachment){
@@ -63,8 +63,36 @@ public class Data_for_netty {
         subType = builder.subType;
         user_no = builder.user_no;
         target_user_no = builder.target_user_no;
-        msg = builder.msg;
+        chat_log = builder.chat_log;
         attachment = builder.attachment;
         extra = builder.extra;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getSubType() {
+        return subType;
+    }
+
+    public String getUser_no() {
+        return user_no;
+    }
+
+    public String getTarget_user_no() {
+        return target_user_no;
+    }
+
+    public Chat_log getChat_log() {
+        return chat_log;
+    }
+
+    public String getAttachment() {
+        return attachment;
+    }
+
+    public String getExtra() {
+        return extra;
     }
 }

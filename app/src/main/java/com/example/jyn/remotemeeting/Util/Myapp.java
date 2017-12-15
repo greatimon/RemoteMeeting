@@ -21,6 +21,7 @@ import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
+import com.example.jyn.remotemeeting.Netty.Chat_handler;
 import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
@@ -44,7 +45,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 
+import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -341,9 +351,47 @@ public class Myapp extends Application {
 
             /** 채팅 서버 접속 서비스 구동 메소드 호출 */
             // 현재 서비스가 구동중인지 확인하는 메소드 호출 - 자세한 설명은 해당 메소드에 주석처리
-            if(!isServiceRunningCheck()) {
-                chat_server_conn_service_run();
-            }
+//            if(!isServiceRunningCheck()) {
+//                chat_server_conn_service_run();
+//            }
+
+            /** 테스트 코드 - 테스트 중으로, 로그인할 때마다 서비스를 다시 돌리는 것으로 변경 */
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    EventLoopGroup group = new NioEventLoopGroup();
+
+                    try {
+                        Bootstrap bootStrap = new Bootstrap();
+                        bootStrap.group(group)
+                                // 논블럭 방식 적용
+                                .channel(NioSocketChannel.class)
+                                .handler(new ChannelInitializer<SocketChannel>() {
+                                    @Override
+                                    public void initChannel(SocketChannel ch) throws Exception {
+                                        ChannelPipeline pipeline = ch.pipeline();
+                                        // String 인/디코더 (default인 UTF-8)
+                                        pipeline.addLast(new StringEncoder(), new StringDecoder());
+                                        // IO 이벤트 핸들러
+                                        pipeline.addLast(new Chat_handler());
+                                    }
+                                });
+
+                        Channel channel = bootStrap.connect("52.78.88.227", 8888).sync().channel();
+
+                        // 어플리케이션 객체에 Channel 객체 저장하기
+                        setChannel(channel);
+
+                        channel.closeFuture().sync();
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } finally {
+                        group.shutdownGracefully();
+                    }
+                }
+            }).start();
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -1222,10 +1270,10 @@ public class Myapp extends Application {
      메소드 ==> Netty 를 통해 연결된 서버로 통신메세지 보내기
      ---------------------------------------------------------------------------*/
     public void send_to_server(Data_for_netty data) {
-        if(!isServiceRunningCheck()) {
-            Log.d(TAG, "Netty 연결 없음");
-            return;
-        }
+//        if(!isServiceRunningCheck()) {
+//            Log.d(TAG, "Netty 연결 없음");
+//            return;
+//        }
         Gson gson = new Gson();
         String data_string = gson.toJson(data);
         getChannel().writeAndFlush(data_string);
@@ -1233,6 +1281,8 @@ public class Myapp extends Application {
 
     @Override
     public void onTerminate() {
+        // TODO: 서비스 돌리기 이전, 테스트 코드 - 나중에 삭제
+        channel.close();
         super.onTerminate();
     }
 }

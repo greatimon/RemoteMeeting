@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Dialog.Chat_draw_menu_D;
@@ -76,14 +77,14 @@ public class Chat_A extends Activity {
         // CachePot 이용해서 room 객체 받아오기
         chat_room = CachePot.getInstance().pop("chat_room");
         CachePot.getInstance().clear("chat_room");
-        Log.d(TAG, "getChatroom_no(): " + chat_room.getChatroom_no());
+        Log.d(TAG, "getChat_room_no(): " + chat_room.getChatroom_no());
         Log.d(TAG, "getChat_room_title(): " + chat_room.getChat_room_title());
         Log.d(TAG, "getUser_nickname_arr().toString(): " + chat_room.getUser_nickname_arr().toString());
         Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
 
         // 어플리케이션 객체: Myapp 에 채팅방 번호를 저장한다
         myapp.setChatroom_no(chat_room.getChatroom_no());
-        Log.d(TAG, "myapp.setChatroom_no: " + myapp.getChatroom_no());
+        Log.d(TAG, "myapp.setChat_room_no: " + myapp.getChatroom_no());
 
         // 채팅방 리스트로부터 채팅방을 열었을 때
         if(from.equals("list")) {
@@ -282,13 +283,20 @@ public class Chat_A extends Activity {
     public void send_btn() {
         String input_msg = send_msg.getText().toString();
 
+        Chat_log chat_log = new Chat_log();
+        chat_log.setChat_room_no(chat_room.getChatroom_no());        // 채팅방 번호
+        chat_log.setMsg_type("text");                                   // Chat_log 종류
+        chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));  // 내 user_no
+        chat_log.setMsg_content(input_msg);                             // 메세지 내용
+        chat_log.setMember_count(member_count);                // 채팅방 참여중인 총 인원
+
+
         // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
         Data_for_netty data = new Data_for_netty
-                .Builder("enter", "none", myapp.getUser_no())
-                .msg(input_msg)
+                .Builder("msg", "none", myapp.getUser_no())
+                .chat_log(chat_log)
                 .build();
         myapp.send_to_server(data);
-
 //        myapp.getChannel().writeAndFlush(input_msg);
     }
 
@@ -305,16 +313,16 @@ public class Chat_A extends Activity {
 
 
     //    /**---------------------------------------------------------------------------
-//     otto ==> RCV_chat_adapter 로 부터 message 수신
+//     otto ==> RCV_chatRoom_list_adapter 로 부터 message 수신
 //     ---------------------------------------------------------------------------*/
 //    @Subscribe
 //    public void getMessage(Event.RCV_chat_adapter__Chat_A event) {
 //        Log.d(TAG, "otto 받음_ " + event.getMessage());
 //
-//        // RCV_chat_adapter 로 부터 온 메세지 종류 확인
+//        // RCV_chatRoom_list_adapter 로 부터 온 메세지 종류 확인
 //        if(event.getMessage().equals("room_ob")) {
 //            Chat_room chat_room = event.getChat_room();
-//            Log.d(TAG, "getChatroom_no(): " + chat_room.getChatroom_no());
+//            Log.d(TAG, "getChat_room_no(): " + chat_room.getChat_room_no());
 //            Log.d(TAG, "getUser_nickname_arr().toString(): " + chat_room.getUser_nickname_arr().toString());
 //            Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
 //        }

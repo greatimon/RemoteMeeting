@@ -50,7 +50,7 @@ public class Chat_room implements Serializable {
 
         // 마지막 로그 정보를 set 할 때, 마지막 로그 정보에서 long 타입의 메세지 전송 시각을 가져와서,
         // 핸드폰 기기 국가(로컬) 기준으로 원하는 time type String 값으로 변환하여 set 한다
-        String last_log_transmission_time =  myapp.chat_log_transmission_time(this.last_log.getTransmission_time());
+        String last_log_transmission_time =  myapp.chat_log_transmission_time(this.last_log.getTransmission_gmt_time());
         transmission_time_for_local = last_log_transmission_time;
     }
 

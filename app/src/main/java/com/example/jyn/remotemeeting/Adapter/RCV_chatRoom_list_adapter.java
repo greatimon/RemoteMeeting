@@ -2,7 +2,6 @@ package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,8 +17,6 @@ import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.Etc.Static;
-import com.example.jyn.remotemeeting.Otto.BusProvider;
-import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.github.kimkevin.cachepot.CachePot;
@@ -34,18 +31,18 @@ import jp.wasabeef.glide.transformations.CropCircleTransformation;
  * Created by JYN on 2017-12-09.
  */
 
-public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.ViewHolder> {
+public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom_list_adapter.ViewHolder> {
 
     private Context context;
     private int itemLayout;
     private String request;
     private ArrayList<Chat_room> rooms;
-    public static String TAG = "all_"+RCV_chat_adapter.class.getSimpleName();
+    public static String TAG = "all_"+RCV_chatRoom_list_adapter.class.getSimpleName();
     public Myapp myapp;
 
     /** RecyclerAdapter 생성자 */
-    public RCV_chat_adapter(Context context, int itemLayout, ArrayList<Chat_room> rooms, String request) {
-        Log.d(TAG, "ViewHolder_ RCV_chat_adapter: 생성");
+    public RCV_chatRoom_list_adapter(Context context, int itemLayout, ArrayList<Chat_room> rooms, String request) {
+        Log.d(TAG, "ViewHolder_ RCV_chatRoom_list_adapter: 생성");
         this.context = context;
         this.itemLayout = itemLayout;
         this.rooms = rooms;
@@ -83,9 +80,9 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
                     Log.d(TAG, "채팅방 참여중인 유저 수: " + rooms.get(pos).getUser_nickname_arr().size());
                     Log.d(TAG, "채팅방의 마지막 메세지 no: " + rooms.get(pos).getLast_msg_no());
                     if(rooms.get(pos).getLast_log() != null) {
-                        Log.d(TAG, "채팅방의 마지막 메세지 타입: " + rooms.get(pos).getLast_log().getType());
+                        Log.d(TAG, "채팅방의 마지막 메세지 타입: " + rooms.get(pos).getLast_log().getMsg_type());
                         Log.d(TAG, "채팅방의 마지막 메세지 유저번호: " + rooms.get(pos).getLast_log().getUser_no());
-                        Log.d(TAG, "채팅방의 마지막 메세지 내용: " + rooms.get(pos).getLast_log().getContent());
+                        Log.d(TAG, "채팅방의 마지막 메세지 내용: " + rooms.get(pos).getLast_log().getMsg_content());
                     }
                     for(int i=0; i<rooms.get(pos).getUser_nickname_arr().size(); i++) {
                         Log.d(TAG, "채팅방 유저 닉네임 리스트_"+ i + ": " + rooms.get(pos).getUser_nickname_arr().get(i));
@@ -129,8 +126,11 @@ public class RCV_chat_adapter extends RecyclerView.Adapter<RCV_chat_adapter.View
         // TODO: 나중에, 메세지가 오고 간적이 없는 채팅방은 표시하지 않도록 구현하기,
         // TODO: 현재는 테스트를 위해서 그냥 리스트뷰에 표시되도록 함
         if(rooms.get(pos).getLast_log() != null) {
-            last_log_msg_content = rooms.get(pos).getLast_log().getContent();
+            last_log_msg_content = rooms.get(pos).getLast_log().getMsg_content();
         }
+//        else if(rooms.get(pos).getLast_log() ) {
+//
+//        }
 
         String last_log_transmission_time_for_local = rooms.get(pos).getTransmission_time_for_local();
         int member_count = rooms.get(pos).getUser_nickname_arr().size();

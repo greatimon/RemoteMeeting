@@ -34,11 +34,10 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
     // 채널이 등록(register)된 이후 호출되는 콜백
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-//        String sendMessage = myapp.getUser_no() + Static.SPLIT + myapp.getChatroom_no();
-        String sendMessage = Chat_service.user_no + Static.SPLIT + myapp.getChatroom_no();
-        Log.d(TAG, "채팅 서버 접속 시, 전달 메시지: " + sendMessage);
-
-        ctx.writeAndFlush(sendMessage);
+//        String sendMessage = Chat_service.user_no + Static.SPLIT + myapp.getChat_room_no();
+//        Log.d(TAG, "채팅 서버 접속 시, 전달 메시지: " + sendMessage);
+//
+//        ctx.writeAndFlush(sendMessage);
 
     }
 
@@ -48,9 +47,9 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String readMessage = (String)msg;
-        Log.d(TAG, readMessage);
+    public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
+        String readMessage = (String)obj;
+        Log.d(TAG, "#채팅채팅#" + readMessage);
     }
 
     @Override

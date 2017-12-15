@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.jyn.remotemeeting.Adapter.RCV_chat_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_chatRoom_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Users;
@@ -62,7 +62,7 @@ public class Chat_F extends Fragment {
     @BindView(R.id.no_result)           TextView no_result;
 
     // 리사이클러뷰 관련 클래스
-    public RCV_chat_adapter rcv_chat_adapter;
+    public RCV_chatRoom_list_adapter rcv_chat_Roomlist_adapter;
     public RecyclerView.LayoutManager layoutManager;
 
     public Chat_F() {
@@ -148,19 +148,19 @@ public class Chat_F extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
 
             // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-            if(rcv_chat_adapter == null) {
+            if(rcv_chat_Roomlist_adapter == null) {
                 // 생성자 인수
                 // 1. 액티비티
                 // 2. 인플레이팅 되는 레이아웃
                 // 3. arrayList rooms
                 // 4. extra 변수
-                rcv_chat_adapter = new RCV_chat_adapter(getActivity(), R.layout.i_chat_room, rooms, "chat");
-                recyclerView.setAdapter(rcv_chat_adapter);
-                rcv_chat_adapter.notifyDataSetChanged();
+                rcv_chat_Roomlist_adapter = new RCV_chatRoom_list_adapter(getActivity(), R.layout.i_chat_room, rooms, "chat");
+                recyclerView.setAdapter(rcv_chat_Roomlist_adapter);
+                rcv_chat_Roomlist_adapter.notifyDataSetChanged();
             }
             // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
             else {
-                rcv_chat_adapter.refresh_arr(rooms);
+                rcv_chat_Roomlist_adapter.refresh_arr(rooms);
             }
         }
     }
@@ -252,19 +252,18 @@ public class Chat_F extends Fragment {
                                     }
 
                                     // 채팅방 마지막 메세지, JSONArray를 파싱
-                                    JSONArray jsonArray_for_last_log = jsonArray.getJSONObject(i).getJSONArray("last_chat_log_ob");
-                                    Log.d(TAG, "jsonArray_for_last_log.toString(): " + jsonArray_for_last_log.toString());
-                                    Log.d(TAG, "jsonArray_for_last_log.length(): " + jsonArray_for_last_log.length());
+                                    JSONArray jsonArray_last_chat_log = new JSONArray(jsonArray.getJSONObject(i).getString("last_chat_log_ob"));
+                                    Log.d(TAG, "jsonArray_last_chat_log.toString(): " + jsonArray_last_chat_log.toString());
+                                    Log.d(TAG, "jsonArray_last_chat_log.length(): " + jsonArray_last_chat_log.length());
 
-                                    // Chat_log 객체 생성
-                                    Chat_log last_chat_log = new Chat_log();
-
-                                    // 채팅방 마지막 메세지가 있는지 확인하기
-                                    if(jsonArray_for_last_log.length() > 0) {
-                                        last_chat_log = gson.fromJson(String.valueOf(jsonArray_for_last_log), Chat_log.class);
-                                    }
-                                    else if(jsonArray_for_last_log.length() == 0) {
-                                        Log.d(TAG, "last_chat_log is NULL ");
+                                    // gson 이용해서 Chat_log 객체로 변환
+                                    Chat_log last_chat_log = null;
+                                    // 마지막 Chat_log가 있을 때만 변환
+                                    if(jsonArray_last_chat_log.length() == 1) {
+                                        last_chat_log = gson.fromJson(jsonArray_last_chat_log.get(0).toString(), Chat_log.class);
+                                        Log.d(TAG, "jsonArray_last_chat_log.get(0).toString(): " + jsonArray_last_chat_log.get(0).toString());
+                                        Log.d(TAG, "last_chat_log.getMsg_content(): " + last_chat_log.getMsg_content());
+                                        Log.d(TAG, "last_chat_log.getChat_room_no(): " + last_chat_log.getChat_room_no());
                                     }
 
                                     /** Chat_room 객체에 데이터 넣기 */
@@ -273,7 +272,8 @@ public class Chat_F extends Fragment {
                                     room.setLast_msg_no(last_msg_no);
                                     room.setUser_nickname_arr(user_nickname_arr);
                                     room.setUser_img_filename_arr(user_img_filename_arr);
-                                    if(jsonArray_for_last_log.length() > 0) {
+                                    // 마지막 Chat_log가 있을때만 데이터 넣음
+                                    if(jsonArray_last_chat_log.length() == 1) {
                                         room.setLast_log(last_chat_log);
                                     }
                                     room.setUnread_msg_count(unread_msg_count);
@@ -361,7 +361,7 @@ public class Chat_F extends Fragment {
 
         // onDestroyView() 시에 어댑터를 null 처리 해주어야,
         // 다음 onCreateView 시에 제대로 뷰에 채팅방 리스트가 나온다
-        rcv_chat_adapter = null;
+        rcv_chat_Roomlist_adapter = null;
 
         super.onDestroyView();
     }

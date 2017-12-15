@@ -320,7 +320,7 @@ public class Profile_F extends Fragment {
                 Glide
                     .with(this)
                     .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + absolutePath)
-                    .placeholder(R.drawable.on_loading)
+//                    .placeholder(R.drawable.on_loading)
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                     .bitmapTransform(new CropCircleTransformation(getContext()))
                     .into(profile_img);
@@ -336,7 +336,7 @@ public class Profile_F extends Fragment {
             Glide
                 .with(this)
                 .load(absolutePath)
-                .placeholder(R.drawable.on_loading)
+//                .placeholder(R.drawable.on_loading)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(getContext()))
                 .into(profile_img);
@@ -352,7 +352,7 @@ public class Profile_F extends Fragment {
             Glide
                 .with(this)
                 .load(R.drawable.default_profile)
-                .placeholder(R.drawable.on_loading)
+//                .placeholder(R.drawable.on_loading)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .bitmapTransform(new CropCircleTransformation(getContext()))
                 .into(profile_img);
