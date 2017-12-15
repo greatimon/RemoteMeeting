@@ -16,10 +16,13 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.github.kimkevin.cachepot.CachePot;
+import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 
@@ -212,6 +215,14 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 .bitmapTransform(new CropCircleTransformation(context))
                 .into(holder.profile_img);
         }
+
+        // 안 읽은 메세지 개수 셋팅
+        if(unread_msg_count >= 1) {
+            holder.unread_msg.setVisibility(View.VISIBLE);
+        }
+        else if(unread_msg_count == 0) {
+            holder.unread_msg.setVisibility(View.GONE);
+        }
     }
 
     /** getItemCount => arr 사이즈 리턴 */
@@ -228,6 +239,28 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         this.rooms.clear();
         this.rooms = rooms;
         notifyDataSetChanged();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅방 마지막 메시지 갱신
+     ---------------------------------------------------------------------------*/
+    public void update_last_msg(String message, Data_for_netty data) {
+        // 채팅방 리스트를 업데이트 하라는 지시일 때
+        if(message.equals("update")) {
+            for(int i=0; i<rooms.size(); i++) {
+                // 내가 가지고 있는 채팅방 목록에서, 서버로 부터 받은 채팅메시지에 해당하는 채팅방을 찾아서
+                // (채팅방 no 비교)
+                // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
+                if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
+                    rooms.get(i).setLast_log(data.getChat_log());
+                    // 안읽은 메세지 수 '1' 증가시키기
+                    rooms.get(i).setUnread_msg_count(rooms.get(i).getUnread_msg_count()+1);
+                    Log.d(TAG, "rooms.get(i).getChatroom_no(): " + rooms.get(i).getChatroom_no());
+                    notifyItemChanged(i);
+                }
+            }
+        }
     }
 
 }

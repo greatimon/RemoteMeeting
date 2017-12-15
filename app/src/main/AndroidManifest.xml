@@ -28,7 +28,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="InnerclassSeparator">
+        tools:ignore="ExtraText,InnerclassSeparator">
 
         // 메인 로그인 전
         <activity

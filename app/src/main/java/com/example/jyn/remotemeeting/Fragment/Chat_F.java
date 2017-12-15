@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import com.example.jyn.remotemeeting.Adapter.RCV_chatRoom_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -102,8 +104,10 @@ public class Chat_F extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 구분선 - 가로(클래스 생성)
         recyclerView.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
-        // 애니메이션 설정
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        // 애니메이션 설정 - 애니메이션 설정 끔
+        ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+        // 애니메이션 설정 - 기본 애니메이션
+//        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         // 리사이클러뷰 동작 메소드 호출
         activate_RCV();
@@ -122,6 +126,21 @@ public class Chat_F extends Fragment {
             // 리사이클러뷰 동작 메소드 호출
             activate_RCV();
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     otto ==> Chat_handler로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage(Event.Chat_handler__Char_F event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+
+        // 어댑터로 연결
+        // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
+        // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
+        // (Chat_F는 해제할 부분이 확실함)
+        rcv_chat_Roomlist_adapter.update_last_msg(event.getMessage(), event.getData());
     }
 
 

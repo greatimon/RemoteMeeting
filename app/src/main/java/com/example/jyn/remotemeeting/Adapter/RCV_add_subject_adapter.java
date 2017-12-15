@@ -211,6 +211,5 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
         return null;
     }
 
-
 }
 

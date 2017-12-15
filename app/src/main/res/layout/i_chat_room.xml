@@ -95,16 +95,19 @@
             android:textColor="#737373" />
 
         <TextView
-            android:visibility="gone"
+            android:visibility="visible"
             tools:visibility="visible"
             android:id="@+id/unread_msg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:singleLine="true"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="5dp"
             android:gravity="center"
             android:textAlignment="center"
-            android:padding="5dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp"
             android:layout_gravity="center_horizontal"
             android:ellipsize="end"
             tools:text="12"

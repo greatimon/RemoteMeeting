@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.support.multidex.MultiDex;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -1265,18 +1266,29 @@ public class Myapp extends Application {
         return false;
     }
 
-
     /**---------------------------------------------------------------------------
      메소드 ==> Netty 를 통해 연결된 서버로 통신메세지 보내기
      ---------------------------------------------------------------------------*/
-    public void send_to_server(Data_for_netty data) {
-//        if(!isServiceRunningCheck()) {
-//            Log.d(TAG, "Netty 연결 없음");
-//            return;
-//        }
-        Gson gson = new Gson();
-        String data_string = gson.toJson(data);
-        getChannel().writeAndFlush(data_string);
+    public void send_to_server(final Data_for_netty data) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Gson gson = new Gson();
+                String data_string = gson.toJson(data);
+                getChannel().writeAndFlush(data_string);
+            }
+        }).start();
+    }
+
+    /** MultiDex 문제 해결*/
+    /** MultiDex 문제 해결*/
+    /** MultiDex 문제 해결*/
+    // Caused by: java.lang.ClassNotFoundException: Didn't find class "com.example.jyn.remotemeeting.Activity.Main_before_login_A" on path:
+    // DexPathList[[zip file "/data/app/com.example.jyn.remotemeeting-2.apk"],nativeLibraryDirectories=[/data/app-lib/com.example.jyn.remotemeeting-2, /vendor/lib, /system/lib]]
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 
     @Override

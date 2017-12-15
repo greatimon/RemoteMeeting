@@ -53,8 +53,10 @@ public class Chat_A extends Activity {
     @BindView(R.id.send_btn)        TextView send_btn;
     @BindView(R.id.recyclerView)    RecyclerView recyclerView;
 
-    // 채팅 채널 - 테스트 코드
-//    ChannelFuture channelFuture;
+    // 리사이클러뷰 관련 클래스
+
+
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -132,45 +134,8 @@ public class Chat_A extends Activity {
         // 메소드 호출
         set_title_and_counting();
 
-        // 채팅 시작 메소드 호출 - 테스트 코드
-//        test();
-    }
 
-    /** 채팅 테스트 코드 - 나중에 서비스로 돌릴 예정 */
-//    public void test() {
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                EventLoopGroup group = new NioEventLoopGroup();
-//
-//                try {
-//                    Bootstrap bootStrap = new Bootstrap();
-//                    bootStrap.group(group)
-//                            // 논블럭 방식 적용
-//                            .channel(NioSocketChannel.class)
-//                            .handler(new ChannelInitializer<SocketChannel>() {
-//                                @Override
-//                                public void initChannel(SocketChannel ch) throws Exception {
-//                                    ChannelPipeline pipeline = ch.pipeline();
-//                                    // String 인/디코더 (default인 UTF-8)
-//                                    pipeline.addLast(new StringEncoder(), new StringDecoder());
-//                                    // IO 이벤트 핸들러
-//                                    pipeline.addLast(new Chat_handler());
-//                                }
-//                            });
-//
-//                    channelFuture = bootStrap.connect("52.78.88.227", 8888).sync();
-//
-//                    channelFuture.channel().closeFuture().sync();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } finally {
-//                    group.shutdownGracefully();
-//                }
-//            }
-//        });
-//        thread.start();
-//    }
+    }
 
 
     /**---------------------------------------------------------------------------
@@ -208,10 +173,6 @@ public class Chat_A extends Activity {
         else if(!chat_room_title.equals("none")) {
             title.setText(chat_room_title);
         }
-
-        // 방 인원 set - 테스트 코드
-//        counting.setVisibility(View.VISIBLE);
-//        counting.setText(String.valueOf(member_count));
 
         // 방 인원 set - 채팅 인원이 2명 이상일 때만, 표시함
         if(member_count > 2) {
@@ -284,11 +245,11 @@ public class Chat_A extends Activity {
         String input_msg = send_msg.getText().toString();
 
         Chat_log chat_log = new Chat_log();
-        chat_log.setChat_room_no(chat_room.getChatroom_no());        // 채팅방 번호
+        chat_log.setChat_room_no(chat_room.getChatroom_no());           // 채팅방 번호
         chat_log.setMsg_type("text");                                   // Chat_log 종류
-        chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));  // 내 user_no
+        chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));      // 내 user_no
         chat_log.setMsg_content(input_msg);                             // 메세지 내용
-        chat_log.setMember_count(member_count);                // 채팅방 참여중인 총 인원
+        chat_log.setMember_count(member_count);                         // 채팅방 참여중인 총 인원
 
 
         // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
@@ -296,8 +257,8 @@ public class Chat_A extends Activity {
                 .Builder("msg", "none", myapp.getUser_no())
                 .chat_log(chat_log)
                 .build();
+        // 메세지 보내기 메소드 호출
         myapp.send_to_server(data);
-//        myapp.getChannel().writeAndFlush(input_msg);
     }
 
 
@@ -343,10 +304,5 @@ public class Chat_A extends Activity {
         // otto 등록 해제
         BusProvider.getBus().unregister(this);
         super.onDestroy();
-
-//        // 채팅 채널 닫기 - 테스트 코드
-//        if(channelFuture != null) {
-//            channelFuture.channel().close();
-//        }
     }
 }
