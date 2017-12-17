@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import io.netty.bootstrap.Bootstrap;
@@ -1189,7 +1191,7 @@ public class Myapp extends Application {
                                 // 파일 변환 percent 구하기
                                 int value_2 = i;
                                 int total_2 = document.getNumberOfPages();
-                                int rate = (int)((double)((double)value_2/(double)total_2) * 100);
+                                int rate = (int)((double)value_2/(double)total_2 * 100);
                                 Log.d(TAG, "PDF 파일 변환 진척도: " + rate + "%");
 
                                 Message msg_2 = new Message();
@@ -1281,8 +1283,6 @@ public class Myapp extends Application {
     }
 
     /** MultiDex 문제 해결*/
-    /** MultiDex 문제 해결*/
-    /** MultiDex 문제 해결*/
     // Caused by: java.lang.ClassNotFoundException: Didn't find class "com.example.jyn.remotemeeting.Activity.Main_before_login_A" on path:
     // DexPathList[[zip file "/data/app/com.example.jyn.remotemeeting-2.apk"],nativeLibraryDirectories=[/data/app-lib/com.example.jyn.remotemeeting-2, /vendor/lib, /system/lib]]
     @Override
@@ -1290,6 +1290,35 @@ public class Myapp extends Application {
         super.attachBaseContext(base);
         MultiDex.install(this);
     }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 현재 기기에 최상단에 올라와 있는 액티비티 클래스 확인하기
+     ---------------------------------------------------------------------------*/
+    public String getTop_activity() {
+//        ActivityManager am = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+//        List<ActivityManager.RunningTaskInfo> Info = am.getRunningTasks(1);
+//        ComponentName topActivity = Info.get(0).topActivity;
+//
+//        String topActivity_name = topActivity.getPackageName();
+//        Log.d(TAG, "topActivity_name: " + topActivity_name);
+//        return topActivity_name;
+        ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> info;
+        info = activityManager.getRunningTasks(1);
+
+        String top_activity_name = "";
+        for (ActivityManager.RunningTaskInfo runningTaskInfo : info) {
+            top_activity_name = runningTaskInfo.topActivity.getClassName();
+            Log.d(TAG, top_activity_name);
+//            if(runningTaskInfo.topActivity.getClassName().equals("com.android.ABCApplication.ABCApplication")) {
+//                Log.e("ABCApplication","ABCApplication is running");
+//                return true;
+//            }
+        }
+        return top_activity_name;
+    }
+
 
     @Override
     public void onTerminate() {

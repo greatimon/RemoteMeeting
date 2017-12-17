@@ -11,14 +11,14 @@ public class Event {
 
 
     /** 이벤트
-     *    Chat_handler --> Char_F
+     *    Chat_handler --> Chat_F
      *    : Data_for_netty 객체와 함께 채팅방 리사이클러뷰에 대한 변경점 이벤트 메시지를 전달
      * */
-    public static class Chat_handler__Char_F {
+    public static class Chat_handler__Chat_F {
         private String message;
         private Data_for_netty data;
 
-        public Chat_handler__Char_F(String message, Data_for_netty data) {
+        public Chat_handler__Chat_F(String message, Data_for_netty data) {
             this.message = message;
             this.data = data;
         }
@@ -33,6 +33,10 @@ public class Event {
     }
 
 
+    /** 이벤트
+     *    Chat_handler --> Chat_A
+     *    : 서버로부터 다른 사람이 보낸 채팅 로그를 받아, 채팅 액티비티에 전달
+     * */
     public static class Chat_handler__Chat_A {
         private String message;
         private Data_for_netty data;

@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,11 +20,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_Chat_log_list_adapter;
-import com.example.jyn.remotemeeting.Adapter.RCV_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
-import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Chat_draw_menu_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -41,7 +41,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -77,17 +76,22 @@ public class Chat_A extends Activity {
     @BindView(R.id.title)           TextView title;
     @BindView(R.id.counting)        TextView counting;
     @BindView(R.id.send_btn)        TextView send_btn;
-    @BindView(R.id.recyclerView)    RecyclerView recyclerView;
+//    @BindView(R.id.recyclerView)    RecyclerView recyclerView;
+    public static RecyclerView recyclerView;
 
     // 리사이클러뷰 관련 클래스
     public RCV_Chat_log_list_adapter rcv_chat_log_list_adapter;
-    public RecyclerView.LayoutManager layoutManager;
+    public LinearLayoutManager layoutManager;
+
+    // 서버로 부터 받은 채팅 메세지를 Chat_handler로부터 전달받는 핸들러 객체 생성
+    public static Handler chat_message_handler;
 
 
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
+    @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +99,8 @@ public class Chat_A extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+        // static recyclerView findViewById
+        recyclerView = findViewById(R.id.recyclerView);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
         // otto 등록
@@ -158,9 +164,38 @@ public class Chat_A extends Activity {
             public void afterTextChanged(Editable s) {}
         });
 
+        /** 서버로 부터 받은 채팅 메세지를 Chat_handler로부터 전달받음 */
+        chat_message_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                // 핸들러 메세지를 보낸 주체가 to_Char_A() 메소드일 때
+                if(msg.what == 1) {
+
+                    // Message 객체로 부터 전달된 값들 가져오기
+                    String order = msg.getData().getString("order");
+                    Data_for_netty received_data = (Data_for_netty) msg.obj;
+
+                    // otto 등록
+                    BusProvider.getBus().register(this);
+
+                    Event.Chat_handler__Chat_A event
+                            = new Event.Chat_handler__Chat_A(order, received_data);
+                    BusProvider.getBus().post(event);
+                    Log.d(TAG, "otto 전달_ to_Chat_A");
+
+                    // otto 해제
+                    BusProvider.getBus().unregister(this);
+                }
+            }
+        };
+
+
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(getBaseContext());
+        layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        // 밑에서부터 리사이클러뷰 아이템 밑으로 쌓기
+        layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -174,7 +209,7 @@ public class Chat_A extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 채팅 로그들을 가져와서, 리사이클러뷰 어댑터로 넘기기 - from PHP
+     메소드 ==> chatting_log ArrayList를 리사이클러뷰 어댑터로 넘기기
      ---------------------------------------------------------------------------*/
     public void set_chatting_logs() {
 //        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
@@ -211,8 +246,13 @@ public class Chat_A extends Activity {
     }
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
     /**---------------------------------------------------------------------------
-     메소드 ==> 채팅 로그들을 가져와서, 리사이클러뷰 어댑터로 넘기기 - from PHP
+     메소드 ==> 서버로부터 채팅 로그들을 가져와서, 로그들의 ArrayList를 리턴하기
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
     public ArrayList<Chat_log> get_chatting_logs() {
@@ -282,7 +322,7 @@ public class Chat_A extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> Chat_room 객체로부터 데이터를 가져와, 방 제목과 방 인원을 표시 - from PHP
+     메소드 ==> 서버로 부터 Chat_room 객체로부터 데이터를 가져와, 방 제목과 방 인원을 표시
      ---------------------------------------------------------------------------*/
     public void set_title_and_counting() {
         member_count = chat_room.getUser_nickname_arr().size();
@@ -379,6 +419,7 @@ public class Chat_A extends Activity {
 
     }
 
+
     /**---------------------------------------------------------------------------
      otto ==> Chat_handler로 부터 message 수신
      ---------------------------------------------------------------------------*/
@@ -391,10 +432,8 @@ public class Chat_A extends Activity {
         // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
         // (Chat_F는 해제할 부분이 확실함)
         rcv_chat_log_list_adapter.update_last_msg(event.getMessage(), event.getData());
-    }
+        recyclerView.setAdapter(rcv_chat_log_list_adapter);
 
-    public void tobottom() {
-        recyclerView.scrollToPosition(rcv_chat_log_list_adapter.getItemCount()-1);
     }
 
 
@@ -421,7 +460,9 @@ public class Chat_A extends Activity {
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 
-        // 내 어댑터에 추가
+        // 내 어댑터에 바로 추가 (서버로부터 메세지 전송 완료됐다는 응답 확인 필요 없이 일단 추가)
+        // 나중에 서버로 부터 메세지 전송 완료됐다는 통신을 받으면
+        // 그때 보여주던 프로그레스바의 View를 GONE 처리하고 메세지 전송 시각과 읽지 않은 메세지 숫자를 표시하기
         rcv_chat_log_list_adapter.update_my_msg(chat_log);
 //        try {
 //            Thread.sleep(100);

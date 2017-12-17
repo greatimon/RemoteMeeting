@@ -99,7 +99,7 @@
         <!--circularProgressbar 레이아웃-->
         <RelativeLayout
             android:visibility="gone"
-            tools:visibility="gone"
+            tools:visibility="visible"
             android:id="@+id/circularProgressbar_REL"
             android:layout_marginTop="-30dp"
             android:layout_width="match_parent"

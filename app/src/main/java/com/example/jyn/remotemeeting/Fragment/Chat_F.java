@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
@@ -18,7 +17,6 @@ import android.widget.TextView;
 import com.example.jyn.remotemeeting.Adapter.RCV_chatRoom_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
-import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -133,7 +131,7 @@ public class Chat_F extends Fragment {
      otto ==> Chat_handler로 부터 message 수신
      ---------------------------------------------------------------------------*/
     @Subscribe
-    public void getMessage(Event.Chat_handler__Char_F event) {
+    public void getMessage(Event.Chat_handler__Chat_F event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
 
         // 어댑터로 연결

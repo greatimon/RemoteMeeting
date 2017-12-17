@@ -1,6 +1,7 @@
 package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,8 +14,11 @@ import android.widget.TextView;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.pnikosis.materialishprogress.ProgressWheel;
 
 import java.util.ArrayList;
 
@@ -35,7 +39,10 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
     public Myapp myapp;
 
     /** RecyclerAdapter 생성자 */
-    public RCV_Chat_log_list_adapter(Context context, int itemLayout, ArrayList<Chat_log> chat_log, String request) {
+    public RCV_Chat_log_list_adapter(Context context,
+                                     int itemLayout,
+                                     ArrayList<Chat_log> chat_log,
+                                     String request) {
         Log.d(TAG, "ViewHolder_ RCV_Chat_log_list_adapter: 생성");
         this.context = context;
         this.itemLayout = itemLayout;
@@ -70,12 +77,22 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
         @BindView(R.id.unread_msg_count_me)             TextView unread_msg_count_me;
         @BindView(R.id.time)                            TextView time;
         @BindView(R.id.time_me)                         TextView time_me;
+        // 일반 findView
+        View view;
+        public ProgressWheel progress_wheel;
 
         ViewHolder(View itemView) {
             super(itemView);
+            this.view = itemView;
             Log.d(TAG, "ViewHolder");
             Log.d(TAG, "request: "+ request);
             ButterKnife.bind(this,itemView);
+            progress_wheel = view.findViewById(R.id.progress_wheel);
+
+            // progress_wheel 설정
+            progress_wheel.setBarColor(Color.parseColor("#4CAF50"));
+            progress_wheel.setSpinSpeed(0.8f);
+            progress_wheel.setBarWidth(3);
         }
     }
 
@@ -93,29 +110,55 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
     /** onBindViewHolder => 리스트뷰의 getView 역할 */
     @Override
     public void onBindViewHolder(ViewHolder holder, int pos) {
-        String msg_content = chat_log.get(pos).getMsg_content();
-        long transmission_gmt_time = chat_log.get(pos).getTransmission_gmt_time();
-        String transmission_gmt_time_str = myapp.chat_log_transmission_time(transmission_gmt_time);
 
-        int msg_user_no = chat_log.get(pos).getUser_no();
-        boolean me = false;
-        if(msg_user_no == Integer.parseInt(myapp.getUser_no())) {
-            me = true;
-        }
+        // 라사이클러뷰의 포지션이 존재할때만, 리사이클러뷰 아이템들에 data들을 넣어서 보여줌
+        if(holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
+            int position = holder.getAdapterPosition();
+            String msg_content = chat_log.get(position).getMsg_content();
+            long transmission_gmt_time = chat_log.get(position).getTransmission_gmt_time();
+            String transmission_gmt_time_str = myapp.chat_log_transmission_time(transmission_gmt_time);
 
-        if(me) {
-            holder.not_me_layout.setVisibility(View.GONE);
-            holder.me_layout.setVisibility(View.VISIBLE);
+            // 내 채팅 메세지 일때, transmission_gmt_time 확인해보기
+            // 확인 결과 long type의 default 값인 '0'으로 표시
+            if(chat_log.get(position).getUser_no() == Integer.parseInt(myapp.getUser_no())) {
+                Log.d(TAG, "transmission_gmt_time:" + transmission_gmt_time);
+                Log.d(TAG, "transmission_gmt_time:" + transmission_gmt_time_str);
+            }
 
-            holder.msg_content_me.setText(msg_content);
-            holder.time_me.setText(transmission_gmt_time_str);
-        }
-        else if(!me) {
-            holder.me_layout.setVisibility(View.GONE);
-            holder.not_me_layout.setVisibility(View.VISIBLE);
+            // 채팅 로그의 user_no 가져오기
+            int msg_user_no = chat_log.get(position).getUser_no();
+            // 내 채팅 로그인지 아닌지 확인하는 변수 선언 + 확인하기
+            boolean me = false;
+            if(msg_user_no == Integer.parseInt(myapp.getUser_no())) {
+                me = true;
+            }
 
-            holder.msg_content.setText(msg_content);
-            holder.time.setText(transmission_gmt_time_str);
+            // 내 채팅 로그일 때, View Visibility 조절 + 데이터 set
+            if(me) {
+                holder.not_me_layout.setVisibility(View.GONE);
+                holder.me_layout.setVisibility(View.VISIBLE);
+
+                holder.msg_content_me.setText(msg_content);
+                holder.time_me.setText(transmission_gmt_time_str);
+                // 채팅 로그의 메세지 전송 시간이 '0L' 일 때,
+                // 즉, 아직 서버로 부터 메세지 전송 완료 콜백을 받지 못했을 때임
+                if(transmission_gmt_time == 0L) {
+                    holder.progress_wheel.setVisibility(View.VISIBLE);
+                }
+            }
+            // 내 채팅 로그가 아닐 때, View Visibility 조절 + 데이터 set
+            else if(!me) {
+                holder.me_layout.setVisibility(View.GONE);
+                holder.not_me_layout.setVisibility(View.VISIBLE);
+
+                holder.msg_content.setText(msg_content);
+                holder.time.setText(transmission_gmt_time_str);
+            }
+
+            // 마지막 채팅 로그까지 뷰에 다 표시 했다면, 리사이클러뷰의 포커스를 제일 마지막 아이템으로 준다
+//            if(position == chat_log.size()-1) {
+//                layoutManager.scrollToPosition(chat_log.size()-1);
+//            }
         }
 
     }
@@ -138,7 +181,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 채팅방 메세지 받아서 출력 (어레이리스트에 추가)
+     메소드 ==> Chat_A로 부터 채팅방 메세지 받아서 어레이리스트에 추가 후, 갱신
      ---------------------------------------------------------------------------*/
     public void update_last_msg(String message, Data_for_netty data) {
         // 채팅방 리스트를 업데이트 하라는 지시일 때
@@ -147,13 +190,18 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
             Chat_log new_chat_log = data.getChat_log();
             chat_log.add(new_chat_log);
             notifyItemInserted(chat_log.size()-1);
-//            notifyDataSetChanged();
+            Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);
         }
     }
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> Chat_A로 부터 내가 발송한 채팅 메세지 받아서 어레이리스트에 추가 후, 갱신
+     ---------------------------------------------------------------------------*/
     public void update_my_msg(Chat_log data) {
         chat_log.add(data);
         notifyItemInserted(chat_log.size()-1);
+        Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);
+//        layoutManager.scrollToPosition(chat_log.size()-1);
 //        notifyDataSetChanged();
     }
 
