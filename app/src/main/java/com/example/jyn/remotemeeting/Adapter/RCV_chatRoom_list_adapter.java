@@ -216,13 +216,16 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 .into(holder.profile_img);
         }
 
+        /** 안 읽은 메세지 개수 나중에 작업할것!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+        holder.unread_msg.setVisibility(View.GONE);
+
         // 안 읽은 메세지 개수 셋팅
-        if(unread_msg_count >= 1) {
-            holder.unread_msg.setVisibility(View.VISIBLE);
-        }
-        else if(unread_msg_count == 0) {
-            holder.unread_msg.setVisibility(View.GONE);
-        }
+//        if(unread_msg_count >= 1) {
+//            holder.unread_msg.setVisibility(View.VISIBLE);
+//        }
+//        else if(unread_msg_count == 0) {
+//            holder.unread_msg.setVisibility(View.GONE);
+//        }
     }
 
     /** getItemCount => arr 사이즈 리턴 */
@@ -254,9 +257,9 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
                 if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
                     rooms.get(i).setLast_log(data.getChat_log());
-                    // 안읽은 메세지 수 '1' 증가시키기
-                    rooms.get(i).setUnread_msg_count(rooms.get(i).getUnread_msg_count()+1);
-                    Log.d(TAG, "rooms.get(i).getChatroom_no(): " + rooms.get(i).getChatroom_no());
+                    // data 'Extra' 변수에 담겨 있는, 해당 채팅방 안 읽은 메세지 개수 가져와서 set 하기
+                    rooms.get(i).setUnread_msg_count(Integer.parseInt(data.getExtra()));
+                    Log.d(TAG, "해당 채팅방 안 읽은 메세지 개수: " + data.getExtra());
                     notifyItemChanged(i);
                 }
             }

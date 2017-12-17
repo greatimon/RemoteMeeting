@@ -29,6 +29,7 @@ public class Static {
     public static String AM_I_INVITED = "am_i_invited.php";
     public static String GET_SHARE_FILE_LIST = "get_share_file_list.php";
     public static String GET_CHAT_ROOM_LIST = "get_chat_room_list.php";
+    public static String GET_CHATTING_LOGS = "get_chatting_logs.php";
     public static String CREATE_CHAT_ROOM_FOR_ONE = "create_chat_room_for_one.php";
 
     /** 인텐트용 공유 키 */

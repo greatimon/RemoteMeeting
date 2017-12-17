@@ -1,9 +1,214 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:background="#ffffff"
     >
 
-</LinearLayout>
+    <!--다른사람 채팅 메세지-->
+    <LinearLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/not_me_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <ImageView
+            android:visibility="gone"
+            android:id="@+id/sender_profile_img"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:focusable="false"
+            android:padding="12dp"
+            tools:src="@drawable/back_2"
+            tools:visibility="gone" />
+
+        <View
+            tools:visibility="gone"
+            android:id="@+id/serial_msg_profile_img"
+            android:layout_width="60dp"
+            android:layout_height="30dp"
+            android:visibility="gone"/>
+
+        <LinearLayout
+            tools:visibility="visible"
+            android:id="@+id/layout_for_only_msg_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/nickName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                tools:text="그레아티"
+                android:textColor="#383838"
+                android:textSize="12dp"
+                tools:visibility="gone" />
+
+            <View
+                android:id="@+id/serial_msg_above_content"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/msg_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_msg_not_me"
+                android:paddingBottom="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="8dp"
+                android:textColor="#383838"
+                tools:text="메시지_테스트"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/send_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:maxWidth="250dp"
+                android:maxHeight="250dp"
+                android:minHeight="250dp"
+                android:scaleType="fitStart"
+                android:visibility="gone"
+                tools:visibility="gone" />
+
+            <View
+                android:id="@+id/serial_msg_below_content"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:orientation="vertical"
+            android:layout_gravity="bottom"
+            >
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/unread_msg_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="1"
+                android:textSize="10dp"
+                android:textColor="#4caf50" />
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="22:16"
+                android:textSize="11dp"
+                android:textColor="#737373" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--내 채팅 메세지-->
+    <LinearLayout
+        android:id="@+id/me_layout"
+        android:layout_alignParentEnd="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:orientation="horizontal"
+        >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
+            android:orientation="vertical"
+            android:layout_gravity="bottom"
+            >
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/unread_msg_count_me"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="1"
+                android:textSize="10dp"
+                android:textColor="#4caf50" />
+            <TextView
+                android:id="@+id/time_me"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="end"
+                tools:text="22:16"
+                android:textSize="11dp"
+                android:textColor="#737373" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            tools:visibility="visible"
+            android:id="@+id/layout_for_only_msg_content_me"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical">
+
+            <View
+                android:id="@+id/serial_msg_above_content_me"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/msg_content_me"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_msg_me"
+                android:paddingBottom="8dp"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:paddingTop="8dp"
+                android:textColor="#FFF"
+                tools:text="메시지_테스트"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/send_img_me"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:maxWidth="250dp"
+                android:maxHeight="250dp"
+                android:minHeight="250dp"
+                android:scaleType="fitStart"
+                android:visibility="gone"
+                tools:visibility="gone" />
+
+            <View
+                android:id="@+id/serial_msg_below_content_me"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

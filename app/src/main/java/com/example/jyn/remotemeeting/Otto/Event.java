@@ -33,6 +33,25 @@ public class Event {
     }
 
 
+    public static class Chat_handler__Chat_A {
+        private String message;
+        private Data_for_netty data;
+
+        public Chat_handler__Chat_A(String message, Data_for_netty data) {
+            this.message = message;
+            this.data = data;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public Data_for_netty getData() {
+            return data;
+        }
+    }
+
+
     /** 이벤트
      *    Main_after_login_A --> Partner_F
      *    : 파트너 리스트를 서버로부터 받아 리사이클러뷰를 갱신하라는 이벤트 메시지를 전달

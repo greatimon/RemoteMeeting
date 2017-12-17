@@ -65,6 +65,16 @@ public interface RetrofitService {
     );
 
 
+    /** 채팅방 로그 가져오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_chatting_logs (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "chat_room_no", encoded=true) String chat_room_no
+    );
+
+
     /** 파트너 검색결과 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")

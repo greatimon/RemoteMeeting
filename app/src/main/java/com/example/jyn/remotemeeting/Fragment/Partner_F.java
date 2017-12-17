@@ -126,7 +126,6 @@ public class Partner_F extends Fragment {
         }
         // 서버로 부터 파트너 리스트 받기
         ArrayList<Users> usersArrayList = myapp.get_partner_list();
-        Log.d(TAG, "usersArrayList 개수: " + usersArrayList.size());
         Log.d(TAG, "usersArrayList.isEmpty(): " + usersArrayList.isEmpty());
 
         // 파트너 리스트 결과가 하나도 없다면

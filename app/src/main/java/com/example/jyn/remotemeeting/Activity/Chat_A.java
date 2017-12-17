@@ -1,9 +1,13 @@
 package com.example.jyn.remotemeeting.Activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,19 +17,39 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.jyn.remotemeeting.Adapter.RCV_Chat_log_list_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Chat_draw_menu_D;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.example.jyn.remotemeeting.Util.RetrofitService;
+import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.github.kimkevin.cachepot.CachePot;
+import com.google.gson.Gson;
+import com.squareup.otto.Subscribe;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by JYN on 2017-12-11.
@@ -35,12 +59,14 @@ public class Chat_A extends Activity {
 
     private static final String TAG = "all_"+Chat_A.class.getSimpleName();
     int REQUEST_CHAT_DRAW_MENU = 1000;
+    String JSON_TAG_GET_CHATTING_LOGS = "chatting_logs";
     Myapp myapp;
     Chat_room chat_room;
     int member_count;
     String chat_room_title;
     String nickName_for_setting;
     String from;
+    int Chatroom_no;
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -54,7 +80,8 @@ public class Chat_A extends Activity {
     @BindView(R.id.recyclerView)    RecyclerView recyclerView;
 
     // 리사이클러뷰 관련 클래스
-
+    public RCV_Chat_log_list_adapter rcv_chat_log_list_adapter;
+    public RecyclerView.LayoutManager layoutManager;
 
 
 
@@ -79,7 +106,8 @@ public class Chat_A extends Activity {
         // CachePot 이용해서 room 객체 받아오기
         chat_room = CachePot.getInstance().pop("chat_room");
         CachePot.getInstance().clear("chat_room");
-        Log.d(TAG, "getChat_room_no(): " + chat_room.getChatroom_no());
+        Chatroom_no = chat_room.getChatroom_no();
+        Log.d(TAG, "getChat_room_no(): " + Chatroom_no);
         Log.d(TAG, "getChat_room_title(): " + chat_room.getChat_room_title());
         Log.d(TAG, "getUser_nickname_arr().toString(): " + chat_room.getUser_nickname_arr().toString());
         Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
@@ -130,16 +158,131 @@ public class Chat_A extends Activity {
             public void afterTextChanged(Editable s) {}
         });
 
+        /** 리사이클러뷰 */
+        recyclerView.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(getBaseContext());
+        recyclerView.setLayoutManager(layoutManager);
+        // 애니메이션 설정
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        // 메소드 호출
+        // 방 제목과 방 인원을 표시하는 메소드 호출
         set_title_and_counting();
 
+        // 채팅 로그들을 가져오는 메소드 호출
+        set_chatting_logs();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅 로그들을 가져와서, 리사이클러뷰 어댑터로 넘기기 - from PHP
+     ---------------------------------------------------------------------------*/
+    public void set_chatting_logs() {
+//        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
+//        Data_for_netty data = new Data_for_netty
+//                .Builder("request", "chatting_logs", myapp.getUser_no())
+//                .build();
+//        // 'extra' 변수에 채팅방 번호 넣어 넘기기
+//        data.setExtra(String.valueOf(Chatroom_no));
+//        // 통신 전송 메소드 호출
+//        myapp.send_to_server(data);
+
+        ArrayList<Chat_log> chat_log_arr = get_chatting_logs();
+        Log.d(TAG, "chat_log_arr.isEmpty(): " + chat_log_arr.isEmpty());
+
+        // 채팅 로그들이 있을 때 어댑터를 생성하고 넘김
+        if(!chat_log_arr.isEmpty()) {
+            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+            if(rcv_chat_log_list_adapter == null) {
+                // 생성자 인수
+                // 1. 액티비티
+                // 2. 인플레이팅 되는 레이아웃
+                // 3. arrayList chat_log_arr
+                // 4. extra 변수
+                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
+                recyclerView.setAdapter(rcv_chat_log_list_adapter);
+                rcv_chat_log_list_adapter.notifyDataSetChanged();
+            }
+            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+            else {
+                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
+            }
+        }
 
     }
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> Chat_room 객체로부터 데이터를 가져와, 방 제목과 방 인원을 표시
+     메소드 ==> 채팅 로그들을 가져와서, 리사이클러뷰 어댑터로 넘기기 - from PHP
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public ArrayList<Chat_log> get_chatting_logs() {
+
+        ArrayList<Chat_log> chat_log_arr = new ArrayList<>();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final ArrayList<Chat_log> final_chat_log_arr = chat_log_arr;
+            return new AsyncTask<Void, Void, ArrayList<Chat_log>>() {
+
+                @Override
+                protected ArrayList<Chat_log> doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.get_chatting_logs(
+                                Static.GET_CHATTING_LOGS,
+                                myapp.getUser_no(), String.valueOf(Chatroom_no));
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+//                        Log.d(TAG, "result: " + result);
+
+                        try {
+                            if(result.equals("fail")) {
+                                myapp.logAndToast("예외발생: " + result);
+                                final_chat_log_arr.clear();
+                            }
+                            else if(result.equals("no_result")) {
+                                final_chat_log_arr.clear();
+                            }
+                            else {
+                                // 길이가 긴 JSONString 출력하기
+                                myapp.print_long_Json_logcat(result, TAG);
+                                // jsonString --> jsonObject
+                                JSONObject jsonObject = new JSONObject(result);
+                                // jsonObject --> jsonArray
+                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_GET_CHATTING_LOGS);
+                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+                                // jsonArray에서 jsonObject를 하나씩 가지고 와서,
+                                // gson과 Chat_log 데이터클래스를 이용하여 Chat_log에 add 하기
+                                for(int i=0; i<jsonArray.length(); i++) {
+                                    String jsonString = jsonArray.getJSONObject(i).toString();
+                                    Gson gson = new Gson();
+                                    Chat_log chat_log = gson.fromJson(jsonString, Chat_log.class);
+                                    final_chat_log_arr.add(chat_log);
+                                }
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        return final_chat_log_arr;
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Chat_room 객체로부터 데이터를 가져와, 방 제목과 방 인원을 표시 - from PHP
      ---------------------------------------------------------------------------*/
     public void set_title_and_counting() {
         member_count = chat_room.getUser_nickname_arr().size();
@@ -236,6 +379,24 @@ public class Chat_A extends Activity {
 
     }
 
+    /**---------------------------------------------------------------------------
+     otto ==> Chat_handler로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage(Event.Chat_handler__Chat_A event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+
+        // 어댑터로 연결
+        // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
+        // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
+        // (Chat_F는 해제할 부분이 확실함)
+        rcv_chat_log_list_adapter.update_last_msg(event.getMessage(), event.getData());
+    }
+
+    public void tobottom() {
+        recyclerView.scrollToPosition(rcv_chat_log_list_adapter.getItemCount()-1);
+    }
+
 
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> send_btn 클릭 -- 메세지 전송 (through Netty)
@@ -257,8 +418,24 @@ public class Chat_A extends Activity {
                 .Builder("msg", "none", myapp.getUser_no())
                 .chat_log(chat_log)
                 .build();
-        // 메세지 보내기 메소드 호출
+        // 통신 전송 메소드 호출
         myapp.send_to_server(data);
+
+        // 내 어댑터에 추가
+        rcv_chat_log_list_adapter.update_my_msg(chat_log);
+//        try {
+//            Thread.sleep(100);
+//            recyclerView.scrollToPosition(rcv_chat_log_list_adapter.getItemCount()-1);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+
+
+//        chat_log.setTransmission_gmt_time(Long.parseLong(myapp.chat_log_transmission_time(System.currentTimeMillis())));
+
+        send_msg.setText("");
+        send_msg.setClickable(false);
+        send_msg.setTextColor(Color.parseColor("#999999"));
     }
 
 

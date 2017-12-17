@@ -15,7 +15,7 @@ public class Chat_log {
     private String msg_content;
     private String attachment;
     private int member_count;
-    private int msg_read_count;
+    private int msg_unread_count;
 
     public Chat_log() {}
 
@@ -83,11 +83,11 @@ public class Chat_log {
         this.member_count = member_count;
     }
 
-    public int getMsg_read_count() {
-        return msg_read_count;
+    public int getMsg_unread_count() {
+        return msg_unread_count;
     }
 
-    public void setMsg_read_count(int msg_read_count) {
-        this.msg_read_count = msg_read_count;
+    public void setMsg_unread_count(int msg_unread_count) {
+        this.msg_unread_count = msg_unread_count;
     }
 }
