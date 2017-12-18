@@ -41,6 +41,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -175,17 +176,24 @@ public class Chat_A extends Activity {
                     // Message 객체로 부터 전달된 값들 가져오기
                     String order = msg.getData().getString("order");
                     Data_for_netty received_data = (Data_for_netty) msg.obj;
+//
+//                    // otto 등록
+//                    BusProvider.getBus().register(this);
+//
+//                    Event.Chat_handler__Chat_A event
+//                            = new Event.Chat_handler__Chat_A(order, received_data);
+//                    BusProvider.getBus().post(event);
+//                    Log.d(TAG, "otto 전달_ to_Chat_A");
+//
+//                    // otto 해제
+//                    BusProvider.getBus().unregister(this);
 
-                    // otto 등록
-                    BusProvider.getBus().register(this);
-
-                    Event.Chat_handler__Chat_A event
-                            = new Event.Chat_handler__Chat_A(order, received_data);
-                    BusProvider.getBus().post(event);
-                    Log.d(TAG, "otto 전달_ to_Chat_A");
-
-                    // otto 해제
-                    BusProvider.getBus().unregister(this);
+                    // 어댑터로 연결
+                    // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
+                    // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
+                    // (Chat_F는 해제할 부분이 확실함)
+                    rcv_chat_log_list_adapter.update_last_msg(order, received_data);
+                    recyclerView.setAdapter(rcv_chat_log_list_adapter);
                 }
             }
         };
@@ -226,6 +234,24 @@ public class Chat_A extends Activity {
 
         // 채팅 로그들이 있을 때 어댑터를 생성하고 넘김
         if(!chat_log_arr.isEmpty()) {
+            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+            if(rcv_chat_log_list_adapter == null) {
+                // 생성자 인수
+                // 1. 액티비티
+                // 2. 인플레이팅 되는 레이아웃
+                // 3. arrayList chat_log_arr
+                // 4. extra 변수
+                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
+                recyclerView.setAdapter(rcv_chat_log_list_adapter);
+                rcv_chat_log_list_adapter.notifyDataSetChanged();
+            }
+            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+            else {
+                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
+            }
+        }
+        // 채팅 로그들이 없을 때도 일단 어댑터를 생성하고 넘김
+        else if(chat_log_arr.isEmpty()) {
             // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
             if(rcv_chat_log_list_adapter == null) {
                 // 생성자 인수
@@ -450,6 +476,25 @@ public class Chat_A extends Activity {
         chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));      // 내 user_no
         chat_log.setMsg_content(input_msg);                             // 메세지 내용
         chat_log.setMember_count(member_count);                         // 채팅방 참여중인 총 인원
+        // 일단 기기 기준의 로컬 시간을 변수로 넣어서 전송함
+        // 나중에 서버에서 생성한 통신메세지 accept 시간으로 교체됨
+        long transmission_local_time = System.currentTimeMillis();
+        Log.d(TAG, "내가 채팅 메세지를 보낼때의, 내 기기 기준 로컬 transmission_local_time_ long type: " + transmission_local_time);
+        chat_log.setTransmission_gmt_time(transmission_local_time);
+
+        //// 자바 UUID로 고유값 만들기
+        // 랜덤 고유키 생성
+        UUID uuid = UUID.randomUUID();
+        Log.d(TAG, "랜덤 값 생성(uuid): " + uuid);
+        // 하이픈 제외
+        String converted_uuid = UUID.randomUUID().toString().replace("-", "");
+        Log.d(TAG, "uuid 하이픈 제외 값: " + converted_uuid);
+
+        // 나중에 서버에서 통신 메시지가 잘 도착했다는 콜백을 받으면,
+        // 이 UUID 값과 전달 당시 로컬 기기의 시간으로 해당 메세지를 식별해서
+        // 프로그레스바를 없애고, 읽지 않음 표시 view를 VISIBLE 처리 할거임(즉, 전송완료됨 처리 할것임)
+        // UUID 값과 채팅 내용을 해쉬맵에 저장
+        myapp.getTemp_my_chat_log_hash().put(String.valueOf(converted_uuid), transmission_local_time);
 
 
         // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
@@ -457,20 +502,15 @@ public class Chat_A extends Activity {
                 .Builder("msg", "none", myapp.getUser_no())
                 .chat_log(chat_log)
                 .build();
+        // UUID 값을 Data_for_netty의 Extra 변수에 넣기
+        data.setExtra(converted_uuid);
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 
         // 내 어댑터에 바로 추가 (서버로부터 메세지 전송 완료됐다는 응답 확인 필요 없이 일단 추가)
         // 나중에 서버로 부터 메세지 전송 완료됐다는 통신을 받으면
         // 그때 보여주던 프로그레스바의 View를 GONE 처리하고 메세지 전송 시각과 읽지 않은 메세지 숫자를 표시하기
-        rcv_chat_log_list_adapter.update_my_msg(chat_log);
-//        try {
-//            Thread.sleep(100);
-//            recyclerView.scrollToPosition(rcv_chat_log_list_adapter.getItemCount()-1);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
+        rcv_chat_log_list_adapter.update_my_msg_immediately(chat_log);
 
 //        chat_log.setTransmission_gmt_time(Long.parseLong(myapp.chat_log_transmission_time(System.currentTimeMillis())));
 
@@ -521,6 +561,11 @@ public class Chat_A extends Activity {
         myapp = null;
         // otto 등록 해제
         BusProvider.getBus().unregister(this);
+        // static handler 객체 null 처리
+        if(chat_message_handler != null) {
+            chat_message_handler = null;
+        }
+
         super.onDestroy();
     }
 }

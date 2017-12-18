@@ -1,18 +1,13 @@
 package com.example.jyn.remotemeeting.Netty;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.Application;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
 import com.example.jyn.remotemeeting.Activity.Chat_A;
+import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
-import com.example.jyn.remotemeeting.Otto.BusProvider;
-import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
 
@@ -60,17 +55,27 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                     : Data_for_netty 객체와 함께 채팅방 리사이클러뷰에 대한 변경점 이벤트 메시지를 전달
      ---------------------------------------------------------------------------*/
     public void to_Char_F(final String order, final Data_for_netty data) {
+        new Thread() {
+            @Override
+            public void run() {
 
-        // otto 등록
-        BusProvider.getBus().register(this);
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = Main_after_login_A.chat_room_handler.obtainMessage();
 
-        Event.Chat_handler__Chat_F event
-                = new Event.Chat_handler__Chat_F(order, data);
-        BusProvider.getBus().post(event);
-        Log.d(TAG, "otto 전달_ to_Char_F");
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'order' 변수 담기
+                bundle.putString("order", order);
+                // Message 객체에 bundle, 'data' 변수 담기
+                msg.setData(bundle);
+                msg.obj = data;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                msg.what = 0;
+                // 핸들러로 Message 객체 전달
+                Main_after_login_A.chat_room_handler.sendMessage(msg);
 
-        // otto 해제
-        BusProvider.getBus().unregister(this);
+            }
+        }.start();
     }
 
 
@@ -129,6 +134,7 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
         String[] temp = current_activity_with_package_name.split("[.]");
         String curr_activity_name = temp[temp.length-1];
         Log.d(TAG, "curr_activity_name: " + curr_activity_name);
+        Log.d(TAG, "Main_after_login_A.chat_F_onResume: " + Main_after_login_A.chat_F_onResume);
 
         /** 통신 메세지 구분 */
         switch (data.getSubType()) {
@@ -138,14 +144,21 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                 if(curr_activity_name.equals("Chat_A")) {
                     to_Chat_A("new", data);
                 }
-                // 현재의 액티비티가 'Chat_A'(채팅 화면)가 아닌 다른 액티비티라면,
-                else if(!curr_activity_name.equals("Chat_A")) {
+                // 현재의 액티비티가 'Main_after_login_A' 이고, onResume 상태라면
+                else if(curr_activity_name.equals("Main_after_login_A") &&
+                        Main_after_login_A.chat_F_onResume) {
+                    Log.d(TAG, "else if(curr_activity_name.equals(\"Main_after_login_A\") &&\n" +
+                            "                        Main_after_login_A.chat_F_onResume) 들어옴");
                     to_Char_F("update", data);
                 }
 
                 break;
             // 내가 보낸 채팅 메시지가 서버에 잘 도착했다는 콜백(응답) 메시지를 받았을 때
             case "call_back":
+                // 내가 보낸 채팅 메세지에 대한 콜백 이라면,
+                if(data.getType().equals("msg") && data.getUser_no().equals(myapp.getUser_no())) {
+                    to_Chat_A("my_chat_msg_call_back", data);
+                }
                 break;
         }
     }

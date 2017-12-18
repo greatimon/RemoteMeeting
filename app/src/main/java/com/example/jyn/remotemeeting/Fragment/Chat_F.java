@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_chatRoom_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
@@ -83,7 +84,7 @@ public class Chat_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView");
+        Log.d(TAG, "Chat_F_생명주기 onCreateView");
         this.inflater = inflater;
         this.container = container;
 
@@ -324,49 +325,56 @@ public class Chat_F extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume()");
+        Log.d(TAG, "Chat_F_생명주기 onResume()");
+        Main_after_login_A.chat_F_onResume = true;
     }
 
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause()");
+        Log.d(TAG, "Chat_F_생명주기 onPause()");
+        if(Main_after_login_A.chat_F_onResume) {
+            Main_after_login_A.chat_F_onResume = false;
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        Log.d(TAG, "onStop()");
+        Log.d(TAG, "Chat_F_생명주기 onStop()");
+        if(Main_after_login_A.chat_F_onResume) {
+            Main_after_login_A.chat_F_onResume = false;
+        }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.d(TAG, "onAttach");
+        Log.d(TAG, "Chat_F_생명주기 onAttach");
     }
 
     @Override
     public void onCreate( Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "Chat_F_생명주기 onCreate");
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        Log.d(TAG, "onActivityCreated");
+        Log.d(TAG, "Chat_F_생명주기 onActivityCreated");
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(TAG, "onStart");
+        Log.d(TAG, "Chat_F_생명주기 onStart");
     }
 
     @Override
     public void onDestroyView() {
-        Log.d(TAG, "onDestroyView()");
+        Log.d(TAG, "Chat_F_생명주기 onDestroyView()");
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
@@ -380,18 +388,22 @@ public class Chat_F extends Fragment {
         // 다음 onCreateView 시에 제대로 뷰에 채팅방 리스트가 나온다
         rcv_chat_Roomlist_adapter = null;
 
+        if(Main_after_login_A.chat_F_onResume) {
+            Main_after_login_A.chat_F_onResume = false;
+        }
+
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy()");
+        Log.d(TAG, "Chat_F_생명주기 onDestroy()");
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        Log.d(TAG, "onDetach()");
+        Log.d(TAG, "Chat_F_생명주기 onDetach()");
     }
 }

@@ -23,13 +23,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.example.jyn.remotemeeting.Adapter.Main_viewpager_adapter;
-import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
 import com.example.jyn.remotemeeting.Etc.Static;
-import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
@@ -52,10 +51,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 
-import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -95,7 +92,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     int current_viewPager_pos = 0;
     boolean onCreate = true;
     File file;
-    Handler handler;
+//    Handler handler;
 
     BackPressCloseHandler backPressCloseHandler;
     IsNetwork isNetwork;
@@ -115,6 +112,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     };
 
     PermissionListener permissionListener;
+
+    // Chat_F 프래그먼트의 생명주기 상태를 나타내기 위한 변수
+    public static boolean chat_F_onResume = false;
+
+    // 서버로 부터 받은 채팅 메세지를 Chat_handler로부터 전달받는 핸들러 객체 생성
+    public static Handler chat_room_handler;
 
 
     /**---------------------------------------------------------------------------
@@ -159,23 +162,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             }
         });
 
-        // 핸들러 객체 메세지 리스너
-        handler = new Handler() {
-            @Override
-            public void handleMessage(Message msg) {
-                if(msg.what == 0) {
-
-                }
-            }
-        };
-
         // 회의룸 생성 버튼
         final FloatingActionButton create_room = findViewById(R.id.create_room);
         create_room.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "회의룸 생성 버튼 클릭");
-                handler.sendEmptyMessage(0);
                 Intent intent = new Intent(view.getContext(), Create_room_D.class);
                 startActivityForResult(intent, REQUEST_CREATE_ROOM);
             }
@@ -369,6 +361,26 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                 }
             }
         });
+
+        /** 서버로 부터 받은 채팅 메세지를 Chat_handler로부터 전달받음 */
+        chat_room_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                // 핸들러 메세지를 보낸 주체가 to_Char_F() 메소드일 때
+                if(msg.what == 0) {
+                    Log.d(TAG, "Chat_handler로부터 핸들러 메세지 전달받음");
+                    // Message 객체로 부터 전달된 값들 가져오기
+                    String order = msg.getData().getString("order");
+                    Data_for_netty received_data = (Data_for_netty) msg.obj;
+
+                    /** otto 를 통해 Chat_F에게, 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
+                    Event.Chat_handler__Chat_F event = new Event.Chat_handler__Chat_F(order, received_data);
+                    BusProvider.getBus().post(event);
+                    Log.d(TAG, "otto 전달_ to_Char_F");
+                }
+            }
+        };
     }
 
 
@@ -405,12 +417,13 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     protected void onDestroy() {
         // otto 해제
         BusProvider.getBus().unregister(this);
+
+        // static handler 객체 null 처리
+        if(chat_room_handler != null) {
+            chat_room_handler = null;
+        }
+
         super.onDestroy();
-        // 회의가 비정상적으로 종료됐을 때를 대비
-//        if(!myapp.getMeeting_no().equals("")) {
-//            // 메소드 호출
-//            got_out_from_meeting();
-//        }
     }
 
 
@@ -810,7 +823,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             room.setUser_img_filename_arr(user_img_filename_arr);
             room.setChat_room_title(chat_room_title);
 
-            // TODO: 채팅방 액티비티로 이동
+            //// TODO: 채팅방 액티비티로 이동
             // CachePot 이용해서 클릭한 rooms 객체 전달
             CachePot.getInstance().push("chat_room", room);
 
@@ -1122,9 +1135,6 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         cursor.moveToFirst();
         return cursor.getString(column_index);
     }
-
-
-
 
 
 

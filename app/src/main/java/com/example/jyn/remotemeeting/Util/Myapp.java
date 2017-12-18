@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -133,6 +134,11 @@ public class Myapp extends Application {
 
     /** Netty - Channel : 서비스 구동 후, 서버와 연결된 channel을 어플리케이션 객체에 보관*/
     Channel channel;
+
+    /** 내가 보낸 채팅 메세지에 대한 UUID 값과, 채팅 메세지를 임시적으로 저장하기 위한 hashMap */
+    // key - UUID
+    // value - 내가 채팅 메세지를 전송할 때의 기기의 로컬 시간
+    public ConcurrentHashMap<String, Long> temp_my_chat_log_hash;
 
     /** GET, SET */
     public String getUser_no() {
@@ -272,6 +278,14 @@ public class Myapp extends Application {
         this.channel = channel;
     }
 
+    public ConcurrentHashMap<String, Long> getTemp_my_chat_log_hash() {
+        return temp_my_chat_log_hash;
+    }
+
+    public void setTemp_my_chat_log_hash(ConcurrentHashMap<String, Long> temp_my_chat_log_hash) {
+        this.temp_my_chat_log_hash = temp_my_chat_log_hash;
+    }
+
     /** 생명주기 - onCreate */
     @Override
     public void onCreate() {
@@ -279,6 +293,7 @@ public class Myapp extends Application {
         appInstance = this;
         checked_files = new HashMap<>();
         files_for_upload = new HashMap<>();
+        temp_my_chat_log_hash = new ConcurrentHashMap<>();
     }
 
     /** 싱글톤 */

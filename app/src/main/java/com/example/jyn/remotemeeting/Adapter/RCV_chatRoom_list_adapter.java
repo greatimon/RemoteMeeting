@@ -257,9 +257,9 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
                 if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
                     rooms.get(i).setLast_log(data.getChat_log());
-                    // data 'Extra' 변수에 담겨 있는, 해당 채팅방 안 읽은 메세지 개수 가져와서 set 하기
-                    rooms.get(i).setUnread_msg_count(Integer.parseInt(data.getExtra()));
-                    Log.d(TAG, "해당 채팅방 안 읽은 메세지 개수: " + data.getExtra());
+//                    // data 'Extra' 변수에 담겨 있는, 해당 채팅방 안 읽은 메세지 개수 가져와서 set 하기
+//                    rooms.get(i).setUnread_msg_count(Integer.parseInt(data.getExtra()));
+//                    Log.d(TAG, "해당 채팅방 안 읽은 메세지 개수: " + data.getExtra());
                     notifyItemChanged(i);
                 }
             }
