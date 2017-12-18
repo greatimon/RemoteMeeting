@@ -42,6 +42,7 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -132,14 +133,49 @@ public class Chat_F extends Fragment {
      otto ==> Chat_handler로 부터 message 수신
      ---------------------------------------------------------------------------*/
     @Subscribe
-    public void getMessage(Event.Chat_handler__Chat_F event) {
+    public void getMessage(final Event.Chat_handler__Chat_F event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
 
-        // 어댑터로 연결
-        // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
-        // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
-        // (Chat_F는 해제할 부분이 확실함)
-        rcv_chat_Roomlist_adapter.update_last_msg(event.getMessage(), event.getData());
+        // 해당 채팅방에 대한 안읽은 메세지 개수만 서버로 부터 받아오기
+        int target_chatroom_no = event.getData().getChat_log().getChat_room_no();
+
+        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+        Call<ResponseBody> call = rs.get_unread_msg_count(
+                Static.GET_UNREAD_MSG_COUNT,
+                myapp.getUser_no(), target_chatroom_no);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String result = response.body().string();
+                    Log.d(TAG, "get_unread_msg_count_result: "+result);
+
+                    if(result.equals("-1")) {
+
+                    }
+                    else if(result.equals("0")) {
+
+                    }
+                    // 받아온 msg_unread_count를 전달할 객체에 set
+                    else {
+                        event.getData().getChat_log().setMsg_unread_count(Integer.parseInt(result));
+                        // 어댑터로 연결
+                        // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
+                        // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
+                        // (Chat_F는 해제할 부분이 확실함)
+                        rcv_chat_Roomlist_adapter.update_last_msg(event.getMessage(), event.getData());
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                myapp.logAndToast("onFailure_result" + t.getMessage());
+            }
+        });
     }
 
 
@@ -164,22 +200,22 @@ public class Chat_F extends Fragment {
         else if(!rooms.isEmpty()) {
             no_result.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+        }
 
-            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-            if(rcv_chat_Roomlist_adapter == null) {
-                // 생성자 인수
-                // 1. 액티비티
-                // 2. 인플레이팅 되는 레이아웃
-                // 3. arrayList rooms
-                // 4. extra 변수
-                rcv_chat_Roomlist_adapter = new RCV_chatRoom_list_adapter(getActivity(), R.layout.i_chat_room, rooms, "chat");
-                recyclerView.setAdapter(rcv_chat_Roomlist_adapter);
-                rcv_chat_Roomlist_adapter.notifyDataSetChanged();
-            }
-            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
-            else {
-                rcv_chat_Roomlist_adapter.refresh_arr(rooms);
-            }
+        // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+        if(rcv_chat_Roomlist_adapter == null) {
+            // 생성자 인수
+            // 1. 액티비티
+            // 2. 인플레이팅 되는 레이아웃
+            // 3. arrayList rooms
+            // 4. extra 변수
+            rcv_chat_Roomlist_adapter = new RCV_chatRoom_list_adapter(getActivity(), R.layout.i_chat_room, rooms, "chat");
+            recyclerView.setAdapter(rcv_chat_Roomlist_adapter);
+            rcv_chat_Roomlist_adapter.notifyDataSetChanged();
+        }
+        // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+        else {
+            rcv_chat_Roomlist_adapter.refresh_arr(rooms);
         }
     }
 
@@ -241,6 +277,15 @@ public class Chat_F extends Fragment {
                                     int chat_room_authority_user_no = jsonArray.getJSONObject(i).getInt("chat_room_authority_user_no");
                                     // 해당 채팅방의 마지막 메세지 번호
                                     int last_msg_no = jsonArray.getJSONObject(i).getInt("last_msg_no");
+
+                                    /**
+                                     * 만약 마지막 메세지 번호가 '0' 이라면, 채팅 메세지가 하나도 오고간 적이 없는 것이므로, 무시한다
+                                     *  ==> continue;
+                                     * */
+                                    if(last_msg_no == 0) {
+                                        continue;
+                                    }
+
                                     // 해당 채팅방의 메시지들 중에서 내가 안 읽은 메세지의 개수
                                     int unread_msg_count = jsonArray.getJSONObject(i).getInt("unread_msg_count");
                                     // 채팅방 제목

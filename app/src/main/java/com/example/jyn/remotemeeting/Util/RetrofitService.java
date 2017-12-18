@@ -65,6 +65,16 @@ public interface RetrofitService {
     );
 
 
+    /** 해당 채팅방에서 내가 읽지 않은 메세지 개수 가져오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_unread_msg_count (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "chat_room_no", encoded=true) int chat_room_no
+    );
+
+
     /** 채팅방 로그 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")
@@ -72,6 +82,18 @@ public interface RetrofitService {
             @Path("url") String url,
             @Field(value = "user_no", encoded=true) String user_no,
             @Field(value = "chat_room_no", encoded=true) String chat_room_no
+    );
+
+
+    /** 해당 채팅방에서 처음으로 받은 msg_no + 마지막으로 받은 msg_no 업데이트 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> update_first_last_msg_no (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "chat_room_no", encoded=true) int chat_room_no,
+            @Field(value = "first_read_msg_no", encoded=true) int first_read_msg_no,
+            @Field(value = "last_read_msg_no", encoded=true) int last_read_msg_no
     );
 
 

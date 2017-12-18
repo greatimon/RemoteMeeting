@@ -374,10 +374,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                     String order = msg.getData().getString("order");
                     Data_for_netty received_data = (Data_for_netty) msg.obj;
 
-                    /** otto 를 통해 Chat_F에게, 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
-                    Event.Chat_handler__Chat_F event = new Event.Chat_handler__Chat_F(order, received_data);
-                    BusProvider.getBus().post(event);
-                    Log.d(TAG, "otto 전달_ to_Char_F");
+                    if(chat_F_onResume) {
+                        /** otto 를 통해 Chat_F에게, 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
+                        Event.Chat_handler__Chat_F event = new Event.Chat_handler__Chat_F(order, received_data);
+                        BusProvider.getBus().post(event);
+                        Log.d(TAG, "otto 전달_ to_Char_F");
+                    }
                 }
             }
         };

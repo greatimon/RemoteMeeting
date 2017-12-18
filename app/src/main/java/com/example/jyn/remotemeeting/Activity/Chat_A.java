@@ -49,6 +49,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -232,42 +233,68 @@ public class Chat_A extends Activity {
         ArrayList<Chat_log> chat_log_arr = get_chatting_logs();
         Log.d(TAG, "chat_log_arr.isEmpty(): " + chat_log_arr.isEmpty());
 
-        // 채팅 로그들이 있을 때 어댑터를 생성하고 넘김
+        if(rcv_chat_log_list_adapter == null) {
+            // 생성자 인수
+            // 1. 액티비티
+            // 2. 인플레이팅 되는 레이아웃
+            // 3. arrayList chat_log_arr
+            // 4. extra 변수
+            rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
+            recyclerView.setAdapter(rcv_chat_log_list_adapter);
+            rcv_chat_log_list_adapter.notifyDataSetChanged();
+        }
+        // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+        else {
+            rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
+        }
+
+        // 채팅 로그 arr에 리스트들이 있을 때
         if(!chat_log_arr.isEmpty()) {
-            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-            if(rcv_chat_log_list_adapter == null) {
-                // 생성자 인수
-                // 1. 액티비티
-                // 2. 인플레이팅 되는 레이아웃
-                // 3. arrayList chat_log_arr
-                // 4. extra 변수
-                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
-                recyclerView.setAdapter(rcv_chat_log_list_adapter);
-                rcv_chat_log_list_adapter.notifyDataSetChanged();
-            }
-            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
-            else {
-                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
-            }
+            int first_read_msg_no = chat_log_arr.get(0).getMsg_no();
+            int last_read_msg_no = chat_log_arr.get(chat_log_arr.size()-1).getMsg_no();
+            Log.d(TAG, "first_read_msg_no: " + first_read_msg_no);
+            Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
+
+            // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
+            myapp.update_first_last_msg_no(Chatroom_no, first_read_msg_no, last_read_msg_no);
         }
-        // 채팅 로그들이 없을 때도 일단 어댑터를 생성하고 넘김
-        else if(chat_log_arr.isEmpty()) {
-            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-            if(rcv_chat_log_list_adapter == null) {
-                // 생성자 인수
-                // 1. 액티비티
-                // 2. 인플레이팅 되는 레이아웃
-                // 3. arrayList chat_log_arr
-                // 4. extra 변수
-                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
-                recyclerView.setAdapter(rcv_chat_log_list_adapter);
-                rcv_chat_log_list_adapter.notifyDataSetChanged();
-            }
-            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
-            else {
-                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
-            }
-        }
+
+//        // 채팅 로그들이 있을 때 어댑터를 생성하고 넘김
+//        if(!chat_log_arr.isEmpty()) {
+//            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+//            if(rcv_chat_log_list_adapter == null) {
+//                // 생성자 인수
+//                // 1. 액티비티
+//                // 2. 인플레이팅 되는 레이아웃
+//                // 3. arrayList chat_log_arr
+//                // 4. extra 변수
+//                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
+//                recyclerView.setAdapter(rcv_chat_log_list_adapter);
+//                rcv_chat_log_list_adapter.notifyDataSetChanged();
+//            }
+//            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+//            else {
+//                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
+//            }
+//        }
+//        // 채팅 로그들이 없을 때도 일단 어댑터를 생성하고 넘김
+//        else if(chat_log_arr.isEmpty()) {
+//            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+//            if(rcv_chat_log_list_adapter == null) {
+//                // 생성자 인수
+//                // 1. 액티비티
+//                // 2. 인플레이팅 되는 레이아웃
+//                // 3. arrayList chat_log_arr
+//                // 4. extra 변수
+//                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
+//                recyclerView.setAdapter(rcv_chat_log_list_adapter);
+//                rcv_chat_log_list_adapter.notifyDataSetChanged();
+//            }
+//            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+//            else {
+//                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
+//            }
+//        }
 
     }
 
@@ -324,6 +351,7 @@ public class Chat_A extends Activity {
                                     String jsonString = jsonArray.getJSONObject(i).toString();
                                     Gson gson = new Gson();
                                     Chat_log chat_log = gson.fromJson(jsonString, Chat_log.class);
+                                    Log.d(TAG, "chat_log.getMsg_no(): " + chat_log.getMsg_no());
                                     final_chat_log_arr.add(chat_log);
                                 }
                             }

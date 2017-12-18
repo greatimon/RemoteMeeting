@@ -31,6 +31,8 @@ public class Static {
     public static String GET_CHAT_ROOM_LIST = "get_chat_room_list.php";
     public static String GET_CHATTING_LOGS = "get_chatting_logs.php";
     public static String CREATE_CHAT_ROOM_FOR_ONE = "create_chat_room_for_one.php";
+    public static String UPDATE_FIRST_LAST_MSG_NO = "update_first_last_msg_no.php";
+    public static String GET_UNREAD_MSG_COUNT = "get_unread_msg_count.php";
 
     /** 인텐트용 공유 키 */
     public static String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";

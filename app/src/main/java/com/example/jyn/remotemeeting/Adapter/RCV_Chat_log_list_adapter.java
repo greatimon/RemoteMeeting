@@ -140,13 +140,13 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
 
             // =================================================================
             // 연속된 메세지일때 View를 다르게 하기 위한 구분자 변수
-            boolean serial_msg = true;
+            boolean serial_msg = false;
             if(pos != 0) {
                 // 이전 ArrayList의 바로 전 아이템의 user_no와 지금 아이템의 user_no를 비교함
                 int just_right_before_item_user_no = chat_log.get(pos-1).getUser_no();
-                // 연속된 메세지가 아닌 경우
-                if(just_right_before_item_user_no != msg_user_no) {
-                    serial_msg = false;
+                // 연속된 메세지인 경우
+                if(just_right_before_item_user_no == msg_user_no) {
+                    serial_msg = true;
                 }
             }
 
@@ -210,7 +210,6 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
 
             }
         }
-
     }
 
     /** getItemCount => arr 사이즈 리턴 */
@@ -238,9 +237,16 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
         if(message.equals("new")) {
             Log.d(TAG, "채팅 로그 어레이 리스트 들어옴");
             Chat_log new_chat_log = data.getChat_log();
-            chat_log.add(new_chat_log);
-            notifyItemInserted(chat_log.size()-1);
-            Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);
+
+            // 이 채팅방이, 내가 서버로부터 받은 채팅메세지의 채팅방과 동일한지 확인
+            int get_this_chatroom_no = chat_log.get(0).getChat_room_no();
+            int received_chatroon_no = data.getChat_log().getChat_room_no();
+            // 동일할때만 arrayList에 추가
+            if(get_this_chatroom_no == received_chatroon_no) {
+                chat_log.add(new_chat_log);
+                notifyItemInserted(chat_log.size()-1);
+                Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);
+            }
         }
         // 내가 보낸 채팅 메세지에 대한 '전송완료' 콜백 메시지일 때
         else if(message.equals("my_chat_msg_call_back")) {

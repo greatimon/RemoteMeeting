@@ -125,19 +125,20 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
     public void onBindViewHolder(ViewHolder holder, int pos) {
         Log.d(TAG, "onBindViewHolder");
 
+        // 메세지 내용 get
         String last_log_msg_content = "none exist";
-        // TODO: 나중에, 메세지가 오고 간적이 없는 채팅방은 표시하지 않도록 구현하기,
-        // TODO: 현재는 테스트를 위해서 그냥 리스트뷰에 표시되도록 함
         if(rooms.get(pos).getLast_log() != null) {
             last_log_msg_content = rooms.get(pos).getLast_log().getMsg_content();
         }
-//        else if(rooms.get(pos).getLast_log() ) {
-//
-//        }
 
+        // 메세지 서버 전송 시각 get
         String last_log_transmission_time_for_local = rooms.get(pos).getTransmission_time_for_local();
+        // 총 방 인원 get
         int member_count = rooms.get(pos).getUser_nickname_arr().size();
+        // 읽지 않은 메세지 수 get
         int unread_msg_count = rooms.get(pos).getUnread_msg_count();
+        Log.d(TAG, "unread_msg_count: " + unread_msg_count);
+        // 채팅방 제목 get
         String chat_room_title = rooms.get(pos).getChat_room_title();
 
         StringBuilder user_nickname_list = new StringBuilder();
@@ -203,7 +204,7 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         holder.time.setText(last_log_transmission_time_for_local);
         holder.unread_msg.setText(String.valueOf(unread_msg_count));
 
-        // 이미지 셋팅, 일단 지금은 1:1 기준으로만 셋팅
+        // 이미지 URL로 셋팅, 일단 지금은 1:1 기준으로만 셋팅
         if(img_URL_for_setting.equals("none")) {
             holder.profile_img.setImageResource(R.drawable.default_profile);
         }
@@ -216,16 +217,14 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 .into(holder.profile_img);
         }
 
-        /** 안 읽은 메세지 개수 나중에 작업할것!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-        holder.unread_msg.setVisibility(View.GONE);
-
-        // 안 읽은 메세지 개수 셋팅
-//        if(unread_msg_count >= 1) {
-//            holder.unread_msg.setVisibility(View.VISIBLE);
-//        }
-//        else if(unread_msg_count == 0) {
-//            holder.unread_msg.setVisibility(View.GONE);
-//        }
+        // 해당 채팅방, 읽지 않은 메세지 개수 셋팅
+        if(unread_msg_count == 0) {
+            holder.unread_msg.setVisibility(View.GONE);
+        }
+        else if(unread_msg_count > 0) {
+            holder.unread_msg.setText(String.valueOf(unread_msg_count));
+            holder.unread_msg.setVisibility(View.VISIBLE);
+        }
     }
 
     /** getItemCount => arr 사이즈 리턴 */
@@ -257,6 +256,9 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                 // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
                 if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
                     rooms.get(i).setLast_log(data.getChat_log());
+                    Log.d(TAG, "갱신된 msg_position: " + i);
+                    Log.d(TAG, "갱신된 msg의 unread_msg_count: " + rooms.get(i).getLast_log().getMsg_unread_count());
+                    rooms.get(i).setUnread_msg_count(rooms.get(i).getLast_log().getMsg_unread_count());
 //                    // data 'Extra' 변수에 담겨 있는, 해당 채팅방 안 읽은 메세지 개수 가져와서 set 하기
 //                    rooms.get(i).setUnread_msg_count(Integer.parseInt(data.getExtra()));
 //                    Log.d(TAG, "해당 채팅방 안 읽은 메세지 개수: " + data.getExtra());

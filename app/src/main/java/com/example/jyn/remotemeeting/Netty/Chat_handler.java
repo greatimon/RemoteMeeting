@@ -124,7 +124,7 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
 
         // 받은 통신 메세지 Data_for_netty 객체화
         Gson gson = new Gson();
-        Data_for_netty data = gson.fromJson(message, Data_for_netty.class);
+        final Data_for_netty data = gson.fromJson(message, Data_for_netty.class);
         Log.d(TAG, "data.getType(): " + data.getType());
         Log.d(TAG, "data.getSubType(): " + data.getSubType());
 
@@ -142,14 +142,30 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
             case "relay_msg":
                 // 현재의 액티비티가 'Chat_A'(채팅 화면)라면,
                 if(curr_activity_name.equals("Chat_A")) {
-                    to_Chat_A("new", data);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            to_Chat_A("new", data);
+
+                            // 현재 있는 채팅방이, 서버로부터 받은 relay_msg의 채팅방과 일치한다면,
+                            if(myapp.getChatroom_no() == data.getChat_log().getChat_room_no()) {
+                                // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
+                                myapp.update_first_last_msg_no(data.getChat_log().getChat_room_no(),
+                                        data.getChat_log().getMsg_no(),
+                                        data.getChat_log().getMsg_no());
+                            }
+                        }
+                    }.start();
                 }
                 // 현재의 액티비티가 'Main_after_login_A' 이고, onResume 상태라면
                 else if(curr_activity_name.equals("Main_after_login_A") &&
                         Main_after_login_A.chat_F_onResume) {
-                    Log.d(TAG, "else if(curr_activity_name.equals(\"Main_after_login_A\") &&\n" +
-                            "                        Main_after_login_A.chat_F_onResume) 들어옴");
-                    to_Char_F("update", data);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            to_Char_F("update", data);
+                        }
+                    }.start();
                 }
 
                 break;
@@ -157,11 +173,22 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
             case "call_back":
                 // 내가 보낸 채팅 메세지에 대한 콜백 이라면,
                 if(data.getType().equals("msg") && data.getUser_no().equals(myapp.getUser_no())) {
-                    to_Chat_A("my_chat_msg_call_back", data);
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            to_Chat_A("my_chat_msg_call_back", data);
+
+                            // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
+                            myapp.update_first_last_msg_no(data.getChat_log().getChat_room_no(),
+                                    data.getChat_log().getMsg_no(),
+                                    data.getChat_log().getMsg_no());
+                        }
+                    }.start();
                 }
                 break;
         }
     }
+
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {

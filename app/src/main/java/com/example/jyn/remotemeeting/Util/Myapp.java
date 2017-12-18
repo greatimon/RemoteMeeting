@@ -64,6 +64,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -1332,6 +1333,42 @@ public class Myapp extends Application {
 //            }
         }
         return top_activity_name;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하기
+        마지막으로 받은 msg_no를 서버DB 'my_chat_room_info'테이블의 'last_read_msg_no'로 업데이트 한다
+        처음으로 받은 msg_no를 서버DB 'my_chat_room_info'테이블의 'first_read_msg_no'로 업데이트 한다
+        -- 단, 서버DB 'my_chat_room_info'테이블의 'first_read_msg_no'가 '0'이 아닌 경우에만!
+        -- 즉, 최초 1회에 한해서만 업데이트 한다
+     ---------------------------------------------------------------------------*/
+    public void update_first_last_msg_no(int chat_room_no, int first_read_msg_no, int last_read_msg_no) {
+        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+        Call<ResponseBody> call = rs.update_first_last_msg_no(
+                Static.UPDATE_FIRST_LAST_MSG_NO,
+                getUser_no(), chat_room_no, first_read_msg_no, last_read_msg_no);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String update_first_last_msg_no_result = response.body().string();
+                    Log.d(TAG, "update_first_last_msg_no_result: "+update_first_last_msg_no_result);
+
+                    if(update_first_last_msg_no_result.equals("success")) {
+
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                logAndToast("onFailure_result" + t.getMessage());
+            }
+        });
     }
 
 
