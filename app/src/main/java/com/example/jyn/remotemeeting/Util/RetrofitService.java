@@ -65,6 +65,16 @@ public interface RetrofitService {
     );
 
 
+    /** 특정 한개의 채팅방 정보 가져오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_new_chatroom_info (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "target_chatroom_no", encoded=true) int target_chatroom_no
+    );
+
+
     /** 해당 채팅방에서 내가 읽지 않은 메세지 개수 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")

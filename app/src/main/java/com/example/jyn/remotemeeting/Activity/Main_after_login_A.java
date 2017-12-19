@@ -817,6 +817,10 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // 변환한 user 객체에서 닉네임과 이미지 URL 값을 가져와서 해당 ArrayList 에 add.
             user_nickname_arr.add(user.getUser_nickname());
             user_img_filename_arr.add(user.getUser_img_filename());
+            // 서버에서 채팅방을 생성하고 상대한 정보만 리턴 하므로, 나에 대한 정보는 서버에서 받은 값에 없다
+            // 따라서 나에 대한 정보도 arr 에 add 해준다
+            user_nickname_arr.add(myapp.getUser_nickname());
+            user_img_filename_arr.add(myapp.getUser_img_filename());
 
             /** Chat_room 객체에 데이터 넣기 */
             Chat_room room = new Chat_room();

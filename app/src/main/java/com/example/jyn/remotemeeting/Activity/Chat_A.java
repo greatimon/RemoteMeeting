@@ -111,7 +111,7 @@ public class Chat_A extends Activity {
         Intent intent = getIntent();
         from = intent.getStringExtra("from");
 
-        // CachePot 이용해서 room 객체 받아오기
+        // CachePot 이용해서 Main_after_login_A의 onActivityResult로 부터 전달받은 room 객체 받아오기
         chat_room = CachePot.getInstance().pop("chat_room");
         CachePot.getInstance().clear("chat_room");
         Chatroom_no = chat_room.getChatroom_no();
@@ -177,17 +177,6 @@ public class Chat_A extends Activity {
                     // Message 객체로 부터 전달된 값들 가져오기
                     String order = msg.getData().getString("order");
                     Data_for_netty received_data = (Data_for_netty) msg.obj;
-//
-//                    // otto 등록
-//                    BusProvider.getBus().register(this);
-//
-//                    Event.Chat_handler__Chat_A event
-//                            = new Event.Chat_handler__Chat_A(order, received_data);
-//                    BusProvider.getBus().post(event);
-//                    Log.d(TAG, "otto 전달_ to_Chat_A");
-//
-//                    // otto 해제
-//                    BusProvider.getBus().unregister(this);
 
                     // 어댑터로 연결
                     // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
@@ -221,17 +210,56 @@ public class Chat_A extends Activity {
      메소드 ==> chatting_log ArrayList를 리사이클러뷰 어댑터로 넘기기
      ---------------------------------------------------------------------------*/
     public void set_chatting_logs() {
-//        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
-//        Data_for_netty data = new Data_for_netty
-//                .Builder("request", "chatting_logs", myapp.getUser_no())
-//                .build();
-//        // 'extra' 변수에 채팅방 번호 넣어 넘기기
-//        data.setExtra(String.valueOf(Chatroom_no));
-//        // 통신 전송 메소드 호출
-//        myapp.send_to_server(data);
 
         ArrayList<Chat_log> chat_log_arr = get_chatting_logs();
         Log.d(TAG, "chat_log_arr.isEmpty(): " + chat_log_arr.isEmpty());
+
+        /** 채팅 로그 사이에 날짜가 변경된 것을 알리기 위해, 날짜변경 item을 arrayList에 추가하는 로직 */
+        long first_msg_trans_time = 0L;
+        // 채팅 로그가 있을 때만
+        if(!chat_log_arr.isEmpty()) {
+            // 채팅 로그를 돌면서, 날짜가 변경되는 조건을 확인하여 날짜구분선 item을 arrayList에 add 한다
+            for(int i=0; i<chat_log_arr.size(); i++) {
+
+                // 첫번째 채팅 로그의 trans_time, get
+                if(i == 0) {
+                    first_msg_trans_time = chat_log_arr.get(i).getTransmission_gmt_time();
+                }
+
+                // 현재 'i'의 chat_log millisecond time, get
+                long target_msg_trans_time = chat_log_arr.get(i).getTransmission_gmt_time();
+
+                // 두번째 chat_log 부터는, 바로 이전 chat_log의 millisecond time과 비교를 통해 날짜가 변경됬는지
+                // 확인하고, 변경되었을 때 날짜변경선을 추가한다
+                if(i > 0) {
+                    long previous_msg_trans_time = chat_log_arr.get(i-1).getTransmission_gmt_time();
+
+                    String check_date_result =
+                            myapp.check_change_date(previous_msg_trans_time, target_msg_trans_time, false);
+                    String temp[] = check_date_result.split(Static.SPLIT);
+
+                    if(temp[0].equals("changed")) {
+                        Chat_log date_change_line = new Chat_log();
+                        date_change_line.setMsg_content(temp[1]);
+                        date_change_line.setTransmission_gmt_time(target_msg_trans_time);
+                        /** RCV_chat_log_list_adapter 에서 날짜구분 item을 구분하기 위해 user_no를 특정값 '-10'으로 줌*/
+                        date_change_line.setUser_no(-10);
+                        chat_log_arr.add(i, date_change_line);
+                    }
+                }
+            }
+
+            // 첫번째 chat_log 일 땐 무조건 날짜를 알려야 하므로, 날짜변경선 추가
+            String check_date_result =
+                    myapp.check_change_date(first_msg_trans_time, first_msg_trans_time, true);
+            Chat_log date_change_line = new Chat_log();
+            date_change_line.setMsg_content(check_date_result);
+            date_change_line.setTransmission_gmt_time(first_msg_trans_time);
+            /** RCV_chat_log_list_adapter 에서 날짜구분 item을 구분하기 위해 user_no를 특정값 '-10'으로 줌*/
+            date_change_line.setUser_no(-10);
+            chat_log_arr.add(0, date_change_line);
+        }
+
 
         if(rcv_chat_log_list_adapter == null) {
             // 생성자 인수
@@ -250,7 +278,10 @@ public class Chat_A extends Activity {
 
         // 채팅 로그 arr에 리스트들이 있을 때
         if(!chat_log_arr.isEmpty()) {
-            int first_read_msg_no = chat_log_arr.get(0).getMsg_no();
+            // 원래는 첫번째 읽은 메세지가 당연히 ArrayList의 0번째에 들어있겠지만
+            // 위쪽 로직에서 로그 리스트들이 원래 있을 때, 0번째에 '날짜변경선'을 추가 했으므로
+            // 인덱스 1번이, 내가 첫번째 읽은 메세지가 된다
+            int first_read_msg_no = chat_log_arr.get(1).getMsg_no();
             int last_read_msg_no = chat_log_arr.get(chat_log_arr.size()-1).getMsg_no();
             Log.d(TAG, "first_read_msg_no: " + first_read_msg_no);
             Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
@@ -259,43 +290,15 @@ public class Chat_A extends Activity {
             myapp.update_first_last_msg_no(Chatroom_no, first_read_msg_no, last_read_msg_no);
         }
 
-//        // 채팅 로그들이 있을 때 어댑터를 생성하고 넘김
-//        if(!chat_log_arr.isEmpty()) {
-//            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-//            if(rcv_chat_log_list_adapter == null) {
-//                // 생성자 인수
-//                // 1. 액티비티
-//                // 2. 인플레이팅 되는 레이아웃
-//                // 3. arrayList chat_log_arr
-//                // 4. extra 변수
-//                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
-//                recyclerView.setAdapter(rcv_chat_log_list_adapter);
-//                rcv_chat_log_list_adapter.notifyDataSetChanged();
-//            }
-//            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
-//            else {
-//                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
-//            }
-//        }
-//        // 채팅 로그들이 없을 때도 일단 어댑터를 생성하고 넘김
-//        else if(chat_log_arr.isEmpty()) {
-//            // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-//            if(rcv_chat_log_list_adapter == null) {
-//                // 생성자 인수
-//                // 1. 액티비티
-//                // 2. 인플레이팅 되는 레이아웃
-//                // 3. arrayList chat_log_arr
-//                // 4. extra 변수
-//                rcv_chat_log_list_adapter = new RCV_Chat_log_list_adapter(getBaseContext(), R.layout.i_chat_message, chat_log_arr, "chatting");
-//                recyclerView.setAdapter(rcv_chat_log_list_adapter);
-//                rcv_chat_log_list_adapter.notifyDataSetChanged();
-//            }
-//            // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
-//            else {
-//                rcv_chat_log_list_adapter.refresh_arr(chat_log_arr);
-//            }
-//        }
-
+        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
+        // '내가 현재 들어왔는 채팅방 번호' 전달
+        Data_for_netty data = new Data_for_netty
+                .Builder("chatroom", "none", myapp.getUser_no())
+                .build();
+        // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+        data.setExtra(String.valueOf(Chatroom_no));
+        // 통신 전송 메소드 호출
+        myapp.send_to_server(data);
     }
 
 
@@ -352,6 +355,11 @@ public class Chat_A extends Activity {
                                     Gson gson = new Gson();
                                     Chat_log chat_log = gson.fromJson(jsonString, Chat_log.class);
                                     Log.d(TAG, "chat_log.getMsg_no(): " + chat_log.getMsg_no());
+                                    Log.d(TAG, "chat_log.getMsg_unread_count(): "+chat_log.getMsg_unread_count());
+                                    Log.d(TAG, "chat_log.getMsg_unread_user_no_list(): "+chat_log.getMsg_unread_user_no_list());
+
+                                    /**  */
+
                                     final_chat_log_arr.add(chat_log);
                                 }
                             }
@@ -380,6 +388,7 @@ public class Chat_A extends Activity {
      ---------------------------------------------------------------------------*/
     public void set_title_and_counting() {
         member_count = chat_room.getUser_nickname_arr().size();
+        Log.d(TAG, "member_count: " + member_count);
         chat_room_title = chat_room.getChat_room_title();
         nickName_for_setting = "";
 
@@ -504,6 +513,7 @@ public class Chat_A extends Activity {
         chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));      // 내 user_no
         chat_log.setMsg_content(input_msg);                             // 메세지 내용
         chat_log.setMember_count(member_count);                         // 채팅방 참여중인 총 인원
+        chat_log.setMsg_unread_count(member_count-1);                   // 이 메세지를 읽어야 하는 수(나 제외)
         // 일단 기기 기준의 로컬 시간을 변수로 넣어서 전송함
         // 나중에 서버에서 생성한 통신메세지 accept 시간으로 교체됨
         long transmission_local_time = System.currentTimeMillis();

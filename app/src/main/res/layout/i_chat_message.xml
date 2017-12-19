@@ -37,7 +37,7 @@
             android:id="@+id/layout_for_only_msg_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="-5dp"
+            android:layout_marginStart="-7dp"
             android:orientation="vertical">
 
             <TextView
@@ -60,30 +60,63 @@
                 android:layout_height="3dp"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/msg_content"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/shape_msg_not_me"
-                android:paddingBottom="8dp"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:paddingTop="8dp"
-                android:textColor="#383838"
-                tools:text="메시지_테스트"
-                tools:visibility="visible" />
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/msg_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/shape_msg_not_me"
+                    android:paddingBottom="8dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="8dp"
+                    android:textColor="#383838"
+                    tools:text="1"
+                    tools:visibility="visible" />
 
-            <ImageView
-                android:id="@+id/send_img"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:maxWidth="250dp"
-                android:maxHeight="250dp"
-                android:minHeight="250dp"
-                android:scaleType="fitStart"
-                android:visibility="gone"
-                tools:visibility="gone" />
+                <ImageView
+                    android:id="@+id/send_img"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:maxWidth="250dp"
+                    android:maxHeight="250dp"
+                    android:minHeight="250dp"
+                    android:scaleType="fitStart"
+                    android:visibility="gone"
+                    tools:visibility="gone" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:orientation="vertical"
+                    android:layout_gravity="bottom"
+                    >
+                    <TextView
+                        android:visibility="visible"
+                        android:id="@+id/unread_msg_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="-3dp"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        tools:text="1"
+                        android:textSize="10dp"
+                        android:textColor="#4caf50" />
+                    <TextView
+                        android:id="@+id/time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        tools:text="22:16"
+                        android:textSize="11dp"
+                        android:textColor="#737373" />
+                </LinearLayout>
+            </LinearLayout>
 
             <View
                 android:id="@+id/serial_msg_below_content"
@@ -91,39 +124,11 @@
                 android:layout_height="10dp"
                 android:visibility="gone" />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:orientation="vertical"
-            android:layout_gravity="bottom"
-            >
-            <TextView
-                android:visibility="visible"
-                android:id="@+id/unread_msg_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:ellipsize="end"
-                tools:text="1"
-                android:textSize="10dp"
-                android:textColor="#4caf50" />
-            <TextView
-                android:id="@+id/time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:singleLine="true"
-                android:ellipsize="end"
-                tools:text="22:16"
-                android:textSize="11dp"
-                android:textColor="#737373" />
-
-        </LinearLayout>
     </LinearLayout>
 
     <!--내 채팅 메세지-->
     <LinearLayout
+        tools:visibility="visible"
         android:id="@+id/me_layout"
         android:layout_alignParentEnd="true"
         android:layout_width="wrap_content"
@@ -148,7 +153,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="6dp"
             android:orientation="vertical"
             android:layout_gravity="bottom"
             >
@@ -157,6 +162,8 @@
                 android:id="@+id/unread_msg_count_me"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="-3dp"
+                android:layout_gravity="end"
                 android:singleLine="true"
                 android:ellipsize="end"
                 tools:text="1"
@@ -219,6 +226,45 @@
                 android:layout_height="10dp"
                 android:visibility="gone" />
         </LinearLayout>
+    </LinearLayout>
+
+    <!--날짜 변경 알림-->
+    <LinearLayout
+        tools:visibility="gone"
+        android:id="@+id/date_notice_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0.8dp"
+            android:background="#717171"
+            android:alpha="0.3"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/date_notice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:layout_marginEnd="7dp"
+            android:textColor="#434343"
+            android:textSize="12dp"
+            tools:text="2017년 12월 19일 화요일"
+            tools:visibility="visible" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0.8dp"
+            android:background="#818181"
+            android:alpha="0.3"
+            android:layout_weight="1"/>
+
     </LinearLayout>
 
 </RelativeLayout>

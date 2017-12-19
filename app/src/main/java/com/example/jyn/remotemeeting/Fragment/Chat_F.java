@@ -52,7 +52,7 @@ import retrofit2.Response;
 public class Chat_F extends Fragment {
 
     private static final String TAG = "all_"+Chat_F.class.getSimpleName();
-    String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
+    public static String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
     LayoutInflater inflater;
     ViewGroup container;
     View controlView;
@@ -60,8 +60,10 @@ public class Chat_F extends Fragment {
 
     /** 버터나이프*/
     public Unbinder unbinder;
-    @BindView(R.id.recyclerView)        RecyclerView recyclerView;
-    @BindView(R.id.no_result)           TextView no_result;
+//    @BindView(R.id.recyclerView)        RecyclerView recyclerView;
+//    @BindView(R.id.no_result)           TextView no_result;
+    public static RecyclerView recyclerView;
+    public static TextView no_result;
 
     // 리사이클러뷰 관련 클래스
     public RCV_chatRoom_list_adapter rcv_chat_Roomlist_adapter;
@@ -91,6 +93,10 @@ public class Chat_F extends Fragment {
 
         // 프래그먼트 인플레이팅
         controlView = inflater.inflate(R.layout.f_chat, container, false);
+        // 뷰 찾기
+        recyclerView = controlView.findViewById(R.id.recyclerView);
+        no_result = controlView.findViewById(R.id.no_result);
+
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this, controlView);
         // 어플리케이션 객체 생성

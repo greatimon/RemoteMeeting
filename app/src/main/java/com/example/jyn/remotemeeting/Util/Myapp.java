@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.ProgressDialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -42,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -140,6 +140,9 @@ public class Myapp extends Application {
     // key - UUID
     // value - 내가 채팅 메세지를 전송할 때의 기기의 로컬 시간
     public ConcurrentHashMap<String, Long> temp_my_chat_log_hash;
+
+    // 요일 배열
+    String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
 
     /** GET, SET */
     public String getUser_no() {
@@ -735,16 +738,117 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 채팅 로그 전송 시각을 서버로부터 받아서, 기기 로컬(국가)에 맞게 출력
+     메소드 ==> 원하는 포맷으로 현재 시간, 현재 date를 가져오기 위한 메소드
      ---------------------------------------------------------------------------*/
-    public String chat_log_transmission_time(long server_trans_time) {
+    public String get_time(String format) {
+        SimpleDateFormat received_fotmat = new SimpleDateFormat(format, Locale.KOREA);
+        long time_mil = System.currentTimeMillis();
+        Date date = new Date(time_mil);
+        String result = received_fotmat.format(date);
+        return result;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅 로그 전송 시각을 서버로부터 받아서, 기기 로컬(국가)에 맞게 변환
+                조건에 맞게 다른 result 값을 반환
+
+                1. request - chatroom list
+                  - 채팅방 리스트에 표시되는 가장 최근 메세지의 시간을 나타내기 위한 String 값 리턴
+                2. request - chat_log list
+                  - 채팅방 안에 표시되는 메세지의 시간을 나타내기 위한 String 값 리턴
+     ---------------------------------------------------------------------------*/
+    public String chat_log_transmission_time(long server_trans_time, String request) {
         // 기기 Locale 타입 가져오기
         Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
-        SimpleDateFormat format_for_save = new SimpleDateFormat("HH:mm", systemLocale);
         long time_mil = server_trans_time;
         Date date = new Date(time_mil);
-        String result = format_for_save.format(date);
-        return result;
+
+        SimpleDateFormat format_until_day = new SimpleDateFormat("yyyy-MM-dd", systemLocale);
+        SimpleDateFormat format_until_month = new SimpleDateFormat("yyyy-MM", systemLocale);
+        SimpleDateFormat format_day = new SimpleDateFormat("dd", systemLocale);
+        SimpleDateFormat format_time = new SimpleDateFormat("HH:mm", systemLocale);
+
+        if(request.equals("chatroom_list")) {
+            // 채팅 로그 서버 전송시간이 오늘이라면
+            if(get_time("yyyy-MM-dd").equals(format_until_day.format(date))) {
+                return format_time.format(date);
+            }
+            // 채팅 로그 서버 전송시간이 어제라면
+            else if(get_time("yyyy-MM").equals(format_until_month.format(date)) &&
+                    (Integer.parseInt(get_time("dd"))-1) == Integer.parseInt(format_day.format(date))) {
+                return "어제";
+            }
+            // 위 둘다 아니라면
+            else {
+                return format_until_day.format(date);
+            }
+        }
+        else if(request.equals("chat_log")) {
+            return format_time.format(date);
+        }
+        return null;
+    }
+//    String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
+//    Calendar cal = Calendar.getInstance();
+//    int num = cal.get(Calendar.DAY_OF_WEEK)-1;
+//    String today = weekDay[num];
+//      System.out.println(num);
+//      System.out.println("오늘의 요일 : " + today );
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅방 안에서 채팅을 주고 받는 동안에 변경되는 날짜를 변경을 감지하고,
+                변경된 경우 해당 날짜를 리턴하는 메소드
+     ---------------------------------------------------------------------------*/
+    public String check_change_date(long previous_msg_trans_time,
+                                    long target_msg_trans_time,
+                                    boolean check_skip) {
+        // 캘린더 객체
+        Calendar cal = Calendar.getInstance();
+        // 기기 Locale 타입 가져오기
+        Locale systemLocale = getApplicationContext().getResources().getConfiguration().locale;
+        // 이전 메세지와, 현재 메세지를 date 형태로 변환
+        Date previous_msg_date = new Date(previous_msg_trans_time);
+        Date target_msg_date = new Date(target_msg_trans_time);
+
+        // 리턴할 때 만들 String값을 만들기 위한 dateFormat
+        SimpleDateFormat format_year = new SimpleDateFormat("yyyy", systemLocale);
+        SimpleDateFormat format_month = new SimpleDateFormat("M", systemLocale);
+        SimpleDateFormat format_day = new SimpleDateFormat("dd", systemLocale);
+
+        // 체크 필요 없이 그냥 날짜를 리턴하면 되는 경우
+        // ==> 해당 채팅방의 첫번째 메세지일 때
+        if(check_skip) {
+            String year = format_year.format(target_msg_date);
+            String month = format_month.format(target_msg_date);
+            String day = format_day.format(target_msg_date);
+            int num = cal.get(Calendar.DAY_OF_WEEK)-1;
+            String today = weekDay[num];
+
+            return year + "년 " + month + "월 " + day + "일 " + today;
+        }
+
+        // 해당 채팅방의 첫번째 메시지가 아닌 경우, 즉 비교 대상이 있는 경우 ==> 체크
+        else if(!check_skip) {
+            // 비교할 dateFormat
+            SimpleDateFormat format_until_day = new SimpleDateFormat("yyyy-MM-dd", systemLocale);
+
+            // 두 메세지의 "yyyy-MM-dd" String 비교값이 다르다면, 즉 날짜가 변경되었다면
+            if(!format_until_day.format(previous_msg_date).equals(format_until_day.format(target_msg_date))) {
+                String year = format_year.format(target_msg_date);
+                String month = format_month.format(target_msg_date);
+                String day = format_day.format(target_msg_date);
+                int num = cal.get(Calendar.DAY_OF_WEEK)-1;
+                String today = weekDay[num];
+
+                return "changed" + Static.SPLIT + year + "년 " + month + "월 " + day + "일 " + today;
+            }
+            // 변경되지 않았다면
+            return "not_changed" + Static.SPLIT + "";
+        }
+
+        return null;
     }
 
 
@@ -1312,13 +1416,6 @@ public class Myapp extends Application {
      메소드 ==> 현재 기기에 최상단에 올라와 있는 액티비티 클래스 확인하기
      ---------------------------------------------------------------------------*/
     public String getTop_activity() {
-//        ActivityManager am = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
-//        List<ActivityManager.RunningTaskInfo> Info = am.getRunningTasks(1);
-//        ComponentName topActivity = Info.get(0).topActivity;
-//
-//        String topActivity_name = topActivity.getPackageName();
-//        Log.d(TAG, "topActivity_name: " + topActivity_name);
-//        return topActivity_name;
         ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningTaskInfo> info;
         info = activityManager.getRunningTasks(1);
@@ -1327,10 +1424,6 @@ public class Myapp extends Application {
         for (ActivityManager.RunningTaskInfo runningTaskInfo : info) {
             top_activity_name = runningTaskInfo.topActivity.getClassName();
             Log.d(TAG, top_activity_name);
-//            if(runningTaskInfo.topActivity.getClassName().equals("com.android.ABCApplication.ABCApplication")) {
-//                Log.e("ABCApplication","ABCApplication is running");
-//                return true;
-//            }
         }
         return top_activity_name;
     }
@@ -1354,10 +1447,6 @@ public class Myapp extends Application {
                 try {
                     String update_first_last_msg_no_result = response.body().string();
                     Log.d(TAG, "update_first_last_msg_no_result: "+update_first_last_msg_no_result);
-
-                    if(update_first_last_msg_no_result.equals("success")) {
-
-                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();

@@ -20,7 +20,10 @@ import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.google.gson.Gson;
 import com.pnikosis.materialishprogress.ProgressWheel;
+
+import org.json.JSONArray;
 
 import java.util.ArrayList;
 
@@ -65,6 +68,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
         @BindView(R.id.me_layout)                       LinearLayout me_layout;
         @BindView(R.id.layout_for_only_msg_content)     LinearLayout layout_for_only_msg_content;
         @BindView(R.id.layout_for_only_msg_content_me)  LinearLayout layout_for_only_msg_content_me;
+        @BindView(R.id.date_notice_layout)              LinearLayout date_notice_layout;
         @BindView(R.id.sender_profile_img)              ImageView sender_profile_img;
         @BindView(R.id.send_img)                        ImageView send_img;
         @BindView(R.id.send_img_me)                     ImageView send_img_me;
@@ -80,6 +84,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
         @BindView(R.id.unread_msg_count_me)             TextView unread_msg_count_me;
         @BindView(R.id.time)                            TextView time;
         @BindView(R.id.time_me)                         TextView time_me;
+        @BindView(R.id.date_notice)                     TextView date_notice;
         // 일반 findView
         View view;
         public ProgressWheel progress_wheel;
@@ -102,6 +107,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
     /** onCreateViewHolder => 뷰홀더 생성 - 인플레이팅 */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        Log.d(TAG, "===================================================================");
         Log.d(TAG, "onCreateViewHolder");
         View view = LayoutInflater.from(parent.getContext()).inflate(itemLayout, parent, false);
         ViewHolder viewHolder = new ViewHolder(view);
@@ -113,101 +119,173 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
     /** onBindViewHolder => 리스트뷰의 getView 역할 */
     @Override
     public void onBindViewHolder(ViewHolder holder, int pos) {
+        Gson gson = new Gson();
 
         // 라사이클러뷰의 포지션이 존재할때만, 리사이클러뷰 아이템들에 data들을 넣어서 보여줌
         if(holder.getAdapterPosition() != RecyclerView.NO_POSITION) {
             int position = holder.getAdapterPosition();
+
+            // 메세지 내용, get
             String msg_content = chat_log.get(position).getMsg_content();
+            // 메세지 서버 전송 millisecond, get
             long transmission_gmt_time = chat_log.get(position).getTransmission_gmt_time();
-            String transmission_gmt_time_str = myapp.chat_log_transmission_time(transmission_gmt_time);
+//            Log.d(TAG, "transmission_gmt_time_ "+ position + ": " + transmission_gmt_time);
+            // 안드로이드 기기 local 기준, transmission_gmt_time을 특정 string 값으로 변환
+            String transmission_gmt_time_str =
+                    myapp.chat_log_transmission_time(transmission_gmt_time, "chat_log");
 
             // =================================================================
-            // 내 채팅 메세지 일때, transmission_gmt_time 확인해보기
+            // 내 채팅 메세지 일때, transmission_gmt_time 확인해보기 (서버로부터 확인 콜백 받기 전 로직)
             // 확인 결과 long type의 default 값인 '0'으로 표시
             if(chat_log.get(position).getUser_no() == Integer.parseInt(myapp.getUser_no())) {
                 Log.d(TAG, "transmission_gmt_time:" + transmission_gmt_time);
                 Log.d(TAG, "transmission_gmt_time:" + transmission_gmt_time_str);
+                Log.d(TAG, "chat_log.get(position).getMember_count():" + chat_log.get(position).getMember_count());
             }
 
-            // =================================================================
             // 채팅 로그의 user_no 가져오기
             int msg_user_no = chat_log.get(position).getUser_no();
-            // 내 채팅 로그인지 아닌지 확인하는 변수 선언 + 확인하기
-            boolean me = false;
-            if(msg_user_no == Integer.parseInt(myapp.getUser_no())) {
-                me = true;
-            }
 
-            // =================================================================
-            // 연속된 메세지일때 View를 다르게 하기 위한 구분자 변수
-            boolean serial_msg = false;
-            if(pos != 0) {
-                // 이전 ArrayList의 바로 전 아이템의 user_no와 지금 아이템의 user_no를 비교함
-                int just_right_before_item_user_no = chat_log.get(pos-1).getUser_no();
-                // 연속된 메세지인 경우
-                if(just_right_before_item_user_no == msg_user_no) {
-                    serial_msg = true;
-                }
-            }
-
-            // =================================================================
-            // 내 채팅 로그일 때, View Visibility 조절 + 데이터 set
-            if(me) {
+            /** 날짜변경선 item인 경우 */
+            if(msg_user_no == -10) {
                 // View Visibility 조절
-                setView_for_me(holder, serial_msg);
-
-                // 채팅 내용
-                holder.msg_content_me.setText(msg_content);
-                // 채팅 서버 도착 시간
-                holder.time_me.setText(transmission_gmt_time_str);
-
-                // HTTP 통신으로 받은 내 채팅 로그, 즉 내가 보냈던 이전 채팅 로그 기록들을 받을때,
-                // 프로그레스 휠을 보여주지 않고, 읽지 않은 메시지 카운팅을 보여준다
-                if(chat_log.get(position).getMsg_no() != 0) {
-                    holder.progress_wheel.setVisibility(View.GONE);
-                }
-
-                // Netty 통신으로 받은 내 채팅 로그, 즉 내가 보낸 실시간 전송된 채팅 로그를 표시할 때는,
-                // 일단 프로그레스 휠을 보여준다 (읽지 않은 메시지 카운팅 보여 주지 않음)
-                // 나중에 Netty 서버로 부터, 내가 보낸 메시지가 제대로 잘 도착했다는 콜백을 받은 이후에
-                // 다른 메소드에서 프로그레스 휠을 GONE 처리 하고 읽지 않은 메시지 카운팅 뷰를 VISIBLE 처리 한다
-                else if(chat_log.get(position).getMsg_no() == 0) {
-                    holder.progress_wheel.setVisibility(View.VISIBLE);
-                }
+                setView_for_changed_date_item(holder);
+                // 변경된 날짜 set
+                holder.date_notice.setText(msg_content);
             }
-            // =================================================================
-            // 내 채팅 로그가 아닐 때, View Visibility 조절 + 데이터 set
-            else if(!me) {
-                // View Visibility 조절
-                setView_for_others(holder, serial_msg);
 
-                // 연속된 메세지가 아니라면
-                if(!serial_msg) {
-                    // 서버로부터 target_user_no 정보 받기
-                    Users user = myapp.get_user_info(String.valueOf(msg_user_no));
+            /** 일반 채팅 item인 경우 */
+            else if(msg_user_no != -10) {
+                // 이 메세지 당시 member count, get
+                int member_count = chat_log.get(position).getMember_count();
+                Log.d(TAG, "member_count: " + member_count);
+                // 이 메세지를 읽을 수 있는 대상 리스트, get
+                String msg_unread_user_no_list_str = chat_log.get(position).getMsg_unread_user_no_list();
+                Log.d(TAG, "msg_unread_user_no_list_str: " + msg_unread_user_no_list_str);
 
-                    // target_user_no 프로필 사진 set
-                    if(user.getUser_img_filename().equals("none")) {
-                        holder.sender_profile_img.setImageResource(R.drawable.default_profile);
+                int msg_unread_user_no_list_count = 0;
+                if(msg_unread_user_no_list_str != null) {
+                    if(msg_unread_user_no_list_str.contains(Static.SPLIT)) {
+                        String[] temp = msg_unread_user_no_list_str.split(Static.SPLIT);
+                        msg_unread_user_no_list_count = temp.length;
                     }
-                    else if(!user.getUser_img_filename().equals("none")) {
-                        Glide
-                                .with(context)
-                                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user.getUser_img_filename())
-                                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                                .bitmapTransform(new CropCircleTransformation(context))
-                                .into(holder.sender_profile_img);
+                    else if(!msg_unread_user_no_list_str.contains(Static.SPLIT)) {
+                        msg_unread_user_no_list_count = 1;
                     }
-                    // target_user_no 닉네임 set
-                    holder.nickName.setText(user.getUser_nickname());
+                }
+                Log.d(TAG, "msg_unread_user_no_list_count: " + msg_unread_user_no_list_count);
+
+                // =================================================================
+                // 읽지 않은 count 수 가져오기
+                int unread_msg_count = chat_log.get(position).getMsg_unread_count();
+                Log.d(TAG, "최초_ msg_unread_count: " + unread_msg_count);
+
+                // =================================================================
+                // 내 채팅 로그인지 아닌지 확인하는 변수 선언 + 확인하기
+                boolean me = false;
+                if(msg_user_no == Integer.parseInt(myapp.getUser_no())) {
+                    me = true;
                 }
 
-                // 채팅 내용
-                holder.msg_content.setText(msg_content);
-                // 채팅 서버 도착 시간
-                holder.time.setText(transmission_gmt_time_str);
+                // =================================================================
+                // 연속된 메세지일때 View를 다르게 하기 위한 구분자 변수
+                boolean serial_msg = false;
+                if(position != 0) {
+                    // 이전 ArrayList의 바로 전 아이템의 user_no와 지금 아이템의 user_no를 비교함
+                    int just_right_before_item_user_no = chat_log.get(position-1).getUser_no();
+                    // 연속된 메세지인 경우
+                    if(just_right_before_item_user_no == msg_user_no) {
+                        serial_msg = true;
+                    }
+                }
 
+                // =================================================================
+                // 내 채팅 로그일 때, View Visibility 조절 + 데이터 set
+                if(me) {
+                    boolean show_unread_msg_count = true;
+                    if(unread_msg_count == 0) {
+                        show_unread_msg_count = false;
+                    }
+                    // View Visibility 조절
+                    setView_for_me(holder, show_unread_msg_count);
 
+                    // 채팅 내용
+                    holder.msg_content_me.setText(msg_content);
+                    // 채팅 서버 도착 시간
+                    holder.time_me.setText(transmission_gmt_time_str);
+                    // 읽지 않은 메시지 count
+                    holder.unread_msg_count_me.setText(String.valueOf(unread_msg_count));
+
+                    // HTTP 통신으로 받은 내 채팅 로그, 즉 내가 보냈던 이전 채팅 로그 기록들을 받을때,
+                    // 프로그레스 휠을 보여주지 않고, 읽지 않은 메시지 카운팅을 보여준다
+                    if(chat_log.get(position).getMsg_no() != 0) {
+                        holder.progress_wheel.setVisibility(View.GONE);
+                    }
+
+                    // Netty 통신으로 받은 내 채팅 로그, 즉 내가 보낸 실시간 전송된 채팅 로그를 표시할 때는,
+                    // 일단 프로그레스 휠을 보여준다 (읽지 않은 메시지 카운팅 보여 주지 않음)
+                    // 나중에 Netty 서버로 부터, 내가 보낸 메시지가 제대로 잘 도착했다는 콜백을 받은 이후에
+                    // 다른 메소드에서 프로그레스 휠을 GONE 처리 하고 읽지 않은 메시지 카운팅 뷰를 VISIBLE 처리 한다
+                    else if(chat_log.get(position).getMsg_no() == 0) {
+                        holder.progress_wheel.setVisibility(View.VISIBLE);
+                    }
+                }
+                // =================================================================
+                // 내 채팅 로그가 아닐 때, View Visibility 조절 + 데이터 set
+                else if(!me) {
+                    // 이 메세지의 member_count 가 '2'이고, 이 메세지를 읽을 수 있는 대상 리스트의 개수가 1개이고,
+                    // 그게 지금 상대방이라면, 난 지금 상대방의 메세지를 읽게 되는 것이므로
+                    // unread_msg_count - 1, 처리를 한다
+                    boolean show_unread_msg_count = true;
+                    if(msg_unread_user_no_list_str != null) {
+//                        Log.d(TAG, "msg_unread_user_no_list_str is NOT NULL");
+                        if(member_count == 2 && unread_msg_count == 1
+                                && msg_unread_user_no_list_str.equals(myapp.getUser_no())) {
+//                            Log.d(TAG, "show_unread_msg_count = false");
+
+                            // 읽었으므로 -1
+                            unread_msg_count = unread_msg_count - 1;
+                        }
+                    }
+
+                    // 읽지 않은 메세지 count가 0이면 count 뷰를 보여주지 않는다
+                    if(unread_msg_count == 0) {
+                        show_unread_msg_count = false;
+                    }
+                    Log.d(TAG, "show_unread_msg_count: " + show_unread_msg_count);
+                    Log.d(TAG, "체크 후_ msg_unread_count: " + unread_msg_count);
+
+                    // View Visibility 조절
+                    setView_for_others(holder, serial_msg, show_unread_msg_count);
+
+                    // 연속된 메세지가 아니라면
+                    if(!serial_msg) {
+                        // 서버로부터 target_user_no 정보 받기
+                        Users user = myapp.get_user_info(String.valueOf(msg_user_no));
+
+                        // target_user_no 프로필 사진 set
+                        if(user.getUser_img_filename().equals("none")) {
+                            holder.sender_profile_img.setImageResource(R.drawable.default_profile);
+                        }
+                        else if(!user.getUser_img_filename().equals("none")) {
+                            Glide
+                                    .with(context)
+                                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user.getUser_img_filename())
+                                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                                    .bitmapTransform(new CropCircleTransformation(context))
+                                    .into(holder.sender_profile_img);
+                        }
+                        // target_user_no 닉네임 set
+                        holder.nickName.setText(user.getUser_nickname());
+                    }
+
+                    // 채팅 내용
+                    holder.msg_content.setText(msg_content);
+                    // 채팅 서버 도착 시간
+                    holder.time.setText(transmission_gmt_time_str);
+                    // 읽지 않은 메시지 count
+                    holder.unread_msg_count.setText(String.valueOf(unread_msg_count));
+                }
             }
         }
     }
@@ -239,7 +317,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
             Chat_log new_chat_log = data.getChat_log();
 
             // 이 채팅방이, 내가 서버로부터 받은 채팅메세지의 채팅방과 동일한지 확인
-            int get_this_chatroom_no = chat_log.get(0).getChat_room_no();
+            int get_this_chatroom_no = myapp.getChatroom_no();
             int received_chatroon_no = data.getChat_log().getChat_room_no();
             // 동일할때만 arrayList에 추가
             if(get_this_chatroom_no == received_chatroon_no) {
@@ -291,20 +369,44 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
 
 
     /**---------------------------------------------------------------------------
+     메소드 ==>  날짜 변경선 item일 때, View visibility 셋팅
+     ---------------------------------------------------------------------------*/
+    private void setView_for_changed_date_item(ViewHolder holder) {
+        holder.not_me_layout.setVisibility(View.GONE);
+        holder.me_layout.setVisibility(View.GONE);
+        holder.date_notice_layout.setVisibility(View.VISIBLE);
+    }
+
+
+    /**---------------------------------------------------------------------------
      메소드 ==>  내 메세지일 때, View visibility 셋팅
      ---------------------------------------------------------------------------*/
-    private void setView_for_me(ViewHolder holder, boolean serial) {
+    private void setView_for_me(ViewHolder holder, boolean show_unread_msg_count_me) {
         holder.not_me_layout.setVisibility(View.GONE);
+        holder.date_notice_layout.setVisibility(View.GONE);
         holder.me_layout.setVisibility(View.VISIBLE);
+        if(show_unread_msg_count_me) {
+            holder.unread_msg_count_me.setVisibility(View.VISIBLE);
+        }
+        else if(!show_unread_msg_count_me) {
+            holder.unread_msg_count_me.setVisibility(View.GONE);
+        }
     }
 
 
     /**---------------------------------------------------------------------------
      메소드 ==>  내 메세지가 아닐 때, View visibility 셋팅
      ---------------------------------------------------------------------------*/
-    private void setView_for_others(ViewHolder holder, boolean serial) {
+    private void setView_for_others(ViewHolder holder, boolean serial, boolean show_unread_msg_count) {
         holder.me_layout.setVisibility(View.GONE);
+        holder.date_notice_layout.setVisibility(View.GONE);
         holder.not_me_layout.setVisibility(View.VISIBLE);
+        if(show_unread_msg_count) {
+            holder.unread_msg_count.setVisibility(View.VISIBLE);
+        }
+        else if(!show_unread_msg_count) {
+            holder.unread_msg_count.setVisibility(View.GONE);
+        }
 
         // 연속된 메세지일 때
         if(serial) {

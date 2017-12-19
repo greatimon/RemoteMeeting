@@ -1,7 +1,9 @@
 package com.example.jyn.remotemeeting.Adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,20 +17,32 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
-import com.example.jyn.remotemeeting.Otto.Event;
+import com.example.jyn.remotemeeting.Fragment.Chat_F;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.example.jyn.remotemeeting.Util.RetrofitService;
+import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.github.kimkevin.cachepot.CachePot;
-import com.squareup.otto.Subscribe;
+import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by JYN on 2017-12-09.
@@ -245,27 +259,199 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 채팅방 마지막 메시지 갱신
+     메소드 ==> 해당 채팅방의 마지막 메시지 갱신
+                (채팅방이 없다면, 채팅방 정보를 서버로 부터 받아와서, arrayList에 추가)
      ---------------------------------------------------------------------------*/
     public void update_last_msg(String message, Data_for_netty data) {
         // 채팅방 리스트를 업데이트 하라는 지시일 때
         if(message.equals("update")) {
-            for(int i=0; i<rooms.size(); i++) {
-                // 내가 가지고 있는 채팅방 목록에서, 서버로 부터 받은 채팅메시지에 해당하는 채팅방을 찾아서
-                // (채팅방 no 비교)
-                // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
-                if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
-                    rooms.get(i).setLast_log(data.getChat_log());
-                    Log.d(TAG, "갱신된 msg_position: " + i);
-                    Log.d(TAG, "갱신된 msg의 unread_msg_count: " + rooms.get(i).getLast_log().getMsg_unread_count());
-                    rooms.get(i).setUnread_msg_count(rooms.get(i).getLast_log().getMsg_unread_count());
-//                    // data 'Extra' 변수에 담겨 있는, 해당 채팅방 안 읽은 메세지 개수 가져와서 set 하기
-//                    rooms.get(i).setUnread_msg_count(Integer.parseInt(data.getExtra()));
-//                    Log.d(TAG, "해당 채팅방 안 읽은 메세지 개수: " + data.getExtra());
-                    notifyItemChanged(i);
+            Log.d(TAG, "update_last_msg_ getItemCount(): " + getItemCount());
+
+            int target_chatroom_no = data.getChat_log().getChat_room_no();
+            Log.d(TAG, "target_chatroom_no: " + target_chatroom_no);
+
+            // 현재 arrayList에 아이템이 있을 때, 즉 현재 채팅방 리스트를 가지고 있을 때
+            if(getItemCount() > 0) {
+                for(int i=0; i<rooms.size(); i++) {
+                    // 내가 가지고 있는 채팅방 목록에서, 서버로 부터 받은 채팅메시지에 해당하는 채팅방을 찾아서
+                    // (채팅방 no 비교)
+                    // 해당 채팅방 목록의 Chat_log(last_chat_log) 의 목록을 바꿔치기 한 후 리사이클러뷰 갱신
+                    if(rooms.get(i).getChatroom_no() == data.getChat_log().getChat_room_no()) {
+                        rooms.get(i).setLast_log(data.getChat_log());
+                        Log.d(TAG, "갱신된 msg_position: " + i);
+                        Log.d(TAG, "갱신된 msg의 unread_msg_count: " + rooms.get(i).getLast_log().getMsg_unread_count());
+                        rooms.get(i).setUnread_msg_count(rooms.get(i).getLast_log().getMsg_unread_count());
+                        notifyItemChanged(i);
+
+                        /** 일치되는 chatRoom을 찾았다면 더이상 진행할 필요가 없으므로 'return' 처리하여 메소드 로직을 끝냄 */
+                        return;
+                    }
                 }
+
+                /**
+                 * 메소드 호출
+                 * 일치하는 chatRoom이 없기 때문에, 서버로부터 이 채팅방 정보를 받아오기
+                 */
+                Chat_room new_chat_room = get_new_chatroom_info(target_chatroom_no);
+                Log.d(TAG, "new_chat_room 정보_getMsg_content:  " + new_chat_room.getLast_log().getMsg_content());
+                Log.d(TAG, "new_chat_room 정보_getUser_nickname_arr:  " + new_chat_room.getUser_nickname_arr().toString());
+                Log.d(TAG, "new_chat_room 정보_getUnread_msg_count:  " + new_chat_room.getUnread_msg_count());
+
+                // 서버로부터 가져온 chat_room 객체를 arrayList에 추가하기
+                rooms.add(0, new_chat_room);
+                notifyItemInserted(0);
             }
+            // 현재 arrayList에 아이템이 없을 때, 즉 현재 가지고 있는 채팅방 리스트가 하나도 없을 때
+            else if(getItemCount() == 0) {
+                /**
+                 * 메소드 호출
+                 * 채팅방 정보가 아예 하나도 없기 때문에, 서버로부터 이 채팅방 정보를 받아오기
+                 */
+                Chat_room new_chat_room = get_new_chatroom_info(target_chatroom_no);
+
+                // 서버로부터 가져온 chat_room 객체를 arrayList에 추가하기
+                rooms.add(0, new_chat_room);
+                notifyItemInserted(0);
+
+                // Chat_F 뷰 조정
+                Chat_F.no_result.setVisibility(View.GONE);
+                Chat_F.recyclerView.setVisibility(View.VISIBLE);
+            }
+
         }
     }
 
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 현재 arrayList에는 없는 chatroom 정보를 서버로 부터 받아오기
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    private Chat_room get_new_chatroom_info(final int target_chatroom_no) {
+
+        Chat_room new_chat_room = new Chat_room();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final Chat_room final_new_chat_room = new_chat_room;
+            return new AsyncTask<Void, Void, Chat_room>() {
+
+                @Override
+                protected Chat_room doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call = rs.get_new_chatroom_info(
+                                Static.GET_NEW_CHATROOM_INFO,
+                                myapp.user_no, target_chatroom_no);
+                        Response<ResponseBody> call_result = call.execute();
+                        String retrofit_result = call_result.body().string();
+                        Log.d(TAG, "retrofit_result: "+retrofit_result);
+
+                        if(retrofit_result.equals("fail")) {
+                            myapp.logAndToast("예외발생: " + retrofit_result);
+                        }
+                        else if(retrofit_result.equals("no_result")) {}
+
+                        else {
+                            // jsonString --> jsonObject
+                            JSONObject jsonObject = new JSONObject(retrofit_result);
+                            // jsonObject --> jsonArray
+                            JSONArray jsonArray = jsonObject.getJSONArray(Chat_F.JSON_TAG_CHAT_ROOM_LIST);
+                            Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+                            if(jsonArray.length() == 1) {
+                                String jsonString = jsonArray.getJSONObject(0).toString();
+                                Log.d(TAG, "jsonString: " + jsonString);
+
+                                // Chat_room 객체안의 세부 ArrayList 객체들 생성
+                                ArrayList<String> user_nickname_arr = new ArrayList<>();
+                                ArrayList<String> user_img_filename_arr = new ArrayList<>();
+
+                                // 채팅방 번호
+                                int chatroom_no = jsonArray.getJSONObject(0).getInt("chatroom_no");
+                                // 채팅방 방장 번호
+                                int chat_room_authority_user_no = jsonArray.getJSONObject(0).getInt("chat_room_authority_user_no");
+                                // 해당 채팅방의 마지막 메세지 번호
+                                int last_msg_no = jsonArray.getJSONObject(0).getInt("last_msg_no");
+
+                                /**
+                                 * 만약 마지막 메세지 번호가 '0' 이라면, 채팅 메세지가 하나도 오고간 적이 없는 것이므로, 무시한다
+                                 *  ==> continue;
+                                 * */
+                                if(last_msg_no == 0) {
+                                    return null;
+                                }
+
+                                // 해당 채팅방의 메시지들 중에서 내가 안 읽은 메세지의 개수
+                                int unread_msg_count = jsonArray.getJSONObject(0).getInt("unread_msg_count");
+                                // 채팅방 제목
+                                String chat_room_title = jsonArray.getJSONObject(0).getString("chat_room_title");
+                                Log.d(TAG, "chatroom_no: " + chatroom_no);
+                                Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
+                                Log.d(TAG, "last_msg_no: " + last_msg_no);
+                                Log.d(TAG, "unread_msg_count: " + unread_msg_count);
+
+                                // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+                                Gson gson = new Gson();
+
+                                // 'user_ob' JSONString을 JSONObect로 파싱
+                                JSONArray jsonArray_for_user = new JSONArray(jsonArray.getJSONObject(0).getString("user_ob"));
+                                Log.d(TAG, "jsonArray_for_user.toString(): " + jsonArray_for_user.toString());
+                                Log.d(TAG, "jsonArray_for_user.length(): " + jsonArray_for_user.length());
+
+                                // gson 이용해서 user 객체로 변환해서, 그 user 객체 안에서 닉네임과, 이미지 URL 값을 가져와서,
+                                // 각 ArrayList 값에 add 한다
+                                for(int k=0; k<jsonArray_for_user.length(); k++) {
+                                    Users user = gson.fromJson(jsonArray_for_user.get(k).toString(), Users.class);
+                                    Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
+                                    Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+                                    user_nickname_arr.add(user.getUser_nickname());
+                                    user_img_filename_arr.add(user.getUser_img_filename());
+                                }
+
+                                // 채팅방 마지막 메세지, JSONArray를 파싱
+                                JSONArray jsonArray_last_chat_log = new JSONArray(jsonArray.getJSONObject(0).getString("last_chat_log_ob"));
+                                Log.d(TAG, "jsonArray_last_chat_log.toString(): " + jsonArray_last_chat_log.toString());
+                                Log.d(TAG, "jsonArray_last_chat_log.length(): " + jsonArray_last_chat_log.length());
+
+                                // gson 이용해서 Chat_log 객체로 변환
+                                Chat_log last_chat_log = null;
+                                // 마지막 Chat_log가 있을 때만 변환
+                                if(jsonArray_last_chat_log.length() == 1) {
+                                    last_chat_log = gson.fromJson(jsonArray_last_chat_log.get(0).toString(), Chat_log.class);
+                                    Log.d(TAG, "jsonArray_last_chat_log.get(0).toString(): " + jsonArray_last_chat_log.get(0).toString());
+                                    Log.d(TAG, "last_chat_log.getMsg_content(): " + last_chat_log.getMsg_content());
+                                    Log.d(TAG, "last_chat_log.getChat_room_no(): " + last_chat_log.getChat_room_no());
+                                }
+
+                                /** final_new_chat_room 객체에 데이터 넣기 */
+                                final_new_chat_room.setChatroom_no(chatroom_no);
+                                final_new_chat_room.setLast_msg_no(last_msg_no);
+                                final_new_chat_room.setUser_nickname_arr(user_nickname_arr);
+                                final_new_chat_room.setUser_img_filename_arr(user_img_filename_arr);
+                                // 마지막 Chat_log가 있을때만 데이터 넣음
+                                if(jsonArray_last_chat_log.length() == 1) {
+                                    final_new_chat_room.setLast_log(last_chat_log);
+                                }
+                                final_new_chat_room.setUnread_msg_count(unread_msg_count);
+                                final_new_chat_room.setChat_room_title(chat_room_title);
+
+                                return final_new_chat_room;
+                            }
+                        }
+                    }
+                    catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

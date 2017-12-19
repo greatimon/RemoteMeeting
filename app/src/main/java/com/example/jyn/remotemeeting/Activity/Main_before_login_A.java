@@ -27,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Random;
 
 import butterknife.ButterKnife;
@@ -90,7 +91,10 @@ public class Main_before_login_A extends AppCompatActivity {
 
         Log.d(TAG, "densityDPI = " + metrics.densityDpi);
 
-        Log.d(TAG, "현재 시간: " + Get_currentTime.got());
+        Log.d(TAG, "현재 시간: " + Get_currentTime.get_full());
+        Log.d(TAG, "오늘 날짜(Calendar 이용): "
+                + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-"
+                + Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
     }
 
 
