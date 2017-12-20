@@ -7,9 +7,15 @@ import android.util.Log;
 
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
+
+import java.io.StringReader;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -41,9 +47,10 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
         // 서버 접속 메시지 보내기
-        Data_for_netty data = new Data_for_netty
-                .Builder("conn", "none", myapp.getUser_no())
-                .build();
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("conn");
+        data.setSubType("none");
+        data.setSender_user_no(myapp.getUser_no());
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 
@@ -118,14 +125,20 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
      ---------------------------------------------------------------------------*/
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
+
         // 서버가 보낸 통신메세지 확인하기
-        String message = (String)obj;
+        String temp_1 = (String)obj;
+        String message = temp_1.replace(" ", "");
         Log.d(TAG, "[서버]: " + message);
 
         // 받은 통신 메세지 Data_for_netty 객체화
-        Gson gson = new Gson();
-        final Data_for_netty data = gson.fromJson(message, Data_for_netty.class);
-        Log.d(TAG, "data.getType(): " + data.getType());
+        Gson gson = new GsonBuilder().setLenient().create();
+
+        JsonReader reader = new JsonReader(new StringReader(message));
+        reader.setLenient(true);
+
+        final Data_for_netty data = gson.fromJson(reader, Data_for_netty.class);
+        Log.d(TAG, "data.getType(): " + data.getNetty_type());
         Log.d(TAG, "data.getSubType(): " + data.getSubType());
 
         // 현재 액티비티 확인해보기
@@ -138,6 +151,7 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
 
         /** 통신 메세지 구분 */
         switch (data.getSubType()) {
+
             // 서버에서 중계한 다른 유저가 보낸 채팅 메시지를 받았을 때
             case "relay_msg":
                 // 현재의 액티비티가 'Chat_A'(채팅 화면)라면,
@@ -150,9 +164,15 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                             // 현재 있는 채팅방이, 서버로부터 받은 relay_msg의 채팅방과 일치한다면,
                             if(myapp.getChatroom_no() == data.getChat_log().getChat_room_no()) {
                                 // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
-                                myapp.update_first_last_msg_no(data.getChat_log().getChat_room_no(),
+                                // 인자 1. 채팅방 번호
+                                // 인자 2. 서버로 부터 받은 채팅 로그 중 첫번째 메세지 번호
+                                // 인자 3. 서버로 부터 받은 채팅 로그 중 마지막 메세지 번호
+                                // 인자 4. 요청구분자
+                                myapp.update_first_last_msg_no(
+                                        data.getChat_log().getChat_room_no(),
                                         data.getChat_log().getMsg_no(),
-                                        data.getChat_log().getMsg_no());
+                                        data.getChat_log().getMsg_no(),
+                                        "netty");
                             }
                         }
                     }.start();
@@ -169,21 +189,47 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                 }
 
                 break;
-            // 내가 보낸 채팅 메시지가 서버에 잘 도착했다는 콜백(응답) 메시지를 받았을 때
+
+            // netty 접속 내가 보낸 채팅 메시지가 서버에 잘 도착했다는 콜백(응답) 메시지를 받았을 때
             case "call_back":
                 // 내가 보낸 채팅 메세지에 대한 콜백 이라면,
-                if(data.getType().equals("msg") && data.getUser_no().equals(myapp.getUser_no())) {
+                if(data.getNetty_type().equals("msg") && data.getSender_user_no().equals(myapp.getUser_no())) {
                     new Thread() {
                         @Override
                         public void run() {
                             to_Chat_A("my_chat_msg_call_back", data);
 
                             // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
-                            myapp.update_first_last_msg_no(data.getChat_log().getChat_room_no(),
+                            // 인자 1. 채팅방 번호
+                            // 인자 2. 서버로 부터 받은 채팅 로그 중 첫번째 메세지 번호
+                            // 인자 3. 서버로 부터 받은 채팅 로그 중 마지막 메세지 번호
+                            // 인자 4. 요청구분자
+                            myapp.update_first_last_msg_no(
+                                    data.getChat_log().getChat_room_no(),
                                     data.getChat_log().getMsg_no(),
-                                    data.getChat_log().getMsg_no());
+                                    data.getChat_log().getMsg_no(),
+                                    "netty");
                         }
                     }.start();
+                }
+                break;
+
+            // 채팅 로그를 업데이트하라는 요청일 때,
+            case "update_chat_log":
+                if(data.getNetty_type().equals("request")) {
+                    // 내가 지금 현재 채팅방에 들어와 있다면,
+                    // (이 메세지를 보내기 전에 netty 서버에서 내가 이 채팅방에 들어와있는지 안들어와 있는지 확인하지만, 재확인)
+                    // 해당 msg_no의 msg_unread_count 받아와서, 해당 채팅 리사이클러뷰 item을 갱신한다
+                    if(data.getExtra().equals(String.valueOf(myapp.getChatroom_no()))) {
+//                        String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
+//                        Log.d(TAG, "unread_msg_count_info_jsonString: " + unread_msg_count_info_jsonString);
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                to_Chat_A("update_chat_log", data);
+                            }
+                        }.start();
+                    }
                 }
                 break;
         }

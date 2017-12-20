@@ -17,6 +17,7 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
@@ -28,6 +29,7 @@ import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.rendering.PDFRenderer;
 import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
@@ -50,6 +52,8 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -394,6 +398,7 @@ public class Myapp extends Application {
                                         ChannelPipeline pipeline = ch.pipeline();
                                         // String 인/디코더 (default인 UTF-8)
                                         pipeline.addLast(new StringEncoder(), new StringDecoder());
+                                        pipeline.addLast(new GatheringHandler());
                                         // IO 이벤트 핸들러
                                         pipeline.addLast(new Chat_handler());
                                     }
@@ -1395,14 +1400,97 @@ public class Myapp extends Application {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Gson gson = new Gson();
+                /** try 1.*/
+                Gson gson = new GsonBuilder().setLenient().create();
                 String data_string = gson.toJson(data);
+                Log.d(TAG, "data_string: " + data_string);
+
                 getChannel().writeAndFlush(data_string);
+
+
+//                /** try 2.*/
+//                StringBuilder stringBuilder = new StringBuilder();
+//                Chat_log chat_log = data.getChat_log();
+//
+//                // netty_type, subType, sender_user_no : 이 세개는 반드시 들어감
+//                String netty_type = data.getNetty_type();
+//                String subType = data.getSubType();
+//                String sender_user_no = data.getSender_user_no();
+//                String target_user_no = data.getTarget_user_no();
+//                String extra = data.getExtra();
+//                String first_read_msg_no = data.getFirst_read_msg_no();
+//                String last_read_msg_no = data.getLast_read_msg_no();
+//                String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
+//
+//                stringBuilder.append(netty_type).append(Static.SPLIT);
+//                stringBuilder.append(subType).append(Static.SPLIT);
+//                stringBuilder.append(sender_user_no).append(Static.SPLIT);
+//                stringBuilder.append(target_user_no).append(Static.SPLIT);
+//                stringBuilder.append(extra).append(Static.SPLIT);
+//                stringBuilder.append(first_read_msg_no).append(Static.SPLIT);
+//                stringBuilder.append(last_read_msg_no).append(Static.SPLIT);
+//                if(chat_log != null) {
+//                    stringBuilder.append(unread_msg_count_info_jsonString).append(Static.SPLIT);
+//                }
+//                else if (chat_log == null) {
+//                    stringBuilder.append(unread_msg_count_info_jsonString);
+//                }
+//
+//                int msg_no;
+//                int chat_room_no;
+//                String msg_type="";
+//                int user_no;
+//                long transmission_gmt_time;
+//                String msg_content="";
+//                String attachment="";
+//                int member_count;
+//                int msg_unread_count;
+//                String msg_unread_user_no_list="";
+//
+//                if(chat_log != null) {
+//                    msg_no = chat_log.getMsg_no();
+//                    chat_room_no = chat_log.getChat_room_no();
+//                    msg_type = chat_log.getMsg_type();
+//                    user_no = chat_log.getUser_no();
+//                    transmission_gmt_time = chat_log.getTransmission_gmt_time();
+//                    msg_content = chat_log.getMsg_content();
+//                    attachment = chat_log.getAttachment();
+//                    member_count = chat_log.getMember_count();
+//                    msg_unread_count = chat_log.getMsg_unread_count();
+//                    msg_unread_user_no_list = chat_log.getMsg_unread_user_no_list();
+//
+//                    stringBuilder.append(msg_no).append(Static.SPLIT);
+//                    stringBuilder.append(chat_room_no).append(Static.SPLIT);
+//                    stringBuilder.append(msg_type).append(Static.SPLIT);
+//                    stringBuilder.append(user_no).append(Static.SPLIT);
+//                    stringBuilder.append(transmission_gmt_time).append(Static.SPLIT);
+//                    stringBuilder.append(msg_content).append(Static.SPLIT);
+//                    stringBuilder.append(attachment).append(Static.SPLIT);
+//                    stringBuilder.append(member_count).append(Static.SPLIT);
+//                    stringBuilder.append(msg_unread_count).append(Static.SPLIT);
+//                    stringBuilder.append(msg_unread_user_no_list);
+//
+////                    Gson gson = new GsonBuilder().setLenient().create();
+////                    chat_log_string = gson.toJson(chat_log);
+////                    Log.d(TAG, "chat_log_string: " + chat_log_string);
+//                }
+//
+//                Log.d(TAG, "stringBuilder: " + stringBuilder);
+//
+//                String[] temp = String.valueOf(stringBuilder).split(Static.SPLIT);
+//
+//                for(int i=0; i<temp.length; i++) {
+//                    Log.d(TAG, "temp " + i + ": " + temp[i]);
+//                }
+//
+//                getChannel().writeAndFlush(String.valueOf(stringBuilder));
+
             }
         }).start();
     }
 
     /** MultiDex 문제 해결*/
+    // 에러 메세지
     // Caused by: java.lang.ClassNotFoundException: Didn't find class "com.example.jyn.remotemeeting.Activity.Main_before_login_A" on path:
     // DexPathList[[zip file "/data/app/com.example.jyn.remotemeeting-2.apk"],nativeLibraryDirectories=[/data/app-lib/com.example.jyn.remotemeeting-2, /vendor/lib, /system/lib]]
     @Override
@@ -1436,7 +1524,8 @@ public class Myapp extends Application {
         -- 단, 서버DB 'my_chat_room_info'테이블의 'first_read_msg_no'가 '0'이 아닌 경우에만!
         -- 즉, 최초 1회에 한해서만 업데이트 한다
      ---------------------------------------------------------------------------*/
-    public void update_first_last_msg_no(int chat_room_no, int first_read_msg_no, int last_read_msg_no) {
+    public void update_first_last_msg_no(
+            final int chat_room_no, final int first_read_msg_no, final int last_read_msg_no, final String request) {
         RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
         Call<ResponseBody> call = rs.update_first_last_msg_no(
                 Static.UPDATE_FIRST_LAST_MSG_NO,
@@ -1447,6 +1536,64 @@ public class Myapp extends Application {
                 try {
                     String update_first_last_msg_no_result = response.body().string();
                     Log.d(TAG, "update_first_last_msg_no_result: "+update_first_last_msg_no_result);
+
+                    boolean success = false;
+                    int first_update_msg_no = -1;
+
+                    if(update_first_last_msg_no_result.contains(Static.SPLIT)) {
+                        String[] temp = update_first_last_msg_no_result.split(Static.SPLIT);
+                        if(temp[0].equals("success")) {
+                            success = true;
+                            first_update_msg_no = Integer.parseInt(temp[1]);
+                        }
+                    }
+
+                    // 업데이트 성공, 그리고 first_update_msg_no를 잘 가져왔다면
+                    if(success && first_update_msg_no!=-1) {
+                        /**
+                         * 서버에 내가 읽은 'first_read_msg_no, last_read_msg_no'가 업데이트 되고 나면,
+                         * netty를 통해서 해당 채팅방에 들어와 있는 사람에게
+                         * 'first_read_msg_no / last_read_msg_no' 를 전달해서
+                         *  해당 범위에 있는 msg_no 정보를 업데이트 하라는 내용을 전달한다
+                         */
+                        Data_for_netty data = new Data_for_netty();
+                        data.setNetty_type("request");
+                        data.setSubType("update_chat_log");
+                        data.setSender_user_no(getUser_no());
+                        // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+                        data.setExtra(String.valueOf(chat_room_no));
+                        data.setFirst_read_msg_no(String.valueOf(first_update_msg_no));
+                        data.setLast_read_msg_no(String.valueOf(last_read_msg_no));
+                        Log.d(TAG, "first_update_msg_no: " + first_update_msg_no);
+                        Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
+                        // 통신 전송 메소드 호출
+                        send_to_server(data);
+//                        // 채팅 액티비티에 막 들어와서, 서버로 부터 해당 채팅방의 채팅 로그들을 받아왔을 시점
+//                        if(request.equals("http")) {
+//                            Data_for_netty data = new Data_for_netty
+//                                    .Builder("order", "update_chat_log", getUser_no())
+//                                    .build();
+//                            // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+//                            data.setExtra(String.valueOf(chat_room_no));
+//                            data.setFirst_read_msg_no(first_read_msg_no);
+//                            data.setLast_read_msg_no(last_read_msg_no);
+//                            // 통신 전송 메소드 호출
+//                            send_to_server(data);
+//                        }
+//                        // 이미 채팅 액티비티에 들어와있고, netty로 부터 실시간으로 채팅 메세지들을 받을 때
+//                        else if(request.equals("netty")) {
+//                            Data_for_netty data = new Data_for_netty
+//                                    .Builder("order", "update_chat_log", getUser_no())
+//                                    .build();
+//                            // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+//                            data.setExtra(String.valueOf(chat_room_no));
+//                            data.setFirst_read_msg_no(first_read_msg_no);
+//                            data.setLast_read_msg_no(last_read_msg_no);
+//                            // 통신 전송 메소드 호출
+//                            send_to_server(data);
+//                        }
+                    }
+
 
                 } catch (IOException e) {
                     e.printStackTrace();

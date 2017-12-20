@@ -196,7 +196,7 @@ public class Chat_A extends Activity {
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
         // 애니메이션 설정
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
+//        recyclerView.setItemAnimator(new DefaultItemAnimator());
 
         // 방 제목과 방 인원을 표시하는 메소드 호출
         set_title_and_counting();
@@ -287,14 +287,20 @@ public class Chat_A extends Activity {
             Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
 
             // 해당 채팅방에서 내가 서버로부터 받은 'first / last' msg_no를 서버 DB에 업데이트 하는, 메소드 호출
-            myapp.update_first_last_msg_no(Chatroom_no, first_read_msg_no, last_read_msg_no);
+            // 인자 1. 채팅방 번호
+            // 인자 2. 서버로 부터 받은 채팅 로그 중 첫번째 메세지 번호
+            // 인자 3. 서버로 부터 받은 채팅 로그 중 마지막 메세지 번호
+            // 인자 4. 요청구분자
+            myapp.update_first_last_msg_no(
+                    Chatroom_no, first_read_msg_no, last_read_msg_no, "http");
         }
 
-        // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
-        // '내가 현재 들어왔는 채팅방 번호' 전달
-        Data_for_netty data = new Data_for_netty
-                .Builder("chatroom", "none", myapp.getUser_no())
-                .build();
+        /** Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기 */
+        /** '내가 현재 들어와 있는 채팅방 번호' 전달 */
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("chatroom");
+        data.setSubType("enter");
+        data.setSender_user_no(myapp.getUser_no());
         // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
         data.setExtra(String.valueOf(Chatroom_no));
         // 통신 전송 메소드 호출
@@ -536,12 +542,14 @@ public class Chat_A extends Activity {
 
 
         // Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기
-        Data_for_netty data = new Data_for_netty
-                .Builder("msg", "none", myapp.getUser_no())
-                .chat_log(chat_log)
-                .build();
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("msg");
+        data.setSubType("none");
+        data.setSender_user_no(myapp.getUser_no());
+        data.setChat_log(chat_log);
         // UUID 값을 Data_for_netty의 Extra 변수에 넣기
         data.setExtra(converted_uuid);
+
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 
@@ -591,6 +599,20 @@ public class Chat_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        /** Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기 */
+        // '내가 나가는 채팅방 번호' 전달
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("chatroom");
+        data.setSubType("out");
+        data.setSender_user_no(myapp.getUser_no());
+        // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+        data.setExtra(String.valueOf(Chatroom_no));
+        // 통신 전송 메소드 호출
+        myapp.send_to_server(data);
+
+        // 어플리케이션 객체: Myapp 에 채팅방 번호를 초기화 한다
+        myapp.setChatroom_no(-1);
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
@@ -603,7 +625,6 @@ public class Chat_A extends Activity {
         if(chat_message_handler != null) {
             chat_message_handler = null;
         }
-
         super.onDestroy();
     }
 }

@@ -9,14 +9,14 @@ public class Chat_log {
 
     private int msg_no;
     private int chat_room_no;
-    private String msg_type;
+    private String msg_type ="";
     private int user_no;
     private long transmission_gmt_time;
-    private String msg_content;
-    private String attachment;
+    private String msg_content ="";
+    private String attachment ="";
     private int member_count;
     private int msg_unread_count;
-    private String msg_unread_user_no_list;
+    private String msg_unread_user_no_list ="";
 
     public Chat_log() {}
 

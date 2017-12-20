@@ -119,7 +119,4 @@ public class Static {
     public static final boolean NEGOTIATED = false;
     public static final int ID = -1;
 
-
-
-
 }

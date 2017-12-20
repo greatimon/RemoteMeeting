@@ -1,9 +1,11 @@
 package com.example.jyn.remotemeeting.Activity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -81,8 +83,26 @@ public class Main_before_login_A extends AppCompatActivity {
         email_join= findViewById(R.id.email_join);
 
         // todo: 나중에 삭제하기 - 테스트할 때 로그인 편하기 하기 위한 코드
-        input_email_ET.setText("hulk@naver.com");
-        input_pw_ET.setText("asdf1234!");
+        // 유니크한 단말 번호 >>> Android ID 가져오기
+        @SuppressLint("HardwareIds")
+        String android_id = Settings.Secure.getString(this.getContentResolver(),Settings.Secure.ANDROID_ID);
+        Log.d(TAG, "android_id: " + android_id);
+        // 헐크
+        if(android_id.equals("40706c04ca1a5ed")) {
+            input_email_ET.setText("hulk@naver.com");
+            input_pw_ET.setText("asdf1234!");
+        }
+        // 스파이더맨
+        else if(android_id.equals("6074042952871828")) {
+            input_email_ET.setText("spiderman@naver.com");
+            input_pw_ET.setText("asdf1234!");
+        }
+        // 아이언맨
+        else if(android_id.equals("5b1d8c7360b43504")) {
+            input_email_ET.setText("ironman@naver.com");
+            input_pw_ET.setText("asdf1234!");
+        }
+        // todo: 나중에 삭제하기 - 테스트할 때 로그인 편하기 하기 위한 코드
 
         // 핸드폰 DPI 알아내기
         DisplayMetrics metrics = new DisplayMetrics();

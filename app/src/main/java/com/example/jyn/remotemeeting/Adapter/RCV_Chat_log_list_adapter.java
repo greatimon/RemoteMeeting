@@ -2,6 +2,7 @@ package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,8 +25,12 @@ import com.google.gson.Gson;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -336,6 +341,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
             String uuid_this_chat_log = call_back_data.getExtra();
             Log.d(TAG, "uuid_this_chat_log: " + uuid_this_chat_log);
             long local_time_this_chat_log = myapp.getTemp_my_chat_log_hash().get(uuid_this_chat_log);
+            Log.d(TAG, "local_time_this_chat_log: " + local_time_this_chat_log);
 
             // uuid 값과, local_time_this_chat_log 값을 이용해서.
             // 아이템 arrayList 중에서 내가 보낸 채팅 메세지를 찾아서 msg_no를 넣어줌
@@ -343,14 +349,57 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
                 if(chat_log.get(i).getTransmission_gmt_time() == local_time_this_chat_log) {
                     int this_msg_no = my_chat_log.getMsg_no();
                     Log.d(TAG, "서버로 부터 받은 내가 보낸 채팅 메세지의 msg_no 값: " + this_msg_no);
+                    Log.d(TAG, "서버로 부터 받은 내가 보낸 채팅 메세지의 msg_content 내용: "
+                            + my_chat_log.getMsg_content());
                     chat_log.get(i).setMsg_no(this_msg_no);
                     // 해쉬맵에서 해당 UUID 아이템 제거
                     myapp.getTemp_my_chat_log_hash().remove(uuid_this_chat_log);
                     Log.d(TAG, "myapp.getTemp_my_chat_log_hash().size(): " + myapp.getTemp_my_chat_log_hash().size());
-                    // 해당 아이템만 notifyItemChanged
-                    notifyItemChanged(i);
+
+                    final int finalI = i;
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                        // 해당 아이템만 notifyItemChanged
+                            notifyItemChanged(finalI);
+                        }
+                    }, 200);
                 }
             }
+        }
+        // 이미 있는 리사이클러뷰에 있는 채팅 로그를 업데이트 하라는 요청일 때
+        else if(message.equals("update_chat_log")) {
+            String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
+            Log.d(TAG, "unread_msg_count_info_jsonString: " + unread_msg_count_info_jsonString);
+
+            try {
+                JSONObject jsonOB = new JSONObject(unread_msg_count_info_jsonString);
+                Log.d(TAG, "jsonOB.length(): " + jsonOB.length());
+
+                //// for문을 돌면서 업데이트할 unread_msg_no 를 찾아서 해당 값을 업데이트 한다
+                for(int i=0; i<getItemCount(); i++) {
+                    for (Iterator<String> it = jsonOB.keys(); it.hasNext();) {
+                        String key = it.next();
+                        String value = jsonOB.getString(key);
+                        Log.d(TAG, "key: " + key + " -- " + "value: " + value);
+
+                        // chat_log의 msg_no와 netty 서버로 부터 받은 msg_no가 일치할 때
+                        // 해당 chat_log의 msg_unread_count를 서버로 부터 받은 값으로 set 한다
+                        if(chat_log.get(i).getMsg_no() == Integer.parseInt(key)) {
+                            chat_log.get(i).setMsg_unread_count(Integer.parseInt(value));
+                            // 그리고 해당 item notifyItemChanged
+                            notifyItemChanged(i);
+                            Log.d(TAG, "업데이트 한 msg_content_ " + i + ": "
+                                    + chat_log.get(i).getMsg_content());
+                        }
+                    }
+                }
+
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -365,6 +414,18 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
         Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);
 //        layoutManager.scrollToPosition(chat_log.size()-1);
 //        notifyDataSetChanged();
+
+//        chat_log.setChat_room_no(chat_room.getChatroom_no());           // 채팅방 번호
+//        chat_log.setMsg_type("text");                                   // Chat_log 종류
+//        chat_log.setUser_no(Integer.parseInt(myapp.getUser_no()));      // 내 user_no
+//        chat_log.setMsg_content(input_msg);                             // 메세지 내용
+//        chat_log.setMember_count(member_count);                         // 채팅방 참여중인 총 인원
+//        chat_log.setMsg_unread_count(member_count-1);                   // 이 메세지를 읽어야 하는 수(나 제외)
+//        // 일단 기기 기준의 로컬 시간을 변수로 넣어서 전송함
+//        // 나중에 서버에서 생성한 통신메세지 accept 시간으로 교체됨
+//        long transmission_local_time = System.currentTimeMillis();
+//        Log.d(TAG, "내가 채팅 메세지를 보낼때의, 내 기기 기준 로컬 transmission_local_time_ long type: " + transmission_local_time);
+//        chat_log.setTransmission_gmt_time(transmission_local_time);
     }
 
 

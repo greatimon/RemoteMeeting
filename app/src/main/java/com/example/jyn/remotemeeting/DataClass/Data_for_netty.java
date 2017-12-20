@@ -5,92 +5,70 @@ package com.example.jyn.remotemeeting.DataClass;
  */
 
 
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
- * 이 클래스는 netty를 이용해서 서버와 통신할 때, 주고 받는 데이터를 정형화 한 것으로
- * Builder 타입을 이용해서, 필요한 데이터만 이 객체에 넣어서 전달하기 위해 만들었다
- * (특정 상황에서 서버와 통신할 때, 필요하지 않은 변수는 넣지 않고 객체를 만들 수 있음)
+ * 이 클래스는 netty를 이용해서 서버와 통신할 때, 주고 받는 데이터 클래스
  * */
 public class Data_for_netty {
 
     // builder 타입
-    private final String type;            // 서버 통신 분류
-    private final String subType;         // 소분류
-    private final String user_no;         // 내 user_no
-    private final String target_user_no;  // 타켓 user_no
-    private final Chat_log chat_log;      // 채팅 메세지라면, 그 객체
-    private final String attachment;      // 첨부파일 정보
+    private String netty_type ="";            // 서버 통신 분류
+    private String subType ="";         // 소분류
+    private String sender_user_no ="";         // 내 user_no
+    private String target_user_no ="";  // 타켓 user_no
+    private Chat_log chat_log;      // 채팅 메세지라면, 그 객체
+    private String attachment ="";      // 첨부파일 정보
     // 여기서 부터는 getter, setter
-    private String extra;           // 스페어용 변수
-    // 키 - user jsonString
-    // 밸류 - message jsonString
-    private ConcurrentHashMap<String, String> chatting_logs;
-//    private ConcurrentHashMap<Users, Chat_log> chatting_logs;
+    private String extra ="";                                   // 스페어용 변수
+    private String first_read_msg_no ="";                          // 실시간 읽음 표시를 처리하기 위해 필요한 변수1
+    private String last_read_msg_no ="";                           // 실시간 읽음 표시를 처리하기 위해 필요한 변수2
+    private String unread_msg_count_info_jsonString ="";        // 실시간 읽음 표시를 처리하기 위해 필요한 변수3
 
-    public static class Builder {
-        private final String type;
-        private final String subType;
-        private final String user_no;
-        private String target_user_no;
-        private Chat_log chat_log;
-        private String attachment;
-
-        public Builder(String type, String subType, String user_no){
-            this.type = type;
-            this.subType = subType;
-            this.user_no = user_no;
-        }
-
-        public Builder target_user_no(String target_user_no){
-            this.target_user_no = target_user_no;
-            return this;
-        }
-        public Builder chat_log(Chat_log chat_log){
-            this.chat_log = chat_log;
-            return this;
-        }
-        public Builder attachment(String attachment){
-            this.attachment = attachment;
-            return this;
-        }
-
-        public Data_for_netty build() {
-            return new Data_for_netty(this);
-        }
+    public String getNetty_type() {
+        return netty_type;
     }
 
-    public Data_for_netty(Builder builder){
-        type = builder.type;
-        subType = builder.subType;
-        user_no = builder.user_no;
-        target_user_no = builder.target_user_no;
-        chat_log = builder.chat_log;
-        attachment = builder.attachment;
-    }
-
-    public String getType() {
-        return type;
+    public void setNetty_type(String netty_type) {
+        this.netty_type = netty_type;
     }
 
     public String getSubType() {
         return subType;
     }
 
-    public String getUser_no() {
-        return user_no;
+    public void setSubType(String subType) {
+        this.subType = subType;
+    }
+
+    public String getSender_user_no() {
+        return sender_user_no;
+    }
+
+    public void setSender_user_no(String sender_user_no) {
+        this.sender_user_no = sender_user_no;
     }
 
     public String getTarget_user_no() {
         return target_user_no;
     }
 
+    public void setTarget_user_no(String target_user_no) {
+        this.target_user_no = target_user_no;
+    }
+
     public Chat_log getChat_log() {
         return chat_log;
     }
 
+    public void setChat_log(Chat_log chat_log) {
+        this.chat_log = chat_log;
+    }
+
     public String getAttachment() {
         return attachment;
+    }
+
+    public void setAttachment(String attachment) {
+        this.attachment = attachment;
     }
 
     public String getExtra() {
@@ -101,20 +79,27 @@ public class Data_for_netty {
         this.extra = extra;
     }
 
-    public ConcurrentHashMap<String, String> getChatting_logs() {
-        return chatting_logs;
+    public String getFirst_read_msg_no() {
+        return first_read_msg_no;
     }
 
-    public void setChatting_logs(ConcurrentHashMap<String, String> chatting_logs) {
-        this.chatting_logs = chatting_logs;
+    public void setFirst_read_msg_no(String first_read_msg_no) {
+        this.first_read_msg_no = first_read_msg_no;
     }
 
+    public String getLast_read_msg_no() {
+        return last_read_msg_no;
+    }
 
-//    public ConcurrentHashMap<Users, Chat_log> getChatting_logs() {
-//        return chatting_logs;
-//    }
-//
-//    public void setChatting_logs(ConcurrentHashMap<Users, Chat_log> chatting_logs) {
-//        this.chatting_logs = chatting_logs;
-//    }
+    public void setLast_read_msg_no(String last_read_msg_no) {
+        this.last_read_msg_no = last_read_msg_no;
+    }
+
+    public String getUnread_msg_count_info_jsonString() {
+        return unread_msg_count_info_jsonString;
+    }
+
+    public void setUnread_msg_count_info_jsonString(String unread_msg_count_info_jsonString) {
+        this.unread_msg_count_info_jsonString = unread_msg_count_info_jsonString;
+    }
 }
