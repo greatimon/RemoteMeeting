@@ -1,6 +1,5 @@
 package com.example.jyn.remotemeeting.Otto;
 
-import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 
 /**

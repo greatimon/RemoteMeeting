@@ -126,7 +126,7 @@ public class Add_chat_room_subject_users_D extends Activity {
         Gson gson = new Gson();
         String return_jsonString = gson.toJson(target_user_info_arr);
         Log.d(TAG, "return_jsonString: " + return_jsonString);
-        intent.putExtra("target_user_info_jsonString", return_jsonString);
+        intent.putExtra("target_user_no_jsonString", return_jsonString);
         setResult(RESULT_OK, intent);
         finish();
     }

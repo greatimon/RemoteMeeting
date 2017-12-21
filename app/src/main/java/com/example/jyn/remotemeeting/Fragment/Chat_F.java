@@ -206,6 +206,7 @@ public class Chat_F extends Fragment {
         }
         // 채팅방 리스트가 있다면
         else if(!rooms.isEmpty()) {
+            Log.d(TAG, "================================================rooms.size()" + rooms.size());
             no_result.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
@@ -275,7 +276,8 @@ public class Chat_F extends Fragment {
                                     String jsonString = jsonArray.getJSONObject(i).toString();
                                     Log.d(TAG, "jsonString_ " + i + ": " + jsonString);
 
-                                    // Chat_room 객체안의 세부 ArrayList 객체들 생성
+                                    // Chat_room 객체안의 세부 ArrayList 객체 생성
+                                    ArrayList<Users> user_arr = new ArrayList<>();
                                     ArrayList<String> user_nickname_arr = new ArrayList<>();
                                     ArrayList<String> user_img_filename_arr = new ArrayList<>();
 
@@ -318,6 +320,7 @@ public class Chat_F extends Fragment {
                                         Users user = gson.fromJson(jsonArray_for_user.get(k).toString(), Users.class);
                                         Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
                                         Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+                                        user_arr.add(user);
                                         user_nickname_arr.add(user.getUser_nickname());
                                         user_img_filename_arr.add(user.getUser_img_filename());
                                     }
@@ -349,6 +352,7 @@ public class Chat_F extends Fragment {
                                     }
                                     room.setUnread_msg_count(unread_msg_count);
                                     room.setChat_room_title(chat_room_title);
+                                    room.setUser_arr(user_arr);
 
                                     final_rooms.add(room);
                                 }

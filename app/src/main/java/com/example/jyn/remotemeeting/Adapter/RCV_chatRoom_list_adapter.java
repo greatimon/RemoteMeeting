@@ -3,8 +3,8 @@ package com.example.jyn.remotemeeting.Adapter;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +16,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
@@ -142,6 +144,8 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
     public void onBindViewHolder(ViewHolder holder, int pos) {
         Log.d(TAG, "onBindViewHolder");
 
+        final ArrayList<Bitmap> temp_bitmap_arr = new ArrayList<>();
+
         // 메세지 내용 get
         String last_log_msg_content = "none exist";
         if(rooms.get(pos).getLast_log() != null) {
@@ -191,7 +195,8 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         // 닉네임 - 채팅방 표시에 들어갈 닉네임은 상대방만 있으면 된다
         String img_URL_for_setting = "";
         String nickName_for_setting = "";
-        if(rooms.get(pos).getUser_img_filename_arr().size() == 2) {
+        /** 1:1 채팅 일때 */
+        if(member_count == 2) {
             // 이미지 URL
             if(rooms.get(pos).getUser_img_filename_arr().get(0).equals(myapp.getUser_img_filename())) {
                 img_URL_for_setting = rooms.get(pos).getUser_img_filename_arr().get(1);
@@ -208,6 +213,36 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
             }
         }
 
+        ArrayList<Users> temp_users = null;
+
+        /** 그룹 채팅 일 때 */
+        if(member_count > 2) {
+            // 임시 Chat_room ArrayList 생성
+            temp_users = rooms.get(pos).getUser_arr();
+
+            Log.d(TAG, "제거 전, temp_users.size(): " + temp_users.size());
+            // 임시 Chat_room 에서 user 객체 ArrayList들 중, 내 user 객체 삭제
+            for(int p = 0; p<temp_users.size(); p++) {
+                if(temp_users.get(p).getUser_no().equals(myapp.getUser_no())) {
+                    temp_users.remove(p);
+                }
+            }
+            Log.d(TAG, "제거 후, temp_users.size(): " + temp_users.size());
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            for(int y=0; y<temp_users.size(); y++) {
+                if(y == temp_users.size()-1) {
+                    stringBuilder.append(temp_users.get(y).getUser_nickname());
+                }
+                else {
+                    stringBuilder.append(temp_users.get(y).getUser_nickname()).append(", ");
+                }
+            }
+            Log.d(TAG, "stringBuilder: " + stringBuilder);
+            nickName_for_setting = String.valueOf(stringBuilder);
+        }
+
         // 이미지 URL을 제외한, 데이터 셋팅
 //        holder.nickNames.setText(nickName_for_setting);
         if(chat_room_title.equals("none")) {
@@ -221,17 +256,81 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         holder.time.setText(last_log_transmission_time_for_local);
         holder.unread_msg.setText(String.valueOf(unread_msg_count));
 
-        // 이미지 URL로 셋팅, 일단 지금은 1:1 기준으로만 셋팅
-        if(img_URL_for_setting.equals("none")) {
-            holder.profile_img.setImageResource(R.drawable.default_profile);
+        // 1:1 채팅 기준, 이미지 URL로 셋팅
+        if(member_count <= 2) {
+            if(img_URL_for_setting.equals("none")) {
+                holder.profile_img.setImageResource(R.drawable.default_profile);
+            }
+            else if(!img_URL_for_setting.equals("none")) {
+                Glide
+                    .with(context)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_URL_for_setting)
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .bitmapTransform(new CropCircleTransformation(context))
+                    .into(holder.profile_img);
+            }
         }
-        else if(!img_URL_for_setting.equals("none")) {
-            Glide
-                .with(context)
-                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_URL_for_setting)
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                .bitmapTransform(new CropCircleTransformation(context))
-                .into(holder.profile_img);
+
+        // 그룹 채팅 기준, 이미지 URL로 셋팅
+        else if(member_count > 2) {
+            // rooms.get(pos)를 복사하여 임시 객체 생성
+            final Chat_room temp_Chat_room = rooms.get(pos);
+            // 해당 chatroom_no를 복사하여 임시로 chatroom_no final로 생성
+            final int target_chatRoom_no = temp_Chat_room.getChatroom_no();
+
+            // 이미지 URL을 담을 ArrayList 생성
+            ArrayList<String> temp_user_img_filename = new ArrayList<>();
+
+            final int temp_filename_arr_size = temp_Chat_room.getUser_img_filename_arr().size();
+
+            for(int i=0; i<temp_filename_arr_size; i++) {
+                // 내 이미지 URL은 제외 + 프로필 없는 경우도 제외(none)
+                if(temp_Chat_room.getUser_img_filename_arr().get(i).equals(myapp.getUser_nickname()) &&
+                        temp_Chat_room.getUser_img_filename_arr().get(i).equals("none")) {
+                    continue;
+                }
+                // ArrayList에 담기
+                else {
+                    temp_user_img_filename.add(temp_Chat_room.getUser_img_filename_arr().get(i));
+                    Log.d(TAG, "temp_Chat_room.getUser_img_filename_arr().get(i): "
+                            + temp_Chat_room.getUser_img_filename_arr().get(i));
+                }
+
+                final int finalI = i;
+                Glide
+                    .with(context)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + temp_Chat_room.getUser_img_filename_arr().get(i))
+                    .asBitmap()
+                    .into(new SimpleTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                            // 리소스 로드가 끝난 후 수행할 작업
+                            temp_bitmap_arr.add(resource);
+                            Log.d(TAG, "temp_bitmap_arr.size(): " + temp_bitmap_arr.size());
+
+                            if(finalI == temp_filename_arr_size-1) {
+                                Log.d(TAG, "finalI: " + finalI);
+                                Log.d(TAG, "temp_users_size: " + temp_filename_arr_size);
+
+                                // 해당 채팅방의 참여한 유저들의 비트맵들과, 채팅방 번호를 메소드로 넘김
+                                // --> 이미지 4장 합쳐서 해당 아이템에 보여주기 위함
+                                // 매개변수 1. 이 채팅방 번호
+                                // 매개변수 2. 비트맵들을 담은 ArrayList
+                                img_bitmap_put_complete(target_chatRoom_no, temp_bitmap_arr);
+                            }
+                        }
+                    });
+            }
+            Log.d(TAG, "temp_user_img_filename.size(): " + temp_user_img_filename.size());
+        }
+
+
+        // 채팅방 인원에 따른 '인원수' 표시 뷰 조절
+        if(member_count <= 2) {
+            holder.counting.setVisibility(View.GONE);
+        }
+        else if(member_count > 2) {
+            holder.counting.setVisibility(View.VISIBLE);
         }
 
         // 해당 채팅방, 읽지 않은 메세지 개수 셋팅
@@ -243,6 +342,15 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
             holder.unread_msg.setVisibility(View.VISIBLE);
         }
     }
+
+
+    // TODO: 여기서부터!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: 받아온 비트맵 ArrayList 아이템들을 가지고 이미지 4장 합치기를 하자
+    public void img_bitmap_put_complete(int target_chatRoom_no, ArrayList<Bitmap> this_arr) {
+        Log.d(TAG, "test 메소드 들어옴");
+        Log.d(TAG, "target_chatRoom_no: " + target_chatRoom_no);
+    }
+
 
     /** getItemCount => arr 사이즈 리턴 */
     @Override
@@ -259,6 +367,18 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         this.rooms = rooms;
         notifyDataSetChanged();
     }
+
+
+    // 로드된 이미지를 받을 Target을 생성한다.
+//    private SimpleTarget target = new SimpleTarget<Bitmap>() {
+//        final ArrayList<Bitmap> temp_bitmap_arr = new ArrayList<>();
+//        @Override
+//        public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+//            // 리소스 로드가 끝난 후 수행할 작업
+//            temp_bitmap_arr.add(resource);
+//            Log.d(TAG, "temp_bitmap_arr.size(): " + temp_bitmap_arr.size());
+//        }
+//    };
 
 
     /**---------------------------------------------------------------------------

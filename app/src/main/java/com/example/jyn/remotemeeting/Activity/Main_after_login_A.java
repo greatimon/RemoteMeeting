@@ -67,6 +67,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
     private static final String TAG = "all_"+Main_after_login_A.class.getSimpleName();
     String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
+    String JSON_TAG_CREATED_CHAT_ROOM_INFO = "created_chat_room_info";
     private static final int CONNECTION_REQUEST = 1;
     public static int REQUEST_SEARCH_PARTNER = 1318;
     public static int REQUEST_SHOW_PROFILE_DETAIL = 7894;
@@ -810,9 +811,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
             // 1. 채팅방 번호
             int chatroom_no = jsonArray.getJSONObject(0).getInt("chatroom_no");
-            // 채팅방 방장 번호
+            // 2. 채팅방 방장 번호
             int chat_room_authority_user_no = jsonArray.getJSONObject(0).getInt("chat_room_authority_user_no");
-            // 2. 채팅방 제목
+            // 3. 채팅방 제목
             String chat_room_title = jsonArray.getJSONObject(0).getString("chat_room_title");
 
             Log.d(TAG, "chatroom_no: " + chatroom_no);
@@ -822,7 +823,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
             Gson gson = new Gson();
 
-            // 3. user 정보를 가지고 있는 JsonString을 가져와서 gson을 이용해서 user 객체로 변환
+            // 4. user 정보를 가지고 있는 JsonString을 가져와서 gson을 이용해서 user 객체로 변환
             String temp1 =  jsonArray.getJSONObject(0).getString("user_ob");
             Users user = gson.fromJson(temp1, Users.class);
             Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
@@ -841,6 +842,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             room.setChatroom_no(chatroom_no);
             room.setUser_nickname_arr(user_nickname_arr);
             room.setUser_img_filename_arr(user_img_filename_arr);
+            room.setAuthority_user_no(chat_room_authority_user_no);
             room.setChat_room_title(chat_room_title);
 
             //// TODO: 채팅방 액티비티로 이동
@@ -856,9 +858,79 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
 
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> 그룹 채팅방을 생성했을 때,
+     서버로부터 방 정보에 대한 jsonString을 받아서 Chat_room 객체 형식에 맞게 변환하고
+     CachePot 이용 해서 Chat_room 객체를 전달한 뒤, 채팅방 액티비티로 이동
+     ---------------------------------------------------------------------------*/
+    public void form_to_chat_room_ob_for_many(String result_jsonString) {
+        try {
+            // jsonString --> jsonObject
+            JSONObject jsonObject = new JSONObject(result_jsonString);
+            // jsonObject --> jsonArray
+            JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_CREATED_CHAT_ROOM_INFO);
+            Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
 
+            String temp = jsonArray.getJSONObject(0).toString();
+            Log.d(TAG, "jsonString: " + temp);
+
+            // Chat_room 객체안의 세부 ArrayList 객체 생성
+            ArrayList<Users> user_arr = new ArrayList<>();
+            ArrayList<String> user_nickname_arr = new ArrayList<>();
+            ArrayList<String> user_img_filename_arr = new ArrayList<>();
+
+            // 1. 채팅방 번호
+            int chatroom_no = jsonArray.getJSONObject(0).getInt("chatroom_no");
+            // 2. 채팅방 방장 번호
+            int chat_room_authority_user_no = jsonArray.getJSONObject(0).getInt("chat_room_authority_user_no");
+            // 3. 채팅방 제목
+            String chat_room_title = jsonArray.getJSONObject(0).getString("chat_room_title");
+
+            Log.d(TAG, "chatroom_no: " + chatroom_no);
+            Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
+            Log.d(TAG, "chat_room_title: " + chat_room_title);
+
+            // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+            Gson gson = new Gson();
+
+            // 4. 채팅방 참여 유저 객체 Array
+            JSONArray jsonArray_1 = jsonArray.getJSONObject(0).getJSONArray("user_ob");
+
+            for(int i=0; i<jsonArray_1.length(); i++) {
+                String temp_1 =  jsonArray_1.getJSONObject(i).toString();
+                Users user = gson.fromJson(temp_1, Users.class);
+                Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
+                Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+                user_arr.add(user);
+                user_nickname_arr.add(user.getUser_nickname());
+                user_img_filename_arr.add(user.getUser_img_filename());
+            }
+
+            /** Chat_room 객체에 데이터 넣기 */
+            Chat_room room = new Chat_room();
+            room.setChatroom_no(chatroom_no);
+            room.setUser_nickname_arr(user_nickname_arr);
+            room.setUser_img_filename_arr(user_img_filename_arr);
+            room.setAuthority_user_no(chat_room_authority_user_no);
+            room.setChat_room_title(chat_room_title);
+            room.setUser_arr(user_arr);
+
+            //// TODO: 채팅방 액티비티로 이동
+            // CachePot 이용해서 클릭한 rooms 객체 전달
+            CachePot.getInstance().push("chat_room", room);
+
+            // Chat_A 액티비티(채팅방) 열기
+            // 상대방 프로필로부터 채팅방을 여는 것임을 intent 값으로 알린다
+            Intent intent = new Intent(getBaseContext(), Chat_A.class);
+            intent.putExtra("from", "create_chat_room");
+            startActivityForResult(intent, REQUEST_CHAT_ROOM);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -1069,11 +1141,11 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 플로팅 버튼으로, 채팅방을 만들 때
         else if(requestCode==REQUEST_ADD_CHAT_ROOM_SUBJECT && resultCode==RESULT_OK) {
 
-            String target_user_info_jsonString = data.getStringExtra("target_user_info_jsonString");
-            Log.d(TAG, "target_user_info_jsonString: " + target_user_info_jsonString);
+            String target_user_no_jsonString = data.getStringExtra("target_user_no_jsonString");
+            Log.d(TAG, "target_user_no_jsonString: " + target_user_no_jsonString);
 
             try {
-                JSONArray jsonArray = new JSONArray(target_user_info_jsonString);
+                JSONArray jsonArray = new JSONArray(target_user_no_jsonString);
                 Log.d(TAG, "jsonArray.length(): "+jsonArray.length());
                 for(int i=0; i<jsonArray.length(); i++) {
                     Log.d(TAG, "jsonArray[" + i + "]: " + jsonArray.get(i));
@@ -1083,6 +1155,24 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                 // 채팅 지정 상대가 1명일 때
                 if(jsonArray.length() == 1) {
                     create_chat_room_for_one((String)jsonArray.get(0), "create_chat_room");
+                }
+
+                /** inner 메소드 호출 - 서버 통신 - 그룹 채팅방 생성*/
+                // 채팅 지정 상대가 2명 이상일 때
+                if(jsonArray.length() > 1) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    for(int i=0; i<jsonArray.length(); i++) {
+                        if(i==jsonArray.length()-1) {
+                            stringBuilder.append(jsonArray.get(i)).append(Static.SPLIT);
+                            // 나도 추가
+                            stringBuilder.append(myapp.getUser_no());
+                        }
+                        else {
+                            stringBuilder.append(jsonArray.get(i)).append(Static.SPLIT);
+                        }
+                    }
+                    create_chat_room_for_many(String.valueOf(stringBuilder), "create_chat_room");
+                    Log.d(TAG, "stringBuilder: " + stringBuilder);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -1186,7 +1276,43 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     }
 
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 그룹 채팅방 생성
+     ---------------------------------------------------------------------------*/
+    public void create_chat_room_for_many(String target_user_no_jsonString, final String from) {
+        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+        Call<ResponseBody> call_result = rs.create_chat_room_for_many(
+                Static.CREATE_CHAT_ROOM_FOR_MANY,
+                myapp.getUser_no(), target_user_no_jsonString);
+        call_result.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String retrofit_result = response.body().string();
+                    myapp.print_long_Json_logcat(retrofit_result, TAG);
 
+                    // 오류
+                    if(retrofit_result.equals("fail")) {
+                        Log.d(TAG, "retrofit_result_ 그룹 채팅방 생성 fail" + retrofit_result);
+                    }
+
+                    // 레트로핏 결과가 'fail'이 아니라면,
+                    else if(!retrofit_result.equals("fail")) {
+                        // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
+                        // 그리고, 채팅방 액티비티로 이동함
+                        form_to_chat_room_ob_for_many(retrofit_result);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                myapp.logAndToast("onFailure_result" + t.getMessage());
+            }
+        });
+    }
 
 
 

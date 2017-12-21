@@ -14,6 +14,8 @@ public class Chat_room implements Serializable {
     private int chatroom_no;
     private int last_msg_no;
 //    private ArrayList<Integer> user_no_arr;
+    private int authority_user_no;
+    private ArrayList<Users> user_arr;
     private ArrayList<String> user_nickname_arr;
     private ArrayList<String> user_img_filename_arr;
     private Chat_log last_log = null;
@@ -109,5 +111,21 @@ public class Chat_room implements Serializable {
 
     public void setChat_room_title(String chat_room_title) {
         this.chat_room_title = chat_room_title;
+    }
+
+    public ArrayList<Users> getUser_arr() {
+        return user_arr;
+    }
+
+    public void setUser_arr(ArrayList<Users> user_arr) {
+        this.user_arr = user_arr;
+    }
+
+    public int getAuthority_user_no() {
+        return authority_user_no;
+    }
+
+    public void setAuthority_user_no(int authority_user_no) {
+        this.authority_user_no = authority_user_no;
     }
 }

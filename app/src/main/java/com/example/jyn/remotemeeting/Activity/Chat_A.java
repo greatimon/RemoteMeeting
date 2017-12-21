@@ -130,6 +130,10 @@ public class Chat_A extends Activity {
         else if(from.equals("profile")) {
             Log.d(TAG, "상대방 프로필로로부터 채팅방을 열었다!");
         }
+        // 채팅방 생성 버튼을 통해서, 채팅방을 생성하고, 채팅방을 열었을 때
+        else if(from.equals("create_chat_room")) {
+            Log.d(TAG, "채팅방 생성 버튼을 통해서, 채팅방을 생성하고, 채팅방을 열었다!");
+        }
 
         /** 채팅 메세지 입력에 따른 '전송'버튼 활성화 여부_ 텍스트왓쳐 */
         send_msg.addTextChangedListener(new TextWatcher() {
@@ -417,7 +421,16 @@ public class Chat_A extends Activity {
         }
         // TODO: 3명이상의 채팅일 때 - 구현해야함
         else if(chat_room.getUser_img_filename_arr().size() > 2) {
-
+            nickName_for_setting = "그룹채팅";
+//            // StringBuilder를 이용해서 채팅 제목에 표시할 string 을 만든다
+//            StringBuilder stringBuilder = new StringBuilder();
+//            for(int i=0; i<chat_room.getUser_img_filename_arr().size(); i++) {
+//                // 나는 제외
+//                if(chat_room.getUser_arr().get(i).getUser_no().equals(myapp.getUser_no())) {
+//                    continue;
+//                }
+//                stringBuilder.append(chat_room.getUser_nickname_arr().get(i)).append(", ")
+//            }
         }
 
         // 데이터 셋팅 - "none" << 이건 서버에서 방 생성할 때 'chat_room_title' 칼럼의 디폴트 값을 "none"이라고 설정한 것임
