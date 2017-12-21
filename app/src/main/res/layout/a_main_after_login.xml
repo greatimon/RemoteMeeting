@@ -39,6 +39,15 @@
         fab:fab_labelsPosition="left">
 
         <com.getbase.floatingactionbutton.FloatingActionButton
+            android:id="@+id/create_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            fab:fab_icon="@drawable/create_chat"
+            fab:fab_colorNormal="#41a046"
+            fab:fab_colorPressed="#53b958"
+            fab:fab_title="채팅방 생성" />
+
+        <com.getbase.floatingactionbutton.FloatingActionButton
             android:id="@+id/create_room"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

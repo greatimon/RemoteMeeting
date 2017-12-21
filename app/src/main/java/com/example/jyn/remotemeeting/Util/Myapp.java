@@ -17,7 +17,6 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
@@ -52,8 +51,6 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -1513,7 +1510,11 @@ public class Myapp extends Application {
             top_activity_name = runningTaskInfo.topActivity.getClassName();
             Log.d(TAG, top_activity_name);
         }
-        return top_activity_name;
+        Log.d(TAG, "current_activity_with_package_name: " + top_activity_name);
+        String[] temp = top_activity_name.split("[.]");
+        String curr_activity_name = temp[temp.length-1];
+        Log.d(TAG, "curr_activity_name: " + curr_activity_name);
+        return curr_activity_name;
     }
 
 
@@ -1564,8 +1565,8 @@ public class Myapp extends Application {
                         data.setExtra(String.valueOf(chat_room_no));
                         data.setFirst_read_msg_no(String.valueOf(first_update_msg_no));
                         data.setLast_read_msg_no(String.valueOf(last_read_msg_no));
-                        Log.d(TAG, "first_update_msg_no: " + first_update_msg_no);
-                        Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
+                        Log.d(TAG, "myapp_first_update_msg_no: " + first_update_msg_no);
+                        Log.d(TAG, "myapp_last_read_msg_no: " + last_read_msg_no);
                         // 통신 전송 메소드 호출
                         send_to_server(data);
 //                        // 채팅 액티비티에 막 들어와서, 서버로 부터 해당 채팅방의 채팅 로그들을 받아왔을 시점

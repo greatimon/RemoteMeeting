@@ -24,12 +24,10 @@ import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
 import com.pnikosis.materialishprogress.ProgressWheel;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 import butterknife.BindView;
@@ -322,10 +320,29 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
             Chat_log new_chat_log = data.getChat_log();
 
             // 이 채팅방이, 내가 서버로부터 받은 채팅메세지의 채팅방과 동일한지 확인
+            // (서버에서 확인해서 전송하지만, 클라이언트쪽에서도 재확인)
             int get_this_chatroom_no = myapp.getChatroom_no();
             int received_chatroon_no = data.getChat_log().getChat_room_no();
             // 동일할때만 arrayList에 추가
             if(get_this_chatroom_no == received_chatroon_no) {
+                Log.d(TAG, "getChat_room_no: " + new_chat_log.getChat_room_no());
+                Log.d(TAG, "getUser_no: " + new_chat_log.getUser_no());
+                Log.d(TAG, "getMsg_no: " + new_chat_log.getMsg_no());
+                Log.d(TAG, "getMsg_type: " + new_chat_log.getMsg_type());
+                Log.d(TAG, "getMsg_content: " + new_chat_log.getMsg_content());
+                Log.d(TAG, "getMember_count: " + new_chat_log.getMember_count());
+                Log.d(TAG, "getMsg_unread_count: " + new_chat_log.getMsg_unread_count());
+                Log.d(TAG, "getMsg_unread_user_no_list: " + new_chat_log.getMsg_unread_user_no_list());
+                Log.d(TAG, "getTransmission_gmt_time: " + new_chat_log.getTransmission_gmt_time());
+                Log.d(TAG, "getAttachment: " + new_chat_log.getAttachment());
+//                getMember_count: 2
+//                getMsg_unread_count: 1
+//                getMsg_unread_user_no_list: 13
+//
+//                if() {
+//
+//                }
+
                 chat_log.add(new_chat_log);
                 notifyItemInserted(chat_log.size()-1);
                 Chat_A.recyclerView.getLayoutManager().scrollToPosition(chat_log.size()-1);

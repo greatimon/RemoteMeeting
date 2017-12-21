@@ -8,7 +8,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -49,7 +48,6 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -197,6 +195,8 @@ public class Chat_A extends Activity {
         recyclerView.setLayoutManager(layoutManager);
         // 애니메이션 설정
 //        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        // 리사이클러뷰 아이템이 update될때 아이템 레이아웃이 '깜빡'되지 않게 하기 위해 설정
+        recyclerView.getItemAnimator().setChangeDuration(0);
 
         // 방 제목과 방 인원을 표시하는 메소드 호출
         set_title_and_counting();
@@ -216,8 +216,10 @@ public class Chat_A extends Activity {
 
         /** 채팅 로그 사이에 날짜가 변경된 것을 알리기 위해, 날짜변경 item을 arrayList에 추가하는 로직 */
         long first_msg_trans_time = 0L;
+
         // 채팅 로그가 있을 때만
         if(!chat_log_arr.isEmpty()) {
+
             // 채팅 로그를 돌면서, 날짜가 변경되는 조건을 확인하여 날짜구분선 item을 arrayList에 add 한다
             for(int i=0; i<chat_log_arr.size(); i++) {
 
@@ -592,7 +594,6 @@ public class Chat_A extends Activity {
 //            Log.d(TAG, "getUser_img_filename_arr().toString(): " + chat_room.getUser_img_filename_arr().toString());
 //        }
 //    }
-
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onDestroy

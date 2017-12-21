@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,6 +37,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -266,9 +269,11 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
         // 채팅방 리스트를 업데이트 하라는 지시일 때
         if(message.equals("update")) {
             Log.d(TAG, "update_last_msg_ getItemCount(): " + getItemCount());
-
             int target_chatroom_no = data.getChat_log().getChat_room_no();
             Log.d(TAG, "target_chatroom_no: " + target_chatroom_no);
+
+            // update되는 item의 chat_room_no 값을 담는 변수
+            int update_chat_room_no = -1;
 
             // 현재 arrayList에 아이템이 있을 때, 즉 현재 채팅방 리스트를 가지고 있을 때
             if(getItemCount() > 0) {
@@ -281,25 +286,57 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                         Log.d(TAG, "갱신된 msg_position: " + i);
                         Log.d(TAG, "갱신된 msg의 unread_msg_count: " + rooms.get(i).getLast_log().getMsg_unread_count());
                         rooms.get(i).setUnread_msg_count(rooms.get(i).getLast_log().getMsg_unread_count());
-                        notifyItemChanged(i);
 
-                        /** 일치되는 chatRoom을 찾았다면 더이상 진행할 필요가 없으므로 'return' 처리하여 메소드 로직을 끝냄 */
-                        return;
+                        update_chat_room_no = rooms.get(i).getChatroom_no();
+                        Log.d(TAG, "update_chat_room_no: " + update_chat_room_no);
+                        notifyItemChanged(i);
+                    }
+                    // 마지막 item일 때
+                    if(i == rooms.size()-1) {
+                        /** 마지막 채팅 로그의 msg_no를 기준으로, 가장 최근에 받은 메세지가 최상단에 올 수 있도록,
+                         *  Chat_room arrayList sort 하기 */
+                        Collections.sort(rooms, new Comparator<Chat_room>() {
+                            @Override
+                            public int compare(Chat_room o1, Chat_room o2) {
+                                Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
+                                Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
+                                if(o1.getLast_log().getMsg_no() < o2.getLast_log().getMsg_no()) {
+                                    return 1;
+                                }
+                                else if(o1.getLast_log().getMsg_no() > o2.getLast_log().getMsg_no()) {
+                                    return -1;
+                                }
+                                else {
+                                    return 0;
+                                }
+                            }
+                        });
+
+                        // 그리고 해당 Chat_room item을 notify
+                        for(int j=0; j<rooms.size(); j++) {
+                            if(rooms.get(j).getChatroom_no() == update_chat_room_no) {
+                                notifyItemChanged(j);
+                            }
+                        }
                     }
                 }
 
-                /**
-                 * 메소드 호출
-                 * 일치하는 chatRoom이 없기 때문에, 서버로부터 이 채팅방 정보를 받아오기
-                 */
-                Chat_room new_chat_room = get_new_chatroom_info(target_chatroom_no);
-                Log.d(TAG, "new_chat_room 정보_getMsg_content:  " + new_chat_room.getLast_log().getMsg_content());
-                Log.d(TAG, "new_chat_room 정보_getUser_nickname_arr:  " + new_chat_room.getUser_nickname_arr().toString());
-                Log.d(TAG, "new_chat_room 정보_getUnread_msg_count:  " + new_chat_room.getUnread_msg_count());
+                // update되는 item 이 없는 경우, 즉 해당 채팅 로그에 대한 채팅방 리스트를 내가 가지고 있지 않을 경우.
+                if(update_chat_room_no == -1) {
+                    /**
+                     * 메소드 호출
+                     * 일치하는 chatRoom이 없기 때문에, 서버로부터 이 채팅방 정보를 받아오기
+                     */
+                    Chat_room new_chat_room = get_new_chatroom_info(target_chatroom_no);
+                    Log.d(TAG, "new_chat_room 정보_getMsg_content:  " + new_chat_room.getLast_log().getMsg_content());
+                    Log.d(TAG, "new_chat_room 정보_getUser_nickname_arr:  " + new_chat_room.getUser_nickname_arr().toString());
+                    Log.d(TAG, "new_chat_room 정보_getUnread_msg_count:  " + new_chat_room.getUnread_msg_count());
 
-                // 서버로부터 가져온 chat_room 객체를 arrayList에 추가하기
-                rooms.add(0, new_chat_room);
-                notifyItemInserted(0);
+                    // 서버로부터 가져온 chat_room 객체를 arrayList에 추가하기
+                    rooms.add(0, new_chat_room);
+                    notifyItemInserted(0);
+                }
+
             }
             // 현재 arrayList에 아이템이 없을 때, 즉 현재 가지고 있는 채팅방 리스트가 하나도 없을 때
             else if(getItemCount() == 0) {

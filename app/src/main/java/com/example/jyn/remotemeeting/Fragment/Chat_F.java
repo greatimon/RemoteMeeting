@@ -36,6 +36,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -369,6 +371,7 @@ public class Chat_F extends Fragment {
         }
         return null;
     }
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onResume

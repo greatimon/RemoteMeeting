@@ -170,6 +170,15 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
+        // 채팅 대상(들) 등록
+        <activity
+            android:name=".Dialog.Add_chat_room_subject_users_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // WebRTC
         <activity
             android:name=".Activity.Call_A"

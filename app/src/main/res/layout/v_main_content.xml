@@ -20,9 +20,18 @@
     tools:showIn="@layout/v_main_app_bar"
     >
 
+    <!--약간 검은색 표시하는 View-->
+    <View
+        android:id="@+id/gradient"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@drawable/shape_shadow"
+        />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/gradient"
         android:orientation="vertical">
 
         <android.support.v4.view.ViewPager

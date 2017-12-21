@@ -19,6 +19,7 @@ import com.example.jyn.remotemeeting.Adapter.RCV_add_subject_adapter;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -28,10 +29,10 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 
 /**
- * Created by JYN on 2017-12-03.
+ * Created by JYN on 2017-12-21.
  */
 
-public class Add_subject_user_D extends Activity {
+public class Add_chat_room_subject_users_D extends Activity {
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -41,7 +42,7 @@ public class Add_subject_user_D extends Activity {
     @BindView(R.id.no_result)       TextView no_result;
     @BindView(R.id.btn_layout)      LinearLayout btn_layout;
 
-    private static final String TAG = "all_"+Add_subject_user_D.class.getSimpleName();
+    private static final String TAG = "all_"+Add_chat_room_subject_users_D.class.getSimpleName();
     Myapp myapp;
 
     // 리사이클러뷰 관련 클래스
@@ -79,7 +80,7 @@ public class Add_subject_user_D extends Activity {
         no_result.setVisibility(View.GONE);
 
         // resultOK 버튼에 들어갈 text set
-        register.setText("지정");
+        register.setText("확인");
 
         // 리사이클러뷰 동작 메소드 호출
         activate_RCV();
@@ -102,18 +103,30 @@ public class Add_subject_user_D extends Activity {
     @OnClick(R.id.register)
     public void register() {
 
-        String target_user_no = rcv_add_subject_adapter.added_subject_user_no;
-        if(target_user_no.equals("")) {
-            myapp.logAndToast("회의 대상을 지정해 주세요");
+        int target_user_no_hashMap_size = rcv_add_subject_adapter.user_no_hashMap.size();
+        if(target_user_no_hashMap_size == 0) {
+            myapp.logAndToast("채팅 대상을 선택해 주세요");
             return;
         }
 
-        Users target_user = rcv_add_subject_adapter.here_is_the_target_user_info();
+        ArrayList<String> target_user_info_arr = rcv_add_subject_adapter.hers_is_the_target_user_info_arr();
+
+        // 1명일 때, 1:1 채팅방 생성 로직으로
+        if(target_user_info_arr.size() == 1) {
+            Log.d(TAG, "1:1 채팅방 생성");
+        }
+        // 2명 이상일 때, 그룹 채팅방 생성 로직으로
+        else if(target_user_info_arr.size() > 1) {
+            Log.d(TAG, "그룹 채팅방 생성");
+        }
+
+        // gson을 이용해서, 채팅방 개설에 필요한 target_user_info_arr를 jsonString 변환 / intent에 넣어
+        // Main_after_login_A 로 리턴하고 액티비티를 종료 한다
         Intent intent = new Intent();
-        intent.putExtra("user_no", target_user.getUser_no());
-        intent.putExtra("nickname", target_user.getUser_nickname());
-        intent.putExtra("email", target_user.getUser_email());
-        intent.putExtra("filename", target_user.getUser_img_filename());
+        Gson gson = new Gson();
+        String return_jsonString = gson.toJson(target_user_info_arr);
+        Log.d(TAG, "return_jsonString: " + return_jsonString);
+        intent.putExtra("target_user_info_jsonString", return_jsonString);
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -148,7 +161,7 @@ public class Add_subject_user_D extends Activity {
                 // 3. arrayList users
                 // 4. extra 변수
                 rcv_add_subject_adapter = new RCV_add_subject_adapter(
-                        this, R.layout.i_add_subject, usersArrayList, "create_meeting_room");
+                        this, R.layout.i_add_subject, usersArrayList, "create_chat_room");
                 recyclerView.setAdapter(rcv_add_subject_adapter);
                 rcv_add_subject_adapter.notifyDataSetChanged();
             }

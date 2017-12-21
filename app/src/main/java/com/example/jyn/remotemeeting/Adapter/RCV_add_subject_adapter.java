@@ -20,6 +20,8 @@ import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,9 +38,19 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
     private String request;
     private ArrayList<Users> users;
     public static String TAG = "all_"+RCV_add_subject_adapter.class.getSimpleName();
+    Myapp myapp;
+
+    // request = create_meeting_room
+    // 영상회의방을 만들때 사용하는 변수
     public String added_subject_user_no = "";
     private int added_subject_user_no_pos = -1;
-    Myapp myapp;
+
+    // request = create_chat_room
+    // 채팅방을 만들때 사용하는 변수 - 선택한 유저들의 user_no 를 담는 ArrayList
+    // key - user_no, value - user_no
+    public ConcurrentHashMap<String, String> user_no_hashMap;
+
+
 
     /** RecyclerAdapter 생성자 */
     public RCV_add_subject_adapter(Context context, int itemLayout, ArrayList<Users> users, final String request) {
@@ -50,6 +62,12 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
 
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 채팅방을 만들때, 이 어댑터를 사용한다면,
+        // 선택한 유저들의 user_no 를 담는 ArrayList 객체 생성
+        if(request.equals("create_chat_room")) {
+            user_no_hashMap = new ConcurrentHashMap<>();
+        }
 
     }
 
@@ -79,31 +97,59 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
                     String checked_orNot = users.get(pos).getExtra();
                     String target_user_no = users.get(pos).getUser_no();
 
-                    // 체크되어 있는 유저가 없을 경우
-                    if(added_subject_user_no.equals("")) {
-                        // 더블 체크 - 해당 유저가 체크되어있는지 아닌지 확인
-                        if(checked_orNot.equals("check_no")) {
-                            users.get(pos).setExtra("check_yes");
-                            added_subject_user_no = target_user_no;
-                            added_subject_user_no_pos = pos;
-                            notifyItemChanged(pos);
-                        }
+                    /** 영상회의방을 만들때 */
+                    if(request.equals("create_meeting_room")) {
+                        // 체크되어 있는 유저가 없을 경우
+                        if(added_subject_user_no.equals("")) {
+                            // 더블 체크 - 해당 유저가 체크되어있는지 아닌지 확인
+                            if(checked_orNot.equals("check_no")) {
+                                users.get(pos).setExtra("check_yes");
+                                added_subject_user_no = target_user_no;
+                                added_subject_user_no_pos = pos;
+                                notifyItemChanged(pos);
+                            }
 
+                        }
+                        // 체크되어 있는 유저가 있을 경우
+                        else if(!added_subject_user_no.equals("")) {
+                            // 해당 유저가, 체크되어 있는 유저인 경우 --> 체크해제
+                            if(added_subject_user_no.equals(target_user_no)) {
+                                users.get(pos).setExtra("check_no");
+                                added_subject_user_no = "";
+                                added_subject_user_no_pos = -1;
+                                notifyItemChanged(pos);
+                            }
+                            // 해당 유저가, 체크되어 있는 유저가 아닌 경우 --> 토스트 알림
+                            else if(!added_subject_user_no.equals(target_user_no)) {
+                                myapp.logAndToast("이미 지정한 대상이 존재합니다");
+                            }
+                        }
                     }
-                    // 체크되어 있는 유저가 있을 경우
-                    else if(!added_subject_user_no.equals("")) {
-                        // 해당 유저가, 체크되어 있는 유저인 경우 --> 체크해제
-                        if(added_subject_user_no.equals(target_user_no)) {
+                    /** 채팅방을 만들때 */
+                    else if(request.equals("create_chat_room")) {
+                        // 클릭한 유저의 user_no, get
+                        String clicked_user_no = users.get(pos).getUser_no();
+
+                        // 해당 유저가 체크가 안되어 있으면
+                        if(checked_orNot.endsWith("check_no")) {
+                            // user 객체 'extra' 변수 내용 체크됨으로 바꾸고
+                            users.get(pos).setExtra("check_yes");
+                            // user_no_hashMap에 user_no을 넣기
+                            user_no_hashMap.put(clicked_user_no, clicked_user_no);
+                        }
+                        // 해당 유저가 체크되어 있으면
+                        else if(checked_orNot.endsWith("check_yes")) {
+                            // user 객체 'extra' 변수 내용 체크안됨으로 바꾸고
                             users.get(pos).setExtra("check_no");
-                            added_subject_user_no = "";
-                            added_subject_user_no_pos = -1;
-                            notifyItemChanged(pos);
+                            // user_no_hashMap에서 해당 user_no을 삭제하기
+                            if(user_no_hashMap.containsKey(target_user_no)) {
+                                user_no_hashMap.remove(target_user_no);
+                            }
                         }
-                        // 해당 유저가, 체크되어 있는 유저가 아닌 경우 --> 토스트 알림
-                        else if(!added_subject_user_no.equals(target_user_no)) {
-                            myapp.logAndToast("이미 지정한 대상이 존재합니다");
-                        }
+                        // 해당 아이템 뷰 업데이트
+                        notifyItemChanged(pos);
                     }
+
 
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "getUser_no_arr: " + users.get(pos).getUser_no());
@@ -160,21 +206,25 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
                 .into(holder.profile_img);
         }
 
-        // 미팅중인지 아닌지 표시
-        if(on_air.equals("")) {
-            holder.on_meeting.setVisibility(View.GONE);
+        // 영상회의방을 만들때
+        if(request.equals("create_meeting_room")) {
+            // 미팅중인지 아닌지 표시
+            if(on_air.equals("")) {
+                holder.on_meeting.setVisibility(View.GONE);
 //            holder.container.setClickable(true);    // 미팅중 아닌 사람만 클릭 가능하게
-        }
-        else if(!on_air.equals("")) {
-            holder.on_meeting.setVisibility(View.VISIBLE);
+            }
+            else if(!on_air.equals("")) {
+                holder.on_meeting.setVisibility(View.VISIBLE);
 //            holder.container.setClickable(false);   // 미팅중 아닌 사람만 클릭 가능하게
-            // 이미지뷰에 어두운 효과 주기
-            holder.profile_img.setColorFilter(Color.parseColor("#72746b"), PorterDuff.Mode.MULTIPLY);
+                // 이미지뷰에 어두운 효과 주기
+                holder.profile_img.setColorFilter(Color.parseColor("#72746b"), PorterDuff.Mode.MULTIPLY);
+            }
         }
 
         // 체크되었는지 아닌지 체크하기
         if(checked_orNot.equals("check_no")) {
             holder.check_mark.setVisibility(View.GONE);
+            holder.profile_img.setColorFilter(Color.parseColor("#72746b"), PorterDuff.Mode.DST);
         }
         else if(checked_orNot.equals("check_yes")) {
             holder.check_mark.setVisibility(View.VISIBLE);
@@ -209,6 +259,34 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
             return users.get(added_subject_user_no_pos);
         }
         return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 지정 채팅 대상 객체 ArrayList 전달
+     ---------------------------------------------------------------------------*/
+    public ArrayList<String> hers_is_the_target_user_info_arr() {
+
+        ArrayList<String> user_onfo_arr = new ArrayList<>();
+
+        for(String key: user_no_hashMap.keySet()) {
+            Log.d(TAG, "key=" + key);
+            Log.d(TAG, "valuse=" + user_no_hashMap.get(key));
+
+            user_onfo_arr.add(key);
+        }
+
+        Log.d(TAG, "user_onfo_arr.size(): " + user_onfo_arr.size());
+        for(int i=0; i<user_onfo_arr.size(); i++) {
+            Log.d(TAG, "user_onfo_arr.get("+ i +"): " + user_onfo_arr.get(i));
+        }
+
+        if(user_onfo_arr.size() > 0 ) {
+            return user_onfo_arr;
+        }
+        else {
+            return null;
+        }
     }
 
 }

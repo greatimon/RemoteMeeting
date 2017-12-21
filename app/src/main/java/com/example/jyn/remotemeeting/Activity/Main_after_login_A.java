@@ -26,6 +26,7 @@ import com.example.jyn.remotemeeting.Adapter.Main_viewpager_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Dialog.Add_chat_room_subject_users_D;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -76,6 +77,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     public static int REQUEST_CREATE_ROOM = 1235;
     public static int REQUEST_ENTER_ROOM = 9862;
     public static int REQUEST_CHAT_ROOM = 8548;
+    public static int REQUEST_ADD_CHAT_ROOM_SUBJECT = 9844;
     private SharedPreferences sharedPref;
     String JSON_TAG = "am_i_invited";
     Myapp myapp;
@@ -159,6 +161,18 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onMenuCollapsed() {
                 dark_back.setVisibility(View.GONE);
+            }
+        });
+
+
+        // 채팅방 생성 버튼
+        final FloatingActionButton create_chat = findViewById(R.id.create_chat);
+        create_chat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "채팅방 생성 버튼 클릭");
+                Intent intent = new Intent(view.getContext(), Add_chat_room_subject_users_D.class);
+                startActivityForResult(intent, REQUEST_ADD_CHAT_ROOM_SUBJECT);
             }
         });
 
@@ -891,60 +905,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && resultCode==RESULT_OK) {
             String target_user_no = data.getStringExtra("target_user_no");
             if(target_user_no != null) {
-                /** 서버 통신 - 1:1 채팅방 생성 */
-                RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
-                Call<ResponseBody> call_result = rs.create_chat_room_for_one(
-                        Static.CREATE_CHAT_ROOM_FOR_ONE,
-                        myapp.getUser_no(), target_user_no);
-                call_result.enqueue(new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                        try {
-                            String retrofit_result = response.body().string();
-                            Log.d(TAG, "1:1 채팅방 생성 관련 retrofit_result: "+retrofit_result);
 
-                            // 오류
-                            if(retrofit_result.equals("fail")) {
-                                Log.d(TAG, "retrofit_result_ 1:1 채팅방 생성 fail" + retrofit_result);
-                            }
-
-                            // 레트로핏 결과가 'fail'이 아니라면,
-                            else if(!retrofit_result.equals("fail")) {
-                                // SPLIT 상수를 포함하고 있다면, 채팅방이 이미 있는 것임
-                                if(retrofit_result.contains(Static.SPLIT)) {
-                                    String[] temp = retrofit_result.split(Static.SPLIT);
-                                    // 이미 채팅방이 존재할 때
-                                    if(temp[0].equals("overlap")) {
-                                        Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
-                                        Log.d(TAG, "temp[1]: " + temp[1]);
-
-                                        // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
-                                        // 그리고, 채팅방 액티비티로 이동함
-                                        form_to_chat_room_ob(temp[1]);
-                                    }
-
-                                }
-                                // SPLIT 상수를 포함하고 있지 않다면, 채팅방을 생성한 것임
-                                else {
-                                    Log.d(TAG, "retrofit_result: " + retrofit_result);
-                                    // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
-                                    // 그리고, 채팅방 액티비티로 이동함
-                                    form_to_chat_room_ob(retrofit_result);
-                                }
-                            }
-
-
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        myapp.logAndToast("onFailure_result" + t.getMessage());
-                    }
-                });
-
+                /** inner 메소드 호출 - 서버 통신 - 1:1 채팅방 생성*/
+                create_chat_room_for_one(target_user_no, "profile");
             }
         }
 
@@ -1103,6 +1066,29 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 //            got_out_from_meeting();
         }
 
+        // 플로팅 버튼으로, 채팅방을 만들 때
+        else if(requestCode==REQUEST_ADD_CHAT_ROOM_SUBJECT && resultCode==RESULT_OK) {
+
+            String target_user_info_jsonString = data.getStringExtra("target_user_info_jsonString");
+            Log.d(TAG, "target_user_info_jsonString: " + target_user_info_jsonString);
+
+            try {
+                JSONArray jsonArray = new JSONArray(target_user_info_jsonString);
+                Log.d(TAG, "jsonArray.length(): "+jsonArray.length());
+                for(int i=0; i<jsonArray.length(); i++) {
+                    Log.d(TAG, "jsonArray[" + i + "]: " + jsonArray.get(i));
+                }
+
+                /** inner 메소드 호출 - 서버 통신 - 1:1 채팅방 생성*/
+                // 채팅 지정 상대가 1명일 때
+                if(jsonArray.length() == 1) {
+                    create_chat_room_for_one((String)jsonArray.get(0), "create_chat_room");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 
@@ -1143,6 +1129,61 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     }
 
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 1:1 채팅방 생성
+     ---------------------------------------------------------------------------*/
+    public void create_chat_room_for_one(String target_user_no, final String from) {
+        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+        Call<ResponseBody> call_result = rs.create_chat_room_for_one(
+                Static.CREATE_CHAT_ROOM_FOR_ONE,
+                myapp.getUser_no(), target_user_no);
+        call_result.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String retrofit_result = response.body().string();
+                    Log.d(TAG, "1:1 채팅방 생성 관련 retrofit_result: "+retrofit_result);
+
+                    // 오류
+                    if(retrofit_result.equals("fail")) {
+                        Log.d(TAG, "retrofit_result_ 1:1 채팅방 생성 fail" + retrofit_result);
+                    }
+
+                    // 레트로핏 결과가 'fail'이 아니라면,
+                    else if(!retrofit_result.equals("fail")) {
+                        // SPLIT 상수를 포함하고 있다면, 채팅방이 이미 있는 것임
+                        if(retrofit_result.contains(Static.SPLIT)) {
+                            String[] temp = retrofit_result.split(Static.SPLIT);
+                            // 이미 채팅방이 존재할 때
+                            if(temp[0].equals("overlap")) {
+                                Log.d(TAG, "retrofit_result_ 이미 이 사람과의 채팅방 존재함!!");
+                                Log.d(TAG, "temp[1]: " + temp[1]);
+
+                                // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
+                                // 그리고, 채팅방 액티비티로 이동함
+                                form_to_chat_room_ob(temp[1]);
+                            }
+
+                        }
+                        // SPLIT 상수를 포함하고 있지 않다면, 채팅방을 생성한 것임
+                        else {
+                            Log.d(TAG, "retrofit_result: " + retrofit_result);
+                            // jsonString을 Chat_room 객체 형식으로 바꾸는 메소드 호출
+                            // 그리고, 채팅방 액티비티로 이동함
+                            form_to_chat_room_ob(retrofit_result);
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                myapp.logAndToast("onFailure_result" + t.getMessage());
+            }
+        });
+    }
 
 
 

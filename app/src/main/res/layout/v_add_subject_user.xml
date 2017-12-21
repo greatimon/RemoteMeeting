@@ -4,11 +4,27 @@
     android:layout_width="300dp"
     android:layout_height="400dp"
     android:paddingStart="15dp"
-    tools:background="#d5df9c"
+    tools:background="#f4fdc8"
     android:background="@drawable/shape_back_round"
     android:layout_gravity="center"
     android:orientation="vertical"
     tools:ignore="RtlSymmetry">
+
+    <android.support.v7.widget.RecyclerView
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/recyclerView_horizon"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        >
+    </android.support.v7.widget.RecyclerView>
+
+    <EditText
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginEnd="15dp"
+        />
 
     <android.support.v7.widget.RecyclerView
         tools:visibility="visible"
@@ -54,7 +70,7 @@
             android:layout_marginEnd="15dp"
             android:textSize="16sp"
             android:textColor="#6c6d67"
-            android:text="지정"
+            tools:text="지정"
             />
         <TextView
             android:id="@+id/cancel"

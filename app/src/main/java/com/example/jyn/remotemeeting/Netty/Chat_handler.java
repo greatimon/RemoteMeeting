@@ -142,10 +142,12 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
         Log.d(TAG, "data.getSubType(): " + data.getSubType());
 
         // 현재 액티비티 확인해보기
-        String current_activity_with_package_name = myapp.getTop_activity();
-        Log.d(TAG, "current_activity_with_package_name: " + current_activity_with_package_name);
-        String[] temp = current_activity_with_package_name.split("[.]");
-        String curr_activity_name = temp[temp.length-1];
+//        String current_activity_with_package_name = myapp.getTop_activity();
+//        Log.d(TAG, "current_activity_with_package_name: " + current_activity_with_package_name);
+//        String[] temp = current_activity_with_package_name.split("[.]");
+//        String curr_activity_name = temp[temp.length-1];
+        String curr_activity_name = myapp.getTop_activity();
+
         Log.d(TAG, "curr_activity_name: " + curr_activity_name);
         Log.d(TAG, "Main_after_login_A.chat_F_onResume: " + Main_after_login_A.chat_F_onResume);
 
