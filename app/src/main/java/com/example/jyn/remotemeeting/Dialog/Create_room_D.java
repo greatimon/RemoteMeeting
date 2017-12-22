@@ -79,7 +79,7 @@ public class Create_room_D extends Activity {
 
         // 이미지 모서리 둥글게 만들기
         int random = new Random().nextInt(7);
-        BitmapDrawable drawable = (BitmapDrawable) getResources().getDrawable(myapp.round_back_img[random]);
+        BitmapDrawable drawable = (BitmapDrawable)getResources().getDrawable(myapp.round_back_img[random]);
         Bitmap drawable_bitmap = drawable.getBitmap();
         Bitmap bitmap = Image_round_helper.getRoundedCornerBitmap(drawable_bitmap, 50);
         back_img.setImageBitmap(bitmap);

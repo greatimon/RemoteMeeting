@@ -1,5 +1,7 @@
 package com.example.jyn.remotemeeting.DataClass;
 
+import android.graphics.Bitmap;
+
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.io.Serializable;
@@ -22,6 +24,8 @@ public class Chat_room implements Serializable {
     private String transmission_time_for_local = "";
     private int unread_msg_count;
     private String chat_room_title;
+    private boolean combined_img_ready = false;
+    private Bitmap combined_img_bitmap;
 
     public int getUnread_msg_count() {
         return unread_msg_count;
@@ -127,5 +131,21 @@ public class Chat_room implements Serializable {
 
     public void setAuthority_user_no(int authority_user_no) {
         this.authority_user_no = authority_user_no;
+    }
+
+    public boolean isCombined_img_ready() {
+        return combined_img_ready;
+    }
+
+    public void setCombined_img_ready(boolean combined_img_ready) {
+        this.combined_img_ready = combined_img_ready;
+    }
+
+    public Bitmap getCombined_img_bitmap() {
+        return combined_img_bitmap;
+    }
+
+    public void setCombined_img_bitmap(Bitmap combined_img_bitmap) {
+        this.combined_img_bitmap = combined_img_bitmap;
     }
 }

@@ -271,7 +271,7 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
 
         for(String key: user_no_hashMap.keySet()) {
             Log.d(TAG, "key=" + key);
-            Log.d(TAG, "valuse=" + user_no_hashMap.get(key));
+            Log.d(TAG, "values=" + user_no_hashMap.get(key));
 
             user_onfo_arr.add(key);
         }
@@ -283,6 +283,27 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
 
         if(user_onfo_arr.size() > 0 ) {
             return user_onfo_arr;
+        }
+        else {
+            return null;
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 지정 채팅 대상 객체 ArrayList 전달
+     ---------------------------------------------------------------------------*/
+    public ArrayList<String> hers_is_the_target_users_img_fileName() {
+
+        ArrayList<String> user_fileName_arr = new ArrayList<>();
+
+        for(int i=0; i<users.size(); i++) {
+            user_fileName_arr.add(users.get(i).getUser_img_filename());
+        }
+        Log.d(TAG, "user_fileName_arr.size(): " + user_fileName_arr.size());
+
+        if(user_fileName_arr.size() > 0 ) {
+            return user_fileName_arr;
         }
         else {
             return null;

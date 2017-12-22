@@ -70,4 +70,6 @@ dependencies {
     compile 'io.netty:netty-all:4.1.18.Final'
     /** joda-time */
     compile 'joda-time:joda-time:2.9.9'
+    /** CircleImageView - 이미지뷰 동그랗게 하기 */
+    compile 'de.hdodenhof:circleimageview:2.2.0'
 }

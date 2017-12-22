@@ -1277,6 +1277,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
 
     /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 그룹 채팅방 생성 전에,
+                            그룹채팅방 대표 이미지부터 만들어서 업로드 하는 로직
+     ---------------------------------------------------------------------------*/
+    public void update_group_chat_img(String target_user_no_jsonString) {
+
+    }
+
+
+    /**---------------------------------------------------------------------------
      메소드 ==> 서버 통신 -- 그룹 채팅방 생성
      ---------------------------------------------------------------------------*/
     public void create_chat_room_for_many(String target_user_no_jsonString, final String from) {

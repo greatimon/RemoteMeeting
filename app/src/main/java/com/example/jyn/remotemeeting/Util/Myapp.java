@@ -8,6 +8,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -645,6 +646,19 @@ public class Myapp extends Application {
         }
 
         return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 채팅방 인원이 3명이상일 때, 채팅방 리스트에 보여주는 대표 이미지를 만들 때 사용.
+                이미지뷰 자체가 4분할 구성이기 때문에, 남은 1/4 공간을
+                아무것도 없는 회색 으로 채우기 위해, 회색 비트맵 반환
+     ---------------------------------------------------------------------------*/
+    public Bitmap get_blank_gray_view() {
+            BitmapDrawable drawable = (BitmapDrawable) getResources().getDrawable(R.drawable.none_user);
+            Bitmap bitmap = drawable.getBitmap();
+
+        return bitmap;
     }
 
 

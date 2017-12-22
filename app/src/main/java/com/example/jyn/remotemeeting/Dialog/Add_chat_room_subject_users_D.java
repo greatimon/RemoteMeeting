@@ -98,7 +98,7 @@ public class Add_chat_room_subject_users_D extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 지정
+     클릭이벤트 ==> 확인
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.register)
     public void register() {
@@ -109,7 +109,9 @@ public class Add_chat_room_subject_users_D extends Activity {
             return;
         }
 
+        // 유저들의 user_no 를 담은 ArrayList 얻기
         ArrayList<String> target_user_info_arr = rcv_add_subject_adapter.hers_is_the_target_user_info_arr();
+
 
         // 1명일 때, 1:1 채팅방 생성 로직으로
         if(target_user_info_arr.size() == 1) {

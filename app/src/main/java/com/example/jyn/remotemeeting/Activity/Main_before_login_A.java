@@ -102,6 +102,11 @@ public class Main_before_login_A extends AppCompatActivity {
             input_email_ET.setText("ironman@naver.com");
             input_pw_ET.setText("asdf1234!");
         }
+        // 비스트
+        else if(android_id.equals("3087048799591849")) {
+            input_email_ET.setText("beast@naver.com");
+            input_pw_ET.setText("asdf1234!");
+        }
         // todo: 나중에 삭제하기 - 테스트할 때 로그인 편하기 하기 위한 코드
 
         // 핸드폰 DPI 알아내기

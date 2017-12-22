@@ -2,8 +2,14 @@ package com.example.jyn.remotemeeting.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +20,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_chatRoom_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Chat_log;
@@ -36,10 +45,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.concurrent.ConcurrentHashMap;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import okhttp3.ResponseBody;
@@ -71,6 +78,26 @@ public class Chat_F extends Fragment {
     public RCV_chatRoom_list_adapter rcv_chat_Roomlist_adapter;
     public RecyclerView.LayoutManager layoutManager;
 
+    // 서버로 부터 채팅방 리스트 받아서 담아놓을 변수
+    public ArrayList<Chat_room> rooms;
+
+    // 서버로 부터 채팅방 리스트중, 그룹채팅방의 개수
+    public int group_chat_count = 0;
+
+    // 그룹채팅방 대표 이미지 변환 처리완료 횟수를 저장할 변수
+    public int combined_complete_count = 0;
+
+    // 그룹채팅방의 대표 이미지 관련처리가 완료됐을 때 채팅방 리스트에 해당 비트맵을 넣기 위해 사용하는 핸들러
+    public static Handler handler;
+
+    // 채팅방 리스트 전체를 서버로부터 받아 올 때,
+    // 그룹채팅 대표 이미지들의 Bitmap들을 임시로 담고, 처리가 완료되면 핸들러로 전달하기 위한 해쉬맵
+    ConcurrentHashMap<Integer, ArrayList<Bitmap>> temp_bitmap_hash;
+
+    // 새로 생성된 채팅방 한개를 서버로부터 받아 올 때,
+    // 그룹채팅 대표 이미지들의 Bitmap들을 임시로 담고, 처리가 완료되면 핸들러로 전달하기 위한 해쉬맵
+    ConcurrentHashMap<Integer, ArrayList<Bitmap>> temp_bitmap_hash_new;
+
     public Chat_F() {
         // Required empty public constructor
     }
@@ -87,6 +114,7 @@ public class Chat_F extends Fragment {
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreateView
      ---------------------------------------------------------------------------*/
+    @SuppressLint("HandlerLeak")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "Chat_F_생명주기 onCreateView");
@@ -106,6 +134,9 @@ public class Chat_F extends Fragment {
         // otto 등록
         BusProvider.getBus().register(this);
 
+        temp_bitmap_hash = new ConcurrentHashMap<>();
+        temp_bitmap_hash_new = new ConcurrentHashMap<>();
+
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(getActivity());
@@ -116,13 +147,120 @@ public class Chat_F extends Fragment {
         ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         // 애니메이션 설정 - 기본 애니메이션
 //        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        // 리사이클러뷰 스크롤 리스너 - 테스트용도로 사용하였음, 실제로는 안씀
+//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+//                super.onScrolled(recyclerView, dx, dy);
+//            }
+//
+//            @Override
+//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                super.onScrollStateChanged(recyclerView, newState);
+//                if(newState == SCROLL_STATE_SETTLING) {
+//                    Log.d(TAG, "========================SCROLL_STATE_SETTLING========================");
+//                    Log.d(TAG, "newState: "  + newState);
+//                    Log.d(TAG, "recyclerView.getScrollState(): " + recyclerView.getScrollState());
+//                    if(recyclerView.canScrollVertically(1)) {
+//                        Log.d(TAG, "최상단임!!!!");
+//                    }
+//                    else if(!recyclerView.canScrollVertically(1)) {
+//                        Log.d(TAG, "최하단임!!!!");
+//                    }
+//                }
+//                if(newState == SCROLL_STATE_DRAGGING) {
+//                    Log.d(TAG, "========================SCROLL_STATE_DRAGGING========================");
+//                    Log.d(TAG, "newState: "  + newState);
+//                    Log.d(TAG, "recyclerView.getScrollState(): " + recyclerView.getScrollState());
+//                }
+//                if(newState == SCROLL_STATE_IDLE) {
+//                    Log.d(TAG, "=======================SCROLL_STATE_IDLE=========================");
+//                    Log.d(TAG, "newState: "  + newState);
+//                    Log.d(TAG, "recyclerView.getScrollState(): " + recyclerView.getScrollState());
+//                }
+//
+//            }
+//        });
+
+
+        // 그룹채팅방의 대표 이미지 관련처리가 완료됐을 때 채팅방 리스트에 해당 비트맵을 넣기 위해 사용하는 핸들러
+        handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                // Chat_F에서
+                // 채팅방 리스트 전체를 받아올 때, 전달되는 핸들러메세지
+                if(msg.what == 0) {
+                    Log.d(TAG, "Chat_F에서로부터 핸들러 메세지 전달 받음!!!!!!!!!!!!");
+                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
+                    int target_chatRoom_no = Integer.parseInt(msg.getData().getString("target_chatRoom_no"));
+                    Bitmap combined_bitmap = (Bitmap)msg.obj;
+
+                    // 어댑터로 메소드 호출하여, 해당 비트맵 이미지 전달하고,
+                    // 해당 임시 해쉬맵 삭제
+                    rcv_chat_Roomlist_adapter.set_group_chat_representatice_image(target_chatRoom_no, combined_bitmap);
+                    if(temp_bitmap_hash.containsKey(target_chatRoom_no)) {
+                        temp_bitmap_hash.remove(target_chatRoom_no);
+                    }
+
+//                    combined_complete_count++;
+//                    Log.d(TAG, "combined_complete_count: " + combined_complete_count);
+//
+//                    // 총 그룹채팅방의 개수와, 그룹채팅방 대표이미지 관련 처리 완료 개수와 일치 했을 때 어댑터로 arraylist를 넘긴다
+//                    if(group_chat_count == combined_complete_count) {
+//                        Log.d(TAG, "group_chat_count == combined_complete_count");
+//
+//                        // 어댑터 메소드 호출 - 서버로부터 받아온 채팅방 리스트 전체 중, 그룹 채팅 대표 이미지를 업데이트 해라
+//                        if(rcv_chat_Roomlist_adapter != null) {
+//                            rcv_chat_Roomlist_adapter.refresh_group_chat_Representative_image();
+//                            group_chat_count = 0;
+//                            combined_complete_count = 0;
+//                        }
+//                    }
+                }
+                // RCV_chatRoom_list_adapter 로부터
+                // 새로운 채팅방 리스트가 추가 되었을 때, 전달되는 핸들러메세지
+                if(msg.what == 1) {
+                    Log.d(TAG, "RCV_chatRoom_list_adapter로부터 핸들러 메세지 전달 받음!!!!!!!!!!!!");
+//                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
+//                    int target_chatRoom_no = Integer.parseInt(msg.getData().getString("target_chatRoom_no"));
+//                    Bitmap combined_bitmap = (Bitmap)msg.obj;
+//
+//                    // 어플리케이션 객체의 해쉬맵에 넣기
+//                    myapp.getCombined_bitmap_hash().put(target_chatRoom_no, combined_bitmap);
+//
+//                    // 어댑터 메소드 호출 - 서버로부터 받아온 하나의 채팅방이 그룹채팅방일 경우,
+//                    // 그룹채팅방 대표 이미지를 업데이트 해라
+//                    rcv_chat_Roomlist_adapter.refresh_group_chat_Representative_image();
+
+                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
+                    int target_chatRoom_no = msg.getData().getInt("target_chatRoom_no");
+                    ArrayList<Users> user_arr = (ArrayList<Users>)msg.obj;
+
+                    // 이미지 합치기 메소드 호출
+                    new_chatRoom_group_img_combine(target_chatRoom_no, user_arr);
+                }
+                // Chat_F 로부터
+                // 이미지 합치기가 완료되었을 때, 전달되는 핸들러 메세지
+                else if(msg.what == 2) {
+//                    Log.d(TAG, "Chat_F 로부터 이미지 합치기가 완료되었다는 핸들러 메세지 전달 받음!!!!!!!!!!!!");
+//                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
+//                    int target_chatRoom_no = Integer.parseInt(msg.getData().getString("target_chatRoom_no"));
+//                    Bitmap combined_bitmap = (Bitmap)msg.obj;
+//                    // 어플리케이션 객체의 해쉬맵에 넣기
+//                    myapp.getCombined_bitmap_hash().put(target_chatRoom_no, combined_bitmap);
+//                    // 어댑터 메소드 호출 - 서버로부터 받아온 하나의 채팅방이 그룹채팅방일 경우,
+//                    // 그룹채팅방 대표 이미지를 업데이트 해라
+//                    rcv_chat_Roomlist_adapter.refresh_group_chat_Representative_image();
+                }
+            }
+        };
 
         // 리사이클러뷰 동작 메소드 호출
         activate_RCV();
 
         return controlView;
     }
-
 
     /**---------------------------------------------------------------------------
      otto ==> Main_after_login_A로 부터 message 수신
@@ -196,8 +334,158 @@ public class Chat_F extends Fragment {
             myapp = Myapp.getInstance();
         }
         // 서버로 부터 채팅방 리스트 받기
-        ArrayList<Chat_room> rooms = get_chat_room_list();
+//        final ArrayList<Chat_room> rooms = get_chat_room_list();
+        rooms = get_chat_room_list();
         Log.d(TAG, "usersArrayList.isEmpty(): " + rooms.isEmpty());
+
+        group_chat_count = 0;
+        // 그룹채팅방 개수 구하기
+        for(int k=0; k<rooms.size(); k++) {
+            // 채팅방 인원이 2명보다 많을 때, 체크
+            Log.d(TAG, "rooms.get(k).getUser_arr().size(): " + rooms.get(k).getUser_arr().size());
+            Log.d(TAG, "rooms.get(k).getChatroom_no(): " + rooms.get(k).getChatroom_no());
+            if(rooms.get(k).getUser_arr().size() > 2) {
+                group_chat_count++;
+            }
+        }
+        Log.d(TAG, "group_chat_count: " + group_chat_count);
+
+        // 임시 해쉬맵 초기화
+//        temp_bitmap_hash.clear();
+
+        /** 전달받은 채팅방 중, 참여인원이 2명을 초과하는 채팅방 대표 이미지를 만드는 로직 */
+        for(int j=0; j<rooms.size(); j++) {
+
+            if(rooms.get(j).getUser_arr().size() > 2) {
+//                Log.d(TAG, "rooms.get(j).getUser_arr().size() > 3: " + rooms.get(j).getUser_arr().size());
+
+                // rooms.get(j)를 복사하여 임시 Chat_room 객체 생성
+                final Chat_room temp_Chat_room = rooms.get(j);
+
+                // 해당 chatroom_no를 복사하여, 임시로 target_chatRoom_no 담아놓기
+                final int target_chatRoom_no = temp_Chat_room.getChatroom_no();
+
+                // 해당 target_chatRoom_no을 키 값으로 하는 해쉬맵 아이템이 있다면, 지우기(초기화)
+                if(temp_bitmap_hash.containsKey(target_chatRoom_no)) {
+                    temp_bitmap_hash.remove(target_chatRoom_no);
+                }
+
+                // 채팅방에 참여중인 사람들의 수
+                final int user_nums = temp_Chat_room.getUser_arr().size();
+                Log.d(TAG, "user_nums: " + user_nums);
+//                Log.d(TAG, "temp_filename_arr_size: " + temp_filename_arr_size);
+
+                // for 문
+                outer:
+                for(int i = 0; i<user_nums; i++) {
+
+                    // target_chatRoom_no을 키 값으로 하는 해쉬맵 아이템이 존재할 때
+                    if(temp_bitmap_hash.containsKey(target_chatRoom_no)) {
+//                        // 채팅 참여인원이 3명이고, 비트맵 어레이개수가 3개면
+//                        if(user_nums == 3 && temp_bitmap_hash.get(target_chatRoom_no).size() == 3) {
+//                            // 마지막 비트맵 어레이 아이템으로, 프로필 사진이 없는 회색 배경 비트맵을 추가
+//                            temp_bitmap_hash.get(target_chatRoom_no).add(myapp.get_blank_gray_view());
+//                            Log.d(TAG, "3명일 때, 빈 회색 비트맵을 추가하고 난 뒤 비트맵 개수: "
+//                                    + temp_bitmap_hash.get(target_chatRoom_no).size());
+//
+//                            // 해당 채팅방의 참여한 유저들의 비트맵들과, 채팅방 번호를 메소드로 넘김
+//                            // --> 이미지 4장 합쳐서 해당 아이템에 보여주기 위함
+//                            // 매개변수 1. 이 채팅방 번호
+//                            // 매개변수 2. 비트맵들을 담은 ArrayList
+//                            new Thread() {
+//                                @Override
+//                                public void run() {
+//                                    img_bitmap_put_complete(target_chatRoom_no, temp_bitmap_hash.get(target_chatRoom_no), "whole");
+//                                }
+//                            }.start();
+//                        }
+//                        // 채팅 참여 인원이 4명이상일 때, 비트맵 아이템의 개수가 4개 이상이면
+//                        // 바로 비트맵 붙이기 메소드 호출
+//                        else if(user_nums >= 4 && temp_bitmap_hash.get(target_chatRoom_no).size() >= 4) {
+//                            new Thread() {
+//                                @Override
+//                                public void run() {
+//                                    img_bitmap_put_complete(target_chatRoom_no, temp_bitmap_hash.get(target_chatRoom_no), "whole");
+//                                }
+//                            }.start();
+//                        }
+                    }
+
+                    final int finalI = i;
+                    String img_fileName = "";
+
+                    if(!temp_Chat_room.getUser_arr().get(i).getUser_img_filename().equals("none")) {
+                        img_fileName = temp_Chat_room.getUser_arr().get(i).getUser_img_filename();
+                    }
+                    else if(temp_Chat_room.getUser_arr().get(i).getUser_img_filename().equals("none")) {
+                        img_fileName = "default_profile_for_combine.png";
+                    }
+
+                    Glide
+                        .with(getContext())
+                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_fileName)
+                        .asBitmap()
+                        .override(100, 100)
+                        .fitCenter()
+                        .into(new SimpleTarget<Bitmap>() {
+
+                            int this_target_chatRoom_no = target_chatRoom_no;
+                            @Override
+                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+
+                                // 이미 해당 채팅방을 키 값으로 하는 해쉬맵 밸류값이 있다면
+                                if(temp_bitmap_hash.containsKey(this_target_chatRoom_no)) {
+                                    temp_bitmap_hash.get(this_target_chatRoom_no).add(resource);
+                                }
+                                // 이미 해당 채팅방을 키 값으로 하는 해쉬맵 밸류값이 없다면
+                                else if(!temp_bitmap_hash.containsKey(this_target_chatRoom_no)) {
+
+                                    // bitmap들을 담을 새로운 ArrayList를 생성하고,
+                                    // 해당 채팅방을 키 값으로 하는 해쉬맵 arr item을 put 한 뒤
+                                    ArrayList<Bitmap> bitmap_arr = new ArrayList<>();
+                                    temp_bitmap_hash.put(this_target_chatRoom_no, bitmap_arr);
+                                    // 해당 해쉬맵 아이템 밸류인 arr에 해당 bitmap을 넣는다
+                                    temp_bitmap_hash.get(this_target_chatRoom_no).add(resource);
+                                }
+
+                                // 채팅 참여인원이 3명이고, 비트맵 어레이개수가 3개면
+                                if(user_nums == 3 && temp_bitmap_hash.get(target_chatRoom_no).size() == 3) {
+                                    // 마지막 비트맵 어레이 아이템으로, 프로필 사진이 없는 회색 배경 비트맵을 추가
+                                    temp_bitmap_hash.get(target_chatRoom_no).add(myapp.get_blank_gray_view());
+                                    Log.d(TAG, "3명일 때, 빈 회색 비트맵을 추가하고 난 뒤 비트맵 개수: "
+                                            + temp_bitmap_hash.get(target_chatRoom_no).size());
+
+                                    // 해당 채팅방의 참여한 유저들의 비트맵들과, 채팅방 번호를 메소드로 넘김
+                                    // --> 이미지 4장 합쳐서 해당 아이템에 보여주기 위함
+                                    // 매개변수 1. 이 채팅방 번호
+                                    // 매개변수 2. 비트맵들을 담은 ArrayList
+                                    new Thread() {
+                                        @Override
+                                        public void run() {
+                                            img_bitmap_put_complete(target_chatRoom_no, temp_bitmap_hash.get(target_chatRoom_no), "whole");
+                                        }
+                                    }.start();
+                                }
+                                // 채팅 참여 인원이 4명이상일 때, 비트맵 아이템의 개수가 4개 이상이면
+                                // 바로 비트맵 붙이기 메소드 호출
+                                else if(user_nums >= 4 && temp_bitmap_hash.get(target_chatRoom_no).size() == user_nums) {
+                                    new Thread() {
+                                        @Override
+                                        public void run() {
+                                            img_bitmap_put_complete(target_chatRoom_no, temp_bitmap_hash.get(target_chatRoom_no), "whole");
+                                        }
+                                    }.start();
+                                }
+                            }
+                        });
+                }
+            }
+
+//            // for문 마지막
+//            if(j == rooms.size()-1) {
+//                handler.sendEmptyMessage(1);
+//            }
+        }
 
         // 채팅방 리스트가 하나도 없다면
         if(rooms.isEmpty()) {
@@ -206,7 +494,7 @@ public class Chat_F extends Fragment {
         }
         // 채팅방 리스트가 있다면
         else if(!rooms.isEmpty()) {
-            Log.d(TAG, "================================================rooms.size()" + rooms.size());
+            Log.d(TAG, "================================================rooms.size(): " + rooms.size());
             no_result.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
         }
@@ -274,7 +562,7 @@ public class Chat_F extends Fragment {
                                 // jsonArray에서 jsonObject를 하나씩 가지고 와서, parsing 하기
                                 for(int i=0; i<jsonArray.length(); i++) {
                                     String jsonString = jsonArray.getJSONObject(i).toString();
-                                    Log.d(TAG, "jsonString_ " + i + ": " + jsonString);
+//                                    Log.d(TAG, "jsonString_ " + i + ": " + jsonString);
 
                                     // Chat_room 객체안의 세부 ArrayList 객체 생성
                                     ArrayList<Users> user_arr = new ArrayList<>();
@@ -301,25 +589,25 @@ public class Chat_F extends Fragment {
                                     // 채팅방 제목
                                     String chat_room_title = jsonArray.getJSONObject(i).getString("chat_room_title");
 
-                                    Log.d(TAG, "chatroom_no: " + chatroom_no);
-                                    Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
-                                    Log.d(TAG, "last_msg_no: " + last_msg_no);
-                                    Log.d(TAG, "unread_msg_count: " + unread_msg_count);
+//                                    Log.d(TAG, "chatroom_no: " + chatroom_no);
+//                                    Log.d(TAG, "chat_room_authority_user_no: " + chat_room_authority_user_no);
+//                                    Log.d(TAG, "last_msg_no: " + last_msg_no);
+//                                    Log.d(TAG, "unread_msg_count: " + unread_msg_count);
 
                                     // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
                                     Gson gson = new Gson();
 
                                     // 'user_ob' JSONString을 JSONObect로 파싱
                                     JSONArray jsonArray_for_user = new JSONArray(jsonArray.getJSONObject(i).getString("user_ob"));
-                                    Log.d(TAG, "jsonArray_for_user.toString(): " + jsonArray_for_user.toString());
-                                    Log.d(TAG, "jsonArray_for_user.length(): " + jsonArray_for_user.length());
+//                                    Log.d(TAG, "jsonArray_for_user.toString(): " + jsonArray_for_user.toString());
+//                                    Log.d(TAG, "jsonArray_for_user.length(): " + jsonArray_for_user.length());
 
                                     // gson 이용해서 user 객체로 변환해서, 그 user 객체 안에서 닉네임과, 이미지 URL 값을 가져와서,
                                     // 각 ArrayList 값에 add 한다
                                     for(int k=0; k<jsonArray_for_user.length(); k++) {
                                         Users user = gson.fromJson(jsonArray_for_user.get(k).toString(), Users.class);
-                                        Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
-                                        Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
+//                                        Log.d(TAG, "user.getUser_nickname(): " + user.getUser_nickname());
+//                                        Log.d(TAG, "user.getUser_img_filename(): " + user.getUser_img_filename());
                                         user_arr.add(user);
                                         user_nickname_arr.add(user.getUser_nickname());
                                         user_img_filename_arr.add(user.getUser_img_filename());
@@ -327,17 +615,17 @@ public class Chat_F extends Fragment {
 
                                     // 채팅방 마지막 메세지, JSONArray를 파싱
                                     JSONArray jsonArray_last_chat_log = new JSONArray(jsonArray.getJSONObject(i).getString("last_chat_log_ob"));
-                                    Log.d(TAG, "jsonArray_last_chat_log.toString(): " + jsonArray_last_chat_log.toString());
-                                    Log.d(TAG, "jsonArray_last_chat_log.length(): " + jsonArray_last_chat_log.length());
+//                                    Log.d(TAG, "jsonArray_last_chat_log.toString(): " + jsonArray_last_chat_log.toString());
+//                                    Log.d(TAG, "jsonArray_last_chat_log.length(): " + jsonArray_last_chat_log.length());
 
                                     // gson 이용해서 Chat_log 객체로 변환
                                     Chat_log last_chat_log = null;
                                     // 마지막 Chat_log가 있을 때만 변환
                                     if(jsonArray_last_chat_log.length() == 1) {
                                         last_chat_log = gson.fromJson(jsonArray_last_chat_log.get(0).toString(), Chat_log.class);
-                                        Log.d(TAG, "jsonArray_last_chat_log.get(0).toString(): " + jsonArray_last_chat_log.get(0).toString());
-                                        Log.d(TAG, "last_chat_log.getMsg_content(): " + last_chat_log.getMsg_content());
-                                        Log.d(TAG, "last_chat_log.getChat_room_no(): " + last_chat_log.getChat_room_no());
+//                                        Log.d(TAG, "jsonArray_last_chat_log.get(0).toString(): " + jsonArray_last_chat_log.get(0).toString());
+//                                        Log.d(TAG, "last_chat_log.getMsg_content(): " + last_chat_log.getMsg_content());
+//                                        Log.d(TAG, "last_chat_log.getChat_room_no(): " + last_chat_log.getChat_room_no());
                                     }
 
                                     /** Chat_room 객체에 데이터 넣기 */
@@ -374,6 +662,240 @@ public class Chat_F extends Fragment {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 전달받은 비트맵 4장을 정사각형의 하나의 배트맵으로 붙이기
+     ---------------------------------------------------------------------------*/
+    public void img_bitmap_put_complete(
+            final int target_chatRoom_no, final ArrayList<Bitmap> this_arr, final String from) {
+        Log.d(TAG, "test 메소드 들어옴");
+        Log.d(TAG, "target_chatRoom_no: " + target_chatRoom_no);
+        Log.d(TAG, "this_arr.size(): " + this_arr.size());
+        Log.d(TAG, "from: " + from);
+
+        new Thread() {
+            @Override
+            public void run() {
+                int[] temp = random_pick(this_arr.size());
+
+                BitmapFactory.Options option = new BitmapFactory.Options();
+                option.inDither = true;
+                option.inPurgeable = true;
+
+                Bitmap bitmap = null;
+//                Bitmap b1 = this_arr.get(temp[0]);
+//                Bitmap b2 = this_arr.get(temp[1]);
+//                Bitmap b3 = this_arr.get(temp[2]);
+//                Bitmap b4 = this_arr.get(temp[3]);
+                Bitmap b1 = this_arr.get(0);
+                Bitmap b2 = this_arr.get(1);
+                Bitmap b3 = this_arr.get(2);
+                Bitmap b4 = this_arr.get(3);
+
+                b1 = resizeBitmapImage(b1, 100);
+                b2 = resizeBitmapImage(b2, 100);
+                b3 = resizeBitmapImage(b3, 100);
+                b4 = resizeBitmapImage(b4, 100);
+
+                bitmap = Bitmap.createScaledBitmap(b1, b1.getWidth()+b1.getWidth(), b1.getHeight()+b1.getHeight(), true);
+
+                Paint p = new Paint();
+                p.setDither(true);
+                p.setFlags(Paint.ANTI_ALIAS_FLAG);
+
+                Canvas c = new Canvas(bitmap);
+                c.drawBitmap(b1, 0, 0, p);
+                c.drawBitmap(b2, 0, b1.getHeight(), p);
+                c.drawBitmap(b3, b1.getWidth(), 0, p);
+                c.drawBitmap(b4,b1.getWidth(),b1.getHeight(),p);
+
+                b1.recycle();
+                b2.recycle();
+                b3.recycle();
+                b4.recycle();
+
+
+//                rcv_chat_Roomlist_adapter.set_group_chat_representatice_image(target_chatRoom_no, bitmap);
+//                if(temp_bitmap_hash.containsKey(target_chatRoom_no)) {
+//                    temp_bitmap_hash.remove(target_chatRoom_no);
+//                }
+//                return bitmap;
+
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = handler.obtainMessage();
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'target_chatRoom_no' 변수 담기
+                bundle.putString("target_chatRoom_no", String.valueOf(target_chatRoom_no));
+                // Message 객체에 bundle, 'bitmap' 담기
+                msg.setData(bundle);
+                msg.obj = bitmap;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                // 요청하는 위치에 따라 핸들러 메세지를 구분하여 보냄
+                // whole - 서버로부터 전체 채팅방 리스트를 받아 왔을 때.
+                // new - 새로운 채팅방 리스트 한개를 받아 왔을 때.
+                if(from.equals("whole")) {
+                    msg.what = 0;
+                }
+                else if(from.equals("new")) {
+                    msg.what = 2;
+                }
+
+                // 핸들러로 Message 객체 전달
+                handler.sendMessage(msg);
+            }
+        }.start();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> bitmap을 원하는 resolution으로 사이즈 조절하기
+     ---------------------------------------------------------------------------*/
+    private Bitmap resizeBitmapImage(Bitmap source, int maxResolution) {
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int newWidth = width;
+        int newHeight = height;
+        float rate = 0.0f;
+
+        if(width > height) {
+            if(maxResolution < width) {
+                rate = maxResolution / (float) width;
+                newHeight = (int) (height * rate);
+                newWidth = maxResolution;
+            }
+        }
+        else {
+            if(maxResolution < height) {
+                rate = maxResolution / (float) height;
+                newWidth = (int) (width * rate);
+                newHeight = maxResolution;
+            }
+        }
+
+        return Bitmap.createScaledBitmap(source, newWidth, newHeight, true);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 0 ~ size 사이에 중복되지 않는 랜덤한 숫자 4개들의 배열을 return 하는 메소드
+     이미지 URL를 랜덤으로 고르기 위함
+     ---------------------------------------------------------------------------*/
+    public int[] random_pick(int size) {
+        // 배열 생성
+        int picked_imgs[] = new int[4];
+
+        for(int i=0; i<picked_imgs.length; i++) {
+            // 랜덤 값 반환
+            picked_imgs[i] = (int)(Math.random()*size);
+
+            // 중복 값 제거1
+            for(int j=0; j<i; j++) {
+                if(picked_imgs[i]==picked_imgs[j]){
+                    i--;
+                    break;
+                }
+            }
+        }
+        for(int k=0; k<picked_imgs.length; k++){
+//            Log.d(TAG, "picked_imgs["+ k +"]: " + picked_imgs[k]);
+        }
+
+        return picked_imgs;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버로부터 새로 받아온 채팅방이 그룹 채팅방일 때, 해당 그룹채팅방의 대표 이미지를
+                생성하기 위한 메소드
+     ---------------------------------------------------------------------------*/
+    public void new_chatRoom_group_img_combine(
+            int chatroom_no, ArrayList<Users> user_arr) {
+
+        // 임시 해쉬맵 초기화
+        temp_bitmap_hash_new.clear();
+
+        // 해당 chatroom_no를 복사하여, 임시로 target_chatRoom_no 담아놓기
+        final int target_chatRoom_no = chatroom_no;
+
+        // 이미지 URL을 담을 임시 ArrayList 생성
+        ArrayList<String> temp_user_img_filename = new ArrayList<>();
+
+        // 채팅방에 참여중인 사람들의 수
+        final int user_nums = user_arr.size();
+        Log.d(TAG, "user_nums: " + user_nums);
+
+        for(int i = 0; i<user_nums; i++) {
+
+            final int finalI = i;
+            String img_fileName = "";
+
+            if(!user_arr.get(i).getUser_img_filename().equals("none")) {
+                img_fileName = user_arr.get(i).getUser_img_filename();
+            }
+            else if(user_arr.get(i).getUser_img_filename().equals("none")) {
+                img_fileName = "default_profile_for_combine.png";
+            }
+
+            Glide
+                .with(getContext())
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + img_fileName)
+                .asBitmap()
+                .override(100, 100)
+                .fitCenter()
+                .into(new SimpleTarget<Bitmap>() {
+
+                    int this_target_chatRoom_no = target_chatRoom_no;
+
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+
+                        // 이미 해당 채팅방을 키 값으로 하는 해쉬맵 밸류값이 있다면
+                        if(temp_bitmap_hash_new.containsKey(this_target_chatRoom_no)) {
+                            temp_bitmap_hash_new.get(this_target_chatRoom_no).add(resource);
+                        }
+                        // 이미 해당 채팅방을 키 값으로 하는 해쉬맵 밸류값이 없다면
+                        else if(!temp_bitmap_hash_new.containsKey(this_target_chatRoom_no)) {
+
+                            // bitmap들을 담을 새로운 ArrayList를 생성하고,
+                            // 해당 채팅방을 키 값으로 하는 해쉬맵 arr item을 put 한 뒤
+                            ArrayList<Bitmap> bitmap_arr = new ArrayList<>();
+                            temp_bitmap_hash_new.put(this_target_chatRoom_no, bitmap_arr);
+                            // 해당 해쉬맵 아이템 밸류인 arr에 해당 bitmap을 넣는다
+                            temp_bitmap_hash_new.get(this_target_chatRoom_no).add(resource);
+                        }
+
+                        // for문 마지막일 때
+                        if(finalI == user_nums-1) {
+                            Log.d(TAG, "finalI: " + finalI);
+                            Log.d(TAG, "temp_users_size: " + user_nums);
+                            Log.d(TAG, "3명인지 확인하기 위한 로그_ user_nums : " + user_nums);
+
+                            // 채팅 참여인원이 3명일 때 (추가확인 == 현재 비트맵 어레이개수가 3개인지)
+                            if(user_nums == 3 && temp_bitmap_hash_new.get(this_target_chatRoom_no).size() == 3) {
+                                // 마지막 어레이 아이템을 지우고, 프로필 사진이 없는 회색 배경 비트맵을 추가
+                                temp_bitmap_hash_new.get(this_target_chatRoom_no).add(myapp.get_blank_gray_view());
+                                Log.d(TAG, "3명일 때, 빈 회색 비트맵을 추가하고 난 뒤 비트맵 개수: "
+                                        + temp_bitmap_hash_new.get(this_target_chatRoom_no).size());
+                            }
+
+                            // 해당 채팅방의 참여한 유저들의 비트맵들과, 채팅방 번호를 메소드로 넘김
+                            // --> 이미지 4장 합쳐서 해당 아이템에 보여주기 위함
+                            // 매개변수 1. 이 채팅방 번호
+                            // 매개변수 2. 비트맵들을 담은 ArrayList
+                            new Thread() {
+                                @Override
+                                public void run() {
+                                    img_bitmap_put_complete(this_target_chatRoom_no, temp_bitmap_hash_new.get(this_target_chatRoom_no), "new");
+                                }
+                            }.start();
+
+                        }
+                    }
+                });
+        }
     }
 
 
@@ -449,6 +971,10 @@ public class Chat_F extends Fragment {
         if(Main_after_login_A.chat_F_onResume) {
             Main_after_login_A.chat_F_onResume = false;
         }
+
+        // 임시 해쉬맵 초기화
+        temp_bitmap_hash.clear();
+        temp_bitmap_hash_new.clear();
 
         super.onDestroyView();
     }
