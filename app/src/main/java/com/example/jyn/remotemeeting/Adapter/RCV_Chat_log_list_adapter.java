@@ -19,6 +19,8 @@ import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
@@ -214,6 +216,7 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
 
                     // 채팅 내용
                     holder.msg_content_me.setText(msg_content);
+                    Log.d(TAG, "msg_content: " + msg_content);
                     // 채팅 서버 도착 시간
                     holder.time_me.setText(transmission_gmt_time_str);
                     // 읽지 않은 메시지 count
@@ -272,11 +275,11 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
                         }
                         else if(!user.getUser_img_filename().equals("none")) {
                             Glide
-                                    .with(context)
-                                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user.getUser_img_filename())
-                                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                                    .bitmapTransform(new CropCircleTransformation(context))
-                                    .into(holder.sender_profile_img);
+                                .with(context)
+                                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + user.getUser_img_filename())
+                                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                                .bitmapTransform(new CropCircleTransformation(context))
+                                .into(holder.sender_profile_img);
                         }
                         // target_user_no 닉네임 set
                         holder.nickName.setText(user.getUser_nickname());
@@ -385,37 +388,48 @@ public class RCV_Chat_log_list_adapter extends RecyclerView.Adapter<RCV_Chat_log
             }
         }
         // 이미 있는 리사이클러뷰에 있는 채팅 로그를 업데이트 하라는 요청일 때
-        else if(message.equals("update_chat_log")) {
-            String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
-            Log.d(TAG, "unread_msg_count_info_jsonString: " + unread_msg_count_info_jsonString);
+        else if(message.equals("update_chat_log") || message.equals("update_chat_log_complete")) {
+//            String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
+//            Log.d(TAG, "unread_msg_count_info_jsonString: " + unread_msg_count_info_jsonString);
+//
+//            try {
+//                JSONObject jsonOB = new JSONObject(unread_msg_count_info_jsonString);
+//                Log.d(TAG, "jsonOB.length(): " + jsonOB.length());
+//
+//                //// for문을 돌면서 업데이트할 unread_msg_no 를 찾아서 해당 값을 업데이트 한다
+//                for(int i=0; i<getItemCount(); i++) {
+//                    for (Iterator<String> it = jsonOB.keys(); it.hasNext();) {
+//                        String key = it.next();
+//                        String value = jsonOB.getString(key);
+//                        Log.d(TAG, "key: " + key + " -- " + "value: " + value);
+//
+//                        // chat_log의 msg_no와 netty 서버로 부터 받은 msg_no가 일치할 때
+//                        // 해당 chat_log의 msg_unread_count를 서버로 부터 받은 값으로 set 한다
+//                        if(chat_log.get(i).getMsg_no() == Integer.parseInt(key)) {
+//                            chat_log.get(i).setMsg_unread_count(Integer.parseInt(value));
+//                            // 그리고 해당 item notifyItemChanged
+//                            notifyItemChanged(i);
+//                            Log.d(TAG, "업데이트 한 msg_content_ " + i + ": "
+//                                    + chat_log.get(i).getMsg_content());
+//                        }
+//                    }
+//                }
+//
+//            }
+//            catch (JSONException e) {
+//                e.printStackTrace();
+//            }
 
-            try {
-                JSONObject jsonOB = new JSONObject(unread_msg_count_info_jsonString);
-                Log.d(TAG, "jsonOB.length(): " + jsonOB.length());
+            Log.d(TAG, "message: " + message);
 
-                //// for문을 돌면서 업데이트할 unread_msg_no 를 찾아서 해당 값을 업데이트 한다
-                for(int i=0; i<getItemCount(); i++) {
-                    for (Iterator<String> it = jsonOB.keys(); it.hasNext();) {
-                        String key = it.next();
-                        String value = jsonOB.getString(key);
-                        Log.d(TAG, "key: " + key + " -- " + "value: " + value);
-
-                        // chat_log의 msg_no와 netty 서버로 부터 받은 msg_no가 일치할 때
-                        // 해당 chat_log의 msg_unread_count를 서버로 부터 받은 값으로 set 한다
-                        if(chat_log.get(i).getMsg_no() == Integer.parseInt(key)) {
-                            chat_log.get(i).setMsg_unread_count(Integer.parseInt(value));
-                            // 그리고 해당 item notifyItemChanged
-                            notifyItemChanged(i);
-                            Log.d(TAG, "업데이트 한 msg_content_ " + i + ": "
-                                    + chat_log.get(i).getMsg_content());
-                        }
-                    }
-                }
-
-            }
-            catch (JSONException e) {
-                e.printStackTrace();
-            }
+            /** try 1. */
+            /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
+            BusProvider.getBus().register(this);
+            Event.RCV_Chat_log_list_adapter__Chat_A event =
+                    new Event.RCV_Chat_log_list_adapter__Chat_A("update_chat_log");
+            BusProvider.getBus().post(event);
+            BusProvider.getBus().unregister(this);
+            /** try 1. */
 
         }
     }

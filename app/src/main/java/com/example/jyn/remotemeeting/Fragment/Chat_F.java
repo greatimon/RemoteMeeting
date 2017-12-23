@@ -147,7 +147,8 @@ public class Chat_F extends Fragment {
         ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         // 애니메이션 설정 - 기본 애니메이션
 //        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        // 리사이클러뷰 스크롤 리스너 - 테스트용도로 사용하였음, 실제로는 안씀
+
+        /** 리사이클러뷰 스크롤 리스너 - 테스트용도로 사용하였음, 실제로는 안씀 */
 //        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 //            @Override
 //            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -203,6 +204,7 @@ public class Chat_F extends Fragment {
                         temp_bitmap_hash.remove(target_chatRoom_no);
                     }
 
+
 //                    combined_complete_count++;
 //                    Log.d(TAG, "combined_complete_count: " + combined_complete_count);
 //
@@ -220,7 +222,7 @@ public class Chat_F extends Fragment {
                 }
                 // RCV_chatRoom_list_adapter 로부터
                 // 새로운 채팅방 리스트가 추가 되었을 때, 전달되는 핸들러메세지
-                if(msg.what == 1) {
+                else if(msg.what == 1) {
                     Log.d(TAG, "RCV_chatRoom_list_adapter로부터 핸들러 메세지 전달 받음!!!!!!!!!!!!");
 //                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
 //                    int target_chatRoom_no = Integer.parseInt(msg.getData().getString("target_chatRoom_no"));
@@ -235,10 +237,41 @@ public class Chat_F extends Fragment {
 
                     // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
                     int target_chatRoom_no = msg.getData().getInt("target_chatRoom_no");
-                    ArrayList<Users> user_arr = (ArrayList<Users>)msg.obj;
+                    String img_filename_arr = msg.getData().getString("img_filename_arr");
+                    Log.d(TAG, "img_filename_arr: " + img_filename_arr);
+                    ArrayList<Users> received_user_arr = (ArrayList<Users>)msg.obj;
+                    Log.d(TAG, "핸들러_ received_user_arr.size(): " + received_user_arr.size());
+
+                    boolean contain_me_orNot = false;
+                    for(int i=0; i<received_user_arr.size(); i++) {
+                        Log.d(TAG, "received_user_arr.get(i).getUser_nickname(): " + received_user_arr.get(i).getUser_nickname());
+                        if(received_user_arr.get(i).getUser_no().equals(myapp.getUser_no())) {
+                            contain_me_orNot = true;
+                        }
+                    }
+
+                    // 만약에 내 정보가 없다면, 내 user 객체 만들어서 arr에 add 하기
+                    if(!contain_me_orNot) {
+                        Users user = new Users();
+//                        this.user_no = user_object.getString("user_no");
+//                        this.join_path = user_object.getString("join_path");
+//                        this.join_dt = user_object.getString("join_dt");
+//                        this.user_email = user_object.getString("user_email");
+//                        this.user_nickname = user_object.getString("user_nickname");
+//                        this.present_meeting_in_ornot = user_object.getString("present_meeting_in_ornot");
+//                        this.user_img_filename = user_object.getString("user_img_filename");
+                        user.setUser_no(myapp.getUser_no());
+                        user.setJoin_path(myapp.getJoin_path());
+                        user.setJoin_path(myapp.getJoin_path());
+                        user.setUser_email(myapp.getUser_email());
+                        user.setUser_nickname(myapp.getUser_nickname());
+                        user.setPresent_meeting_in_ornot(myapp.getPresent_meeting_in_ornot());
+                        user.setUser_img_filename(myapp.getUser_img_filename());
+                        received_user_arr.add(user);
+                    }
 
                     // 이미지 합치기 메소드 호출
-                    new_chatRoom_group_img_combine(target_chatRoom_no, user_arr);
+                    new_chatRoom_group_img_combine(target_chatRoom_no, received_user_arr);
                 }
                 // Chat_F 로부터
                 // 이미지 합치기가 완료되었을 때, 전달되는 핸들러 메세지
@@ -252,6 +285,17 @@ public class Chat_F extends Fragment {
 //                    // 어댑터 메소드 호출 - 서버로부터 받아온 하나의 채팅방이 그룹채팅방일 경우,
 //                    // 그룹채팅방 대표 이미지를 업데이트 해라
 //                    rcv_chat_Roomlist_adapter.refresh_group_chat_Representative_image();
+
+                    // Message 객체로부터 채팅방 번호와, 비트맵 객체 가져오기
+                    int target_chatRoom_no = Integer.parseInt(msg.getData().getString("target_chatRoom_no"));
+                    Bitmap combined_bitmap = (Bitmap)msg.obj;
+
+                    // 어댑터로 메소드 호출하여, 해당 비트맵 이미지 전달하고,
+                    // 해당 임시 해쉬맵 삭제
+                    rcv_chat_Roomlist_adapter.set_group_chat_representatice_image(target_chatRoom_no, combined_bitmap);
+                    if(temp_bitmap_hash.containsKey(target_chatRoom_no)) {
+                        temp_bitmap_hash.remove(target_chatRoom_no);
+                    }
                 }
             }
         };
@@ -376,7 +420,6 @@ public class Chat_F extends Fragment {
 //                Log.d(TAG, "temp_filename_arr_size: " + temp_filename_arr_size);
 
                 // for 문
-                outer:
                 for(int i = 0; i<user_nums; i++) {
 
                     // target_chatRoom_no을 키 값으로 하는 해쉬맵 아이템이 존재할 때
@@ -975,6 +1018,9 @@ public class Chat_F extends Fragment {
         // 임시 해쉬맵 초기화
         temp_bitmap_hash.clear();
         temp_bitmap_hash_new.clear();
+
+        // static handler 없애기
+        handler = null;
 
         super.onDestroyView();
     }

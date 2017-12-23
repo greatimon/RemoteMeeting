@@ -206,14 +206,26 @@ public class Chat_A extends Activity {
         set_title_and_counting();
 
         // 채팅 로그들을 가져오는 메소드 호출
-        set_chatting_logs();
+        set_chatting_logs("onCreate");
+    }
+
+
+    /**---------------------------------------------------------------------------
+     otto ==> Myapp로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage(Event.Myapp__Chat_A event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+        if(event.getMessage().equals("re_receive_chat_log")) {
+            set_chatting_logs("re_receive_chat_log");
+        }
     }
 
 
     /**---------------------------------------------------------------------------
      메소드 ==> chatting_log ArrayList를 리사이클러뷰 어댑터로 넘기기
      ---------------------------------------------------------------------------*/
-    public void set_chatting_logs() {
+    public void set_chatting_logs(String from) {
 
         ArrayList<Chat_log> chat_log_arr = get_chatting_logs();
         Log.d(TAG, "chat_log_arr.isEmpty(): " + chat_log_arr.isEmpty());
@@ -297,20 +309,25 @@ public class Chat_A extends Activity {
             // 인자 2. 서버로 부터 받은 채팅 로그 중 첫번째 메세지 번호
             // 인자 3. 서버로 부터 받은 채팅 로그 중 마지막 메세지 번호
             // 인자 4. 요청구분자
-            myapp.update_first_last_msg_no(
-                    Chatroom_no, first_read_msg_no, last_read_msg_no, "http");
+            if(from.equals("onCreate")) {
+                myapp.update_first_last_msg_no(
+                        Chatroom_no, first_read_msg_no, last_read_msg_no, "http");
+            }
         }
 
-        /** Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기 */
-        /** '내가 현재 들어와 있는 채팅방 번호' 전달 */
-        Data_for_netty data = new Data_for_netty();
-        data.setNetty_type("chatroom");
-        data.setSubType("enter");
-        data.setSender_user_no(myapp.getUser_no());
-        // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
-        data.setExtra(String.valueOf(Chatroom_no));
-        // 통신 전송 메소드 호출
-        myapp.send_to_server(data);
+        if(from.equals("onCreate")) {
+            Log.d(TAG, "Netty 서버에 채팅방 진입 알림");
+            /** Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기 */
+            /** '내가 현재 들어와 있는 채팅방 번호' 전달 */
+            Data_for_netty data = new Data_for_netty();
+            data.setNetty_type("chatroom");
+            data.setSubType("enter");
+            data.setSender_user_no(myapp.getUser_no());
+            // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
+            data.setExtra(String.valueOf(Chatroom_no));
+            // 통신 전송 메소드 호출
+            myapp.send_to_server(data);
+        }
     }
 
 
@@ -518,6 +535,19 @@ public class Chat_A extends Activity {
         rcv_chat_log_list_adapter.update_last_msg(event.getMessage(), event.getData());
         recyclerView.setAdapter(rcv_chat_log_list_adapter);
 
+    }
+
+
+    /**---------------------------------------------------------------------------
+     otto ==> Chat_handler로 부터 message 수신
+     ---------------------------------------------------------------------------*/
+    @Subscribe
+    public void getMessage(Event.RCV_Chat_log_list_adapter__Chat_A event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+        if(event.getMessage().equals("update_chat_log")) {
+            // 리사이클러뷰 동작 메소드 호출
+            set_chatting_logs("adapter");
+        }
     }
 
 

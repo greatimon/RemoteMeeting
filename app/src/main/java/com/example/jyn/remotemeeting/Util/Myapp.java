@@ -805,12 +805,6 @@ public class Myapp extends Application {
         }
         return null;
     }
-//    String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
-//    Calendar cal = Calendar.getInstance();
-//    int num = cal.get(Calendar.DAY_OF_WEEK)-1;
-//    String today = weekDay[num];
-//      System.out.println(num);
-//      System.out.println("오늘의 요일 : " + today );
 
 
     /**---------------------------------------------------------------------------
@@ -1414,88 +1408,9 @@ public class Myapp extends Application {
                 /** try 1.*/
                 Gson gson = new GsonBuilder().setLenient().create();
                 String data_string = gson.toJson(data);
-                Log.d(TAG, "data_string: " + data_string);
+                Log.d(TAG, "send_to_server_data_string: " + data_string);
 
                 getChannel().writeAndFlush(data_string);
-
-
-//                /** try 2.*/
-//                StringBuilder stringBuilder = new StringBuilder();
-//                Chat_log chat_log = data.getChat_log();
-//
-//                // netty_type, subType, sender_user_no : 이 세개는 반드시 들어감
-//                String netty_type = data.getNetty_type();
-//                String subType = data.getSubType();
-//                String sender_user_no = data.getSender_user_no();
-//                String target_user_no = data.getTarget_user_no();
-//                String extra = data.getExtra();
-//                String first_read_msg_no = data.getFirst_read_msg_no();
-//                String last_read_msg_no = data.getLast_read_msg_no();
-//                String unread_msg_count_info_jsonString = data.getUnread_msg_count_info_jsonString();
-//
-//                stringBuilder.append(netty_type).append(Static.SPLIT);
-//                stringBuilder.append(subType).append(Static.SPLIT);
-//                stringBuilder.append(sender_user_no).append(Static.SPLIT);
-//                stringBuilder.append(target_user_no).append(Static.SPLIT);
-//                stringBuilder.append(extra).append(Static.SPLIT);
-//                stringBuilder.append(first_read_msg_no).append(Static.SPLIT);
-//                stringBuilder.append(last_read_msg_no).append(Static.SPLIT);
-//                if(chat_log != null) {
-//                    stringBuilder.append(unread_msg_count_info_jsonString).append(Static.SPLIT);
-//                }
-//                else if (chat_log == null) {
-//                    stringBuilder.append(unread_msg_count_info_jsonString);
-//                }
-//
-//                int msg_no;
-//                int chat_room_no;
-//                String msg_type="";
-//                int user_no;
-//                long transmission_gmt_time;
-//                String msg_content="";
-//                String attachment="";
-//                int member_count;
-//                int msg_unread_count;
-//                String msg_unread_user_no_list="";
-//
-//                if(chat_log != null) {
-//                    msg_no = chat_log.getMsg_no();
-//                    chat_room_no = chat_log.getChat_room_no();
-//                    msg_type = chat_log.getMsg_type();
-//                    user_no = chat_log.getUser_no();
-//                    transmission_gmt_time = chat_log.getTransmission_gmt_time();
-//                    msg_content = chat_log.getMsg_content();
-//                    attachment = chat_log.getAttachment();
-//                    member_count = chat_log.getMember_count();
-//                    msg_unread_count = chat_log.getMsg_unread_count();
-//                    msg_unread_user_no_list = chat_log.getMsg_unread_user_no_list();
-//
-//                    stringBuilder.append(msg_no).append(Static.SPLIT);
-//                    stringBuilder.append(chat_room_no).append(Static.SPLIT);
-//                    stringBuilder.append(msg_type).append(Static.SPLIT);
-//                    stringBuilder.append(user_no).append(Static.SPLIT);
-//                    stringBuilder.append(transmission_gmt_time).append(Static.SPLIT);
-//                    stringBuilder.append(msg_content).append(Static.SPLIT);
-//                    stringBuilder.append(attachment).append(Static.SPLIT);
-//                    stringBuilder.append(member_count).append(Static.SPLIT);
-//                    stringBuilder.append(msg_unread_count).append(Static.SPLIT);
-//                    stringBuilder.append(msg_unread_user_no_list);
-//
-////                    Gson gson = new GsonBuilder().setLenient().create();
-////                    chat_log_string = gson.toJson(chat_log);
-////                    Log.d(TAG, "chat_log_string: " + chat_log_string);
-//                }
-//
-//                Log.d(TAG, "stringBuilder: " + stringBuilder);
-//
-//                String[] temp = String.valueOf(stringBuilder).split(Static.SPLIT);
-//
-//                for(int i=0; i<temp.length; i++) {
-//                    Log.d(TAG, "temp " + i + ": " + temp[i]);
-//                }
-//
-//                getChannel().writeAndFlush(String.valueOf(stringBuilder));
-
             }
         }).start();
     }
@@ -1541,6 +1456,9 @@ public class Myapp extends Application {
      ---------------------------------------------------------------------------*/
     public void update_first_last_msg_no(
             final int chat_room_no, final int first_read_msg_no, final int last_read_msg_no, final String request) {
+
+        Log.d(TAG, "first_read_msg_no: " + first_read_msg_no);
+        Log.d(TAG, "last_read_msg_no: " + last_read_msg_no);
         RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
         Call<ResponseBody> call = rs.update_first_last_msg_no(
                 Static.UPDATE_FIRST_LAST_MSG_NO,
@@ -1565,6 +1483,7 @@ public class Myapp extends Application {
 
                     // 업데이트 성공, 그리고 first_update_msg_no를 잘 가져왔다면
                     if(success && first_update_msg_no!=-1) {
+
                         /**
                          * 서버에 내가 읽은 'first_read_msg_no, last_read_msg_no'가 업데이트 되고 나면,
                          * netty를 통해서 해당 채팅방에 들어와 있는 사람에게
@@ -1583,30 +1502,18 @@ public class Myapp extends Application {
                         Log.d(TAG, "myapp_last_read_msg_no: " + last_read_msg_no);
                         // 통신 전송 메소드 호출
                         send_to_server(data);
-//                        // 채팅 액티비티에 막 들어와서, 서버로 부터 해당 채팅방의 채팅 로그들을 받아왔을 시점
-//                        if(request.equals("http")) {
-//                            Data_for_netty data = new Data_for_netty
-//                                    .Builder("order", "update_chat_log", getUser_no())
-//                                    .build();
-//                            // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
-//                            data.setExtra(String.valueOf(chat_room_no));
-//                            data.setFirst_read_msg_no(first_read_msg_no);
-//                            data.setLast_read_msg_no(last_read_msg_no);
-//                            // 통신 전송 메소드 호출
-//                            send_to_server(data);
-//                        }
-//                        // 이미 채팅 액티비티에 들어와있고, netty로 부터 실시간으로 채팅 메세지들을 받을 때
-//                        else if(request.equals("netty")) {
-//                            Data_for_netty data = new Data_for_netty
-//                                    .Builder("order", "update_chat_log", getUser_no())
-//                                    .build();
-//                            // 현재 채팅방 번호를 Data_for_netty의 Extra 변수에 넣기
-//                            data.setExtra(String.valueOf(chat_room_no));
-//                            data.setFirst_read_msg_no(first_read_msg_no);
-//                            data.setLast_read_msg_no(last_read_msg_no);
-//                            // 통신 전송 메소드 호출
-//                            send_to_server(data);
-//                        }
+
+
+                        new Handler().postDelayed(new Runnable() {
+                            // 1 초 후에 실행
+                            @Override public void run() {
+                                BusProvider.getBus().register(this);        // otto 등록
+                                // otto 를 통해, 프래그먼트로 이벤트 전달하기
+                                Event.Myapp__Chat_A myapp__chat_a = new Event.Myapp__Chat_A("re_receive_chat_log");
+                                BusProvider.getBus().post(myapp__chat_a);
+                                BusProvider.getBus().unregister(this);      // otto 등록 해제
+                            }
+                        }, 500);
                     }
 
 

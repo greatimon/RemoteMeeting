@@ -73,6 +73,41 @@ public class Event {
 
 
     /** 이벤트
+     *    Myapp --> Chat_A
+     *    : 내가 해당 채팅방에서 읽은 첫번째 메시지와, 마지막 메세지 번호를 업데이트 했으니
+     *    : 다시 서버로 부터 채팅 로그를 받아서 읽음 카운트 수를 업데이트 해라
+     * */
+    public static class Myapp__Chat_A {
+        private String message;
+
+        public Myapp__Chat_A(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+
+    /** 이벤트
+     *    RCV_Chat_log_list_adapter --> Chat_A
+     *    : 채팅 로그들을 새로 받아, 리사이클러뷰를 갱신하라는 이벤트 메세지를 전달
+     * */
+    public static class RCV_Chat_log_list_adapter__Chat_A {
+        private String message;
+
+        public RCV_Chat_log_list_adapter__Chat_A(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+
+    /** 이벤트
      *    Main_after_login_A --> Chat_F
      *    : 채팅방 리스트를 서버로부터 받아 리사이클러뷰를 갱신하라는 이벤트 메시지를 전달
      * */
