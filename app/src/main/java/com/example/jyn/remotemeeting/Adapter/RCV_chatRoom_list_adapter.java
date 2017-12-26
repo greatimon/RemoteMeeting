@@ -120,7 +120,6 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                     Log.d(TAG, "채팅방의 마지막 메세지 전송 시각: " + rooms.get(pos).getTransmission_time_for_local());
                     Log.d(TAG, "채팅방의 안읽은 메세지 개수: " + rooms.get(pos).getUnread_msg_count());
 
-                    // TODO: 해당 채팅방 액티비티로 이동
                     // CachePot 이용해서 클릭한 rooms 객체 전달
                     CachePot.getInstance().push("chat_room", rooms.get(pos));
 

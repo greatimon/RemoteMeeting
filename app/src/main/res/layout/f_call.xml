@@ -54,16 +54,25 @@
                     android:layout_marginEnd="10dp"
                     android:layout_alignParentEnd="true"
                     android:src="@drawable/add_text_2"/>
-                <!--파일 공유 모드 전환 버튼-->
+                <!--미리보기버튼 및 파일 공유버튼 버튼-->
+                <!--<ImageView-->
+                    <!--tools:visibility="visible"-->
+                    <!--android:id="@+id/go_share"-->
+                    <!--android:layout_width="50dp"-->
+                    <!--android:layout_height="match_parent"-->
+                    <!--android:padding="12dp"-->
+                    <!--android:layout_marginRight="5dp"-->
+                    <!--android:layout_alignParentRight="true"-->
+                    <!--android:src="@drawable/share_img_5"/>-->
                 <ImageView
                     tools:visibility="visible"
-                    android:id="@+id/go_share"
+                    android:id="@+id/preview"
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
-                    android:padding="12dp"
-                    android:layout_marginRight="5dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="6dp"
                     android:layout_alignParentRight="true"
-                    android:src="@drawable/share_img_5"/>
+                    android:src="@drawable/preview"/>
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -99,7 +108,7 @@
         <!--circularProgressbar 레이아웃-->
         <RelativeLayout
             android:visibility="gone"
-            tools:visibility="visible"
+            tools:visibility="gone"
             android:id="@+id/circularProgressbar_REL"
             android:layout_marginTop="-30dp"
             android:layout_width="match_parent"
@@ -215,12 +224,30 @@
             android:src="@drawable/close"/>
     </RelativeLayout>
 
+    <RelativeLayout
+        android:id="@+id/preview_REL"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/popup_file_manager"
+        android:layout_below="@+id/close_popup"
+        tools:background="#88b38484"
+        >
+        <android.support.v7.widget.RecyclerView
+            tools:visibility="visible"
+            android:id="@+id/recyclerView_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </android.support.v7.widget.RecyclerView>
+    </RelativeLayout>
+
 
 
     <!--팝업 메뉴-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="gone"
+        tools:visibility="visible"
         android:id="@+id/popup_menu"
         android:layout_width="150dp"
         android:layout_height="match_parent">
@@ -288,13 +315,13 @@
                 android:layout_marginTop="10dp">
                 <ImageView
                     android:layout_width="0dp"
-                    android:layout_height="40dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:paddingTop="10dp"
+                    android:paddingBottom="3dp"
                     android:paddingLeft="13dp"
                     android:paddingRight="7dp"
-                    android:paddingBottom="3dp"
-                    android:src="@drawable/invite"/>
+                    android:paddingTop="10dp"
+                    android:src="@drawable/meeting_log" />
                 <ImageView
                     android:id="@+id/button_call_switch_camera"
                     android:layout_width="0dp"
@@ -314,9 +341,9 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:paddingLeft="4dp"
+                    android:paddingLeft="2dp"
                     android:gravity="center|top"
-                    android:text="초대"
+                    android:text="회의 메모"
                     android:textColor="#cdd1d0"
                     android:textSize="11dp"
                     />
@@ -340,6 +367,7 @@
                 android:layout_marginTop="7dp">
 
                 <ImageView
+                    android:id="@+id/button_call_toggle_video"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -347,7 +375,7 @@
                     android:paddingLeft="13dp"
                     android:paddingRight="7dp"
                     android:paddingTop="10dp"
-                    android:src="@drawable/meeting_log" />
+                    android:src="@drawable/video_on" />
                 <ImageView
                     android:id="@+id/button_call_toggle_mic"
                     android:layout_width="0dp"
@@ -365,12 +393,13 @@
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/text_call_toggle_video"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center|top"
-                    android:paddingLeft="4dp"
-                    android:text="회의 메모"
+                    android:paddingLeft="6.5dp"
+                    android:text="비디오"
                     android:textColor="#cdd1d0"
                     android:textSize="11dp" />
                 <TextView
@@ -378,7 +407,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:paddingRight="4dp"
+                    android:paddingRight="1dp"
                     android:gravity="center|top"
                     android:text="마이크"
                     android:textColor="#cdd1d0"
@@ -496,13 +525,33 @@
         android:layout_toRightOf="@+id/popup_menu"
         android:clickable="true"/>
 
+
+    <!--비디오 상태 표시-->
+    <ImageView
+        android:id="@+id/video_on_show"
+        android:visibility="visible"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/video_on_show"
+        android:layout_alignParentRight="true"/>
+    <ImageView
+        android:id="@+id/video_off_show"
+        android:visibility="gone"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/video_off_show"
+        android:layout_alignParentRight="true"/>
     <!--마이크 상태 표시-->
     <ImageView
         android:id="@+id/mic_on_show"
         android:visibility="visible"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="65dp"
         android:layout_marginRight="10dp"
         android:src="@drawable/mic_on_show"
         android:layout_alignParentRight="true"/>
@@ -511,11 +560,10 @@
         android:visibility="gone"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="65dp"
         android:layout_marginRight="10dp"
         android:src="@drawable/mic_off_show"
         android:layout_alignParentRight="true"/>
-
 
 
 

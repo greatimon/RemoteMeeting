@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.example.jyn.remotemeeting.Util.GatheringHandler;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import io.netty.bootstrap.Bootstrap;
@@ -93,8 +94,9 @@ public class Chat_service extends Service implements Runnable  {
                             ChannelPipeline pipeline = ch.pipeline();
                             // String 인/디코더 (default인 UTF-8)
                             pipeline.addLast(new StringEncoder(), new StringDecoder());
+                            pipeline.addLast(new GatheringHandler());
                             // IO 이벤트 핸들러
-                            pipeline.addLast(new Chat_handler());
+                            pipeline.addLast(new Chat_handler(user_no));
                         }
                     });
 

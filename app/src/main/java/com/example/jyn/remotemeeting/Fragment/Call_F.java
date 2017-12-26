@@ -61,9 +61,7 @@ public class Call_F extends Fragment {
     private ImageView cameraSwitchButton;
     private ImageView mic_on_show_IV;
     private ImageView mic_off_show_IV;
-    private ImageView toggleMuteButton;
     private ImageView popup_menu_icon;
-    private TextView toggleMuteText;
     private TextView captureFormatText;
     private TextView cameraSwitchText;
     private SeekBar captureFormatSlider;
@@ -82,19 +80,28 @@ public class Call_F extends Fragment {
     public RCV_call_adapter rcv_call_adapter_local;
     private RecyclerView.LayoutManager layoutManager;
 
-
-    /** 버터나이프 적용시킨 이후 뷰 찾기*/
+    /** 버터나이프 뷰 찾기*/
     public Unbinder unbinder;
     @BindView(R.id.popup_file_manager)      public RelativeLayout popup_file_manager_REL;
+    @BindView(R.id.preview_REL)             public RelativeLayout preview_REL;
     @BindView(R.id.recyclerView)            public RecyclerView recyclerView;
+    @BindView(R.id.recyclerView_preview)    public RecyclerView recyclerView_preview;
     @BindView(R.id.file_box_title)          public TextView file_box_title;
     @BindView(R.id.back_to_menu)            public ImageView back_to_menu;
-    @BindView(R.id.go_share)                public ImageView go_share;
+    @BindView(R.id.preview)                 public ImageView preview;
+    @BindView(R.id.share_img_mode)          public ImageView share_img_mode;
+    @BindView(R.id.button_call_toggle_video)public ImageView button_call_toggle_video;
+    @BindView(R.id.button_call_toggle_mic)  public ImageView button_call_toggle_mic;
+    @BindView(R.id.video_on_show)           public ImageView video_on_show;
+    @BindView(R.id.video_off_show)          public ImageView video_off_show;
     @BindView(R.id.close_popup)             public RelativeLayout close_popup;
     @BindView(R.id.sequence)                public TextView sequence;
     @BindView(R.id.file_name)               public TextView file_name;
     @BindView(R.id.percent)                 public TextView percent;
+    @BindView(R.id.share_img_mode_text)     public TextView share_img_mode_text;
     @BindView(R.id.page_status)             public TextView page_status;
+    @BindView(R.id.text_call_toggle_video)  public TextView text_call_toggle_video;
+    @BindView(R.id.text_call_toggle_mic)    public TextView text_call_toggle_mic;
     @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
 
     public static CircularProgressBar circularProgressBar;
@@ -113,6 +120,7 @@ public class Call_F extends Fragment {
         void onVideoScalingSwitch(RendererCommon.ScalingType scalingType);
         void onCaptureFormatChange(int width, int height, int framerate);
         boolean onToggleMic();
+        boolean onToggleVideo();
     }
 
     @SuppressLint("HandlerLeak")
@@ -129,8 +137,6 @@ public class Call_F extends Fragment {
         cameraSwitchButton = controlView.findViewById(R.id.button_call_switch_camera);
         cameraSwitchText = controlView.findViewById(R.id.Textview_call_switch_camera);
 //        videoScalingButton = controlView.findViewById(R.id.button_call_scaling_mode);
-        toggleMuteButton = controlView.findViewById(R.id.button_call_toggle_mic);
-        toggleMuteText = controlView.findViewById(R.id.text_call_toggle_mic);
         captureFormatText = controlView.findViewById(R.id.capture_format_text_call);
         captureFormatSlider = controlView.findViewById(R.id.capture_format_slider_call);
         popup_menu_icon = controlView.findViewById(R.id.popup_menu_icon);
@@ -203,70 +209,6 @@ public class Call_F extends Fragment {
 //            }
 //        });
         scalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL;
-
-
-        /**---------------------------------------------------------------------------
-         클릭이벤트 ==> 마이크 on,off
-         ---------------------------------------------------------------------------*/
-        toggleMuteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                boolean enabled = callEvents.onToggleMic();
-                Log.d(TAG, "toggleMuteButton_enabled: " + enabled);
-
-                // 사용자에게 보여주는 마이크 상태 표시 변경
-//                if(enabled) {
-//                    mic_on_show_IV.setVisibility(View.VISIBLE);
-//                    mic_off_show_IV.setVisibility(View.GONE);
-//                } else if(!enabled) {
-//                    mic_on_show_IV.setVisibility(View.GONE);
-//                    mic_off_show_IV.setVisibility(View.VISIBLE);
-//                }
-
-
-                toggleMuteButton.setAlpha(enabled ? 1.0f : 0.3f);
-                String test = String.valueOf(enabled);
-                switch (test) {
-                    case "true":
-                    mic_on_show_IV.setVisibility(View.VISIBLE);
-                    mic_off_show_IV.setVisibility(View.GONE);
-                        break;
-                    case "false":
-                        mic_on_show_IV.setVisibility(View.GONE);
-                        mic_off_show_IV.setVisibility(View.VISIBLE);
-                        break;
-                  }
-
-            }
-        });
-        toggleMuteText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                boolean enabled = callEvents.onToggleMic();
-                Log.d(TAG, "toggleMuteText_enabled: " + enabled);
-
-                // 사용자에게 보여주는 마이크 상태 표시 변경
-//                if(enabled) {
-//                    mic_on_show_IV.setVisibility(View.VISIBLE);
-//                    mic_off_show_IV.setVisibility(View.GONE);
-//                } else if(!enabled) {
-//                    mic_on_show_IV.setVisibility(View.GONE);
-//                    mic_off_show_IV.setVisibility(View.VISIBLE);
-//                }
-                toggleMuteButton.setAlpha(enabled ? 1.0f : 0.3f);
-                String test = String.valueOf(enabled);
-                switch (test) {
-                    case "true":
-                        mic_on_show_IV.setVisibility(View.VISIBLE);
-                        mic_off_show_IV.setVisibility(View.GONE);
-                        break;
-                    case "false":
-                        mic_on_show_IV.setVisibility(View.GONE);
-                        mic_off_show_IV.setVisibility(View.VISIBLE);
-                        break;
-                }
-            }
-        });
 
 
         /**---------------------------------------------------------------------------
@@ -350,6 +292,54 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 오디오 on/off
+     ---------------------------------------------------------------------------*/
+    @OnClick({R.id.button_call_toggle_mic, R.id.text_call_toggle_mic})
+    public void audio_on_off() {
+        boolean enabled = callEvents.onToggleMic();
+        Log.d(TAG, "toggleMuteButton_enabled: " + enabled);
+
+        button_call_toggle_mic.setAlpha(enabled ? 1.0f : 0.3f);
+        text_call_toggle_mic.setAlpha(enabled ? 1.0f : 0.3f);
+        String test = String.valueOf(enabled);
+        switch (test) {
+            case "true":
+                mic_off_show_IV.setVisibility(View.GONE);
+                mic_on_show_IV.setVisibility(View.VISIBLE);
+                break;
+            case "false":
+                mic_on_show_IV.setVisibility(View.GONE);
+                mic_off_show_IV.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 비디오 on/off
+     ---------------------------------------------------------------------------*/
+    @OnClick({R.id.button_call_toggle_video, R.id.text_call_toggle_video})
+    public void video_on_off() {
+        boolean enabled = callEvents.onToggleVideo();
+        Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
+
+        button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+        text_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+        String test = String.valueOf(enabled);
+        switch (test) {
+            case "true":
+                video_off_show.setVisibility(View.GONE);
+                video_on_show.setVisibility(View.VISIBLE);
+                break;
+            case "false":
+                video_on_show.setVisibility(View.GONE);
+                video_off_show.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
      메소드 ==> 회의 파일함 Open
      ---------------------------------------------------------------------------*/
     public void file_box() {
@@ -367,7 +357,7 @@ public class Call_F extends Fragment {
         back_to_menu.setVisibility(View.VISIBLE);
         add_files.setVisibility(View.GONE);
         close_popup.setVisibility(View.VISIBLE);
-        go_share.setVisibility(View.VISIBLE);
+        preview.setVisibility(View.VISIBLE);
 
         file_box_title.setText("회의 파일함");
     }
@@ -500,7 +490,7 @@ public class Call_F extends Fragment {
             // 뷰 Visibility 조절
             back_to_menu.setVisibility(View.VISIBLE);
             add_files.setVisibility(View.VISIBLE);
-            go_share.setVisibility(View.GONE);
+            preview.setVisibility(View.GONE);
 
             // 뷰 comment 셋팅
             String title = "";

@@ -375,47 +375,47 @@ public class Myapp extends Application {
 
             /** 채팅 서버 접속 서비스 구동 메소드 호출 */
             // 현재 서비스가 구동중인지 확인하는 메소드 호출 - 자세한 설명은 해당 메소드에 주석처리
-//            if(!isServiceRunningCheck()) {
-//                chat_server_conn_service_run();
-//            }
+            if(!isServiceRunningCheck()) {
+                chat_server_conn_service_run();
+            }
 
-            /** 테스트 코드 - 테스트 중으로, 로그인할 때마다 서비스를 다시 돌리는 것으로 변경 */
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    EventLoopGroup group = new NioEventLoopGroup();
-
-                    try {
-                        Bootstrap bootStrap = new Bootstrap();
-                        bootStrap.group(group)
-                                // 논블럭 방식 적용
-                                .channel(NioSocketChannel.class)
-                                .handler(new ChannelInitializer<SocketChannel>() {
-                                    @Override
-                                    public void initChannel(SocketChannel ch) throws Exception {
-                                        ChannelPipeline pipeline = ch.pipeline();
-                                        // String 인/디코더 (default인 UTF-8)
-                                        pipeline.addLast(new StringEncoder(), new StringDecoder());
-                                        pipeline.addLast(new GatheringHandler());
-                                        // IO 이벤트 핸들러
-                                        pipeline.addLast(new Chat_handler());
-                                    }
-                                });
-
-                        Channel channel = bootStrap.connect("52.78.88.227", 8888).sync().channel();
-
-                        // 어플리케이션 객체에 Channel 객체 저장하기
-                        setChannel(channel);
-
-                        channel.closeFuture().sync();
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } finally {
-                        group.shutdownGracefully();
-                    }
-                }
-            }).start();
+            // TODO: 테스트 코드 - 테스트 중, 로그인할 때 채팅 서버에 접속하는 것으로 하였음
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    EventLoopGroup group = new NioEventLoopGroup();
+//
+//                    try {
+//                        Bootstrap bootStrap = new Bootstrap();
+//                        bootStrap.group(group)
+//                                // 논블럭 방식 적용
+//                                .channel(NioSocketChannel.class)
+//                                .handler(new ChannelInitializer<SocketChannel>() {
+//                                    @Override
+//                                    public void initChannel(SocketChannel ch) throws Exception {
+//                                        ChannelPipeline pipeline = ch.pipeline();
+//                                        // String 인/디코더 (default인 UTF-8)
+//                                        pipeline.addLast(new StringEncoder(), new StringDecoder());
+//                                        pipeline.addLast(new GatheringHandler());
+//                                        // IO 이벤트 핸들러
+//                                        pipeline.addLast(new Chat_handler());
+//                                    }
+//                                });
+//
+//                        Channel channel = bootStrap.connect("52.78.88.227", 8888).sync().channel();
+//
+//                        // 어플리케이션 객체에 Channel 객체 저장하기
+//                        setChannel(channel);
+//
+//                        channel.closeFuture().sync();
+//
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    } finally {
+//                        group.shutdownGracefully();
+//                    }
+//                }
+//            }).start();
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -1533,7 +1533,7 @@ public class Myapp extends Application {
     @Override
     public void onTerminate() {
         // TODO: 서비스 돌리기 이전, 테스트 코드 - 나중에 삭제
-        channel.close();
+//        channel.close();
         super.onTerminate();
     }
 }

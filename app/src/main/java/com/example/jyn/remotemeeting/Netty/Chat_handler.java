@@ -28,14 +28,16 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
 
     private static final String TAG = "all_"+Chat_handler.class.getSimpleName();
     private Myapp myapp;
-
+    public String user_no;
 
     /**---------------------------------------------------------------------------
      생성자
-     ---------------------------------------------------------------------------*/
+     ---------------------------------------------------------------------------
+     * @param user_no*/
     @SuppressLint("HandlerLeak")
-    public Chat_handler() {
+    public Chat_handler(String user_no) {
         myapp = Myapp.getInstance();
+        this.user_no = user_no;
 
     }
 
@@ -50,7 +52,7 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
         Data_for_netty data = new Data_for_netty();
         data.setNetty_type("conn");
         data.setSubType("none");
-        data.setSender_user_no(myapp.getUser_no());
+        data.setSender_user_no(user_no);
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 

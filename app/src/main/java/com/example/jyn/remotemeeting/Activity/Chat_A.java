@@ -436,7 +436,6 @@ public class Chat_A extends Activity {
                 nickName_for_setting = chat_room.getUser_nickname_arr().get(0);
             }
         }
-        // TODO: 3명이상의 채팅일 때 - 구현해야함
         else if(chat_room.getUser_img_filename_arr().size() > 2) {
             nickName_for_setting = "그룹채팅";
 //            // StringBuilder를 이용해서 채팅 제목에 표시할 string 을 만든다

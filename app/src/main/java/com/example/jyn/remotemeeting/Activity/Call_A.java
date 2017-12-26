@@ -132,6 +132,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     private boolean callControlFragmentVisible = true;
     private long callStartedTimeMs = 0;
     private boolean micEnabled = true;
+    private boolean videoEnabled = true;
     private boolean screencaptureEnabled = false;
     private static Intent mediaProjectionPermissionResultData;
     private static int mediaProjectionPermissionResultCode;
@@ -476,7 +477,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
 
         /** 전송 화질 수정 시도 */
         // TODO: 전송 화질 수정 시도, 중요!!
-//        peerConnectionClient.changeCaptureFormat(640, 480, 24);
+        peerConnectionClient.changeCaptureFormat(640, 480, 24);
     }
 
 
@@ -786,6 +787,15 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             peerConnectionClient.setAudioEnabled(micEnabled);
         }
         return micEnabled;
+    }
+
+    @Override
+    public boolean onToggleVideo() {
+        if (peerConnectionClient != null) {
+            videoEnabled = !videoEnabled;
+            peerConnectionClient.setVideoEnabled(videoEnabled);
+        }
+        return videoEnabled;
     }
 
     // Helper functions.

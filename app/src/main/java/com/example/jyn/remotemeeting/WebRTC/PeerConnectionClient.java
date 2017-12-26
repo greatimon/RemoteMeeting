@@ -785,6 +785,10 @@ public class PeerConnectionClient {
         }
     }
 
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 영상통화 중, 소리(audio) on/off
+     ---------------------------------------------------------------------------*/
     public void setAudioEnabled(final boolean enable) {
         executor.execute(new Runnable() {
             @Override
@@ -797,17 +801,24 @@ public class PeerConnectionClient {
         });
     }
 
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 영상통화 중, 영상(video) on/off
+     ---------------------------------------------------------------------------*/
     public void setVideoEnabled(final boolean enable) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
                 renderVideo = enable;
+                // 내 카메라 on/off - 로컬 카메라는 항상 보여줄 것임 (그래서 주석 처리)
                 if (localVideoTrack != null) {
                     localVideoTrack.setEnabled(renderVideo);
                 }
-                if (remoteVideoTrack != null) {
-                    remoteVideoTrack.setEnabled(renderVideo);
-                }
+//                // 상대방 카메라 on/off
+//                if (remoteVideoTrack != null) {
+//                    remoteVideoTrack.setEnabled(renderVideo);
+//                }
             }
         });
     }
