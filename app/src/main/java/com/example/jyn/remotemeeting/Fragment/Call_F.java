@@ -330,10 +330,16 @@ public class Call_F extends Fragment {
             case "true":
                 video_off_show.setVisibility(View.GONE);
                 video_on_show.setVisibility(View.VISIBLE);
+                // 비디오 전송 모드가 On 이니, 백업뷰를 끄라는 메세지 전달하기
+                Event.Call_F__Call_A call_f__call_a_on = new Event.Call_F__Call_A(enabled);
+                BusProvider.getBus().post(call_f__call_a_on);
                 break;
             case "false":
                 video_on_show.setVisibility(View.GONE);
                 video_off_show.setVisibility(View.VISIBLE);
+                // 비디오 전송 모드가 Off 이니, 백업뷰를 키라는 메세지 전달하기
+                Event.Call_F__Call_A call_f__call_a_off = new Event.Call_F__Call_A(enabled);
+                BusProvider.getBus().post(call_f__call_a_off);
                 break;
         }
     }

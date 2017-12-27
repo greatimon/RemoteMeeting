@@ -150,6 +150,25 @@ public class Event {
     }
 
 
+
+    /** 이벤트
+     *    Call_F --> Call_A
+     *    : 영상회의 중 비디오를 키고, 끌 때, 백업뷰를 켜고 끄라는 메세지 전달
+     * */
+    public static class Call_F__Call_A {
+        private boolean message;
+
+        public Call_F__Call_A(boolean message) {
+            this.message = message;
+        }
+
+        public boolean getMessage() {
+            return message;
+        }
+    }
+
+
+
     /** 이벤트
      *    Main_after_login_A --> Profile_F
      *    : 이미지 셋팅하라는 이벤트 메시지를 전달

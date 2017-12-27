@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
 
     <org.webrtc.SurfaceViewRenderer
         android:id="@+id/fullscreen_video_view"
@@ -10,10 +13,44 @@
 
     <org.webrtc.SurfaceViewRenderer
         android:id="@+id/pip_video_view"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:layout_height="100dp"
-        android:layout_width="wrap_content"
+        android:layout_width="177dp"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"/>
+
+    <!--비디오 전송을 껐을 때 나타나는 백업 뷰-->
+    <RelativeLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/video_off_backup_REL"
+        android:layout_width="match_parent"
+        tools:background="#dfe5ff"
+        android:layout_height="match_parent">
+        <ImageView
+            tools:visibility="gone"
+            android:id="@+id/back_img"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:src="@drawable/back_2"
+            android:scaleType="centerCrop"
+            />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#33000000"
+            />
+        <ImageView
+            android:id="@+id/profile_img"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            tools:src="@drawable/default_profile"
+            android:layout_centerInParent="true"
+            android:scaleType="centerCrop"
+            />
+    </RelativeLayout>
+
 
     <FrameLayout
         android:id="@+id/call_fragment_container"
@@ -29,6 +66,7 @@
         android:layout_height="30dp"
         android:layout_marginTop="11dp"
         android:layout_marginRight="80dp"
+        android:layout_alignParentEnd="true"
         android:gravity="center"
         android:layout_gravity="end">
 
@@ -51,14 +89,14 @@
 
     </RelativeLayout>
     <!--<Chronometer-->
-        <!--android:id="@+id/chronometer"-->
-        <!--tools:visibility="visible"-->
-        <!--android:layout_width="80dp"-->
-        <!--android:layout_height="30dp"-->
-        <!--android:layout_marginTop="15dp"-->
-        <!--android:textSize="17dp"-->
-        <!--android:textColor="#cecece"-->
-        <!--android:gravity="center"-->
-        <!--android:layout_gravity="center_horizontal" />-->
+    <!--android:id="@+id/chronometer"-->
+    <!--tools:visibility="visible"-->
+    <!--android:layout_width="80dp"-->
+    <!--android:layout_height="30dp"-->
+    <!--android:layout_marginTop="15dp"-->
+    <!--android:textSize="17dp"-->
+    <!--android:textColor="#cecece"-->
+    <!--android:gravity="center"-->
+    <!--android:layout_gravity="center_horizontal" />-->
 
-</merge>
+</RelativeLayout>

@@ -72,4 +72,6 @@ dependencies {
     compile 'joda-time:joda-time:2.9.9'
     /** CircleImageView - 이미지뷰 동그랗게 하기 */
     compile 'de.hdodenhof:circleimageview:2.2.0'
+    /** blurry - 이미지 블러 효과 */
+    compile 'jp.wasabeef:blurry:2.1.1'
 }

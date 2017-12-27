@@ -8,6 +8,8 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
@@ -19,11 +21,17 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Chronometer;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
 import com.example.jyn.remotemeeting.Fragment.Hud_F;
@@ -41,6 +49,7 @@ import com.example.jyn.remotemeeting.WebRTC.AppRTCClient;
 import com.example.jyn.remotemeeting.WebRTC.DirectRTCClient;
 import com.example.jyn.remotemeeting.WebRTC.PeerConnectionClient;
 import com.example.jyn.remotemeeting.WebRTC.WebSocketRTCClient;
+import com.squareup.otto.Subscribe;
 
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
@@ -62,8 +71,13 @@ import org.webrtc.VideoRenderer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
+import jp.wasabeef.blurry.Blurry;
+import jp.wasabeef.glide.transformations.BlurTransformation;
+import jp.wasabeef.glide.transformations.ColorFilterTransformation;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -81,7 +95,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
                                                 PeerConnectionClient.PeerConnectionEvents,
                                                 Call_F.OnCallEvents {
 
-    private static final String TAG = "all_"+Call_A.class.getSimpleName();
+    private static final String TAG = "all_" + Call_A.class.getSimpleName();
     private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
     public static int REQUEST_CONFIRM_UPLOAD_FILES = 1220;
     Myapp myapp;
@@ -153,8 +167,14 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
 
     Chronometer timeElapsed;
     Handler time_handler;
+    RelativeLayout video_off_backup_REL;
+    ImageView back_img;
+    ImageView profile_img;
 
 
+    /**---------------------------------------------------------------------------
+     생명주기 ==> onCreate
+     ---------------------------------------------------------------------------*/
     @SuppressLint("HandlerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,7 +199,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         // Create UI controls.
         pipRenderer = (SurfaceViewRenderer) findViewById(R.id.pip_video_view);
         fullscreenRenderer = (SurfaceViewRenderer) findViewById(R.id.fullscreen_video_view);
-        timeElapsed = (Chronometer)findViewById(R.id.chronometer);
+        timeElapsed = (Chronometer) findViewById(R.id.chronometer);
+        video_off_backup_REL = findViewById(R.id.video_off_backup_REL);
+        back_img = findViewById(R.id.back_img);
+        profile_img = findViewById(R.id.profile_img);
+
 
         call_f = new Call_F();
         hud_f = new Hud_F();
@@ -379,7 +403,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
          ---------------------------------------------------------------------------*/
         hangup_confirm = new Handler() {
             public void handleMessage(Message msg) {
-                if(msg.what == 1) {
+                if (msg.what == 1) {
                     onBackPressed();
                 }
             }
@@ -392,7 +416,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         time_handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                if(msg.what == 0) {
+                if (msg.what == 0) {
                     timeElapsed.setBase(SystemClock.elapsedRealtime());
                     timeElapsed.start();
 
@@ -406,13 +430,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
 //                        Log.d("TCP", "cArg.getBase(): " + String.valueOf(cArg.getBase()));
 //                        Log.d("TCP", "time: " + String.valueOf(time));
 
-                            int h = (int)(time /3600000);
-                            int m = (int)(time - h*3600000)/60000;
-                            int s = (int)(time - h*3600000- m*60000)/1000;
-                            String hh = h < 10 ? "0"+h: h+"";
-                            String mm = m < 10 ? "0"+m: m+"";
-                            String ss = s < 10 ? "0"+s: s+"";
-                            cArg.setText(hh+":"+mm+":"+ss);
+                            int h = (int) (time / 3600000);
+                            int m = (int) (time - h * 3600000) / 60000;
+                            int s = (int) (time - h * 3600000 - m * 60000) / 1000;
+                            String hh = h < 10 ? "0" + h : h + "";
+                            String mm = m < 10 ? "0" + m : m + "";
+                            String ss = s < 10 ? "0" + s : s + "";
+                            cArg.setText(hh + ":" + mm + ":" + ss);
 //                        Log.d("TCP", "hh+\":\"+mm+\":\"+ss_ " + hh+":"+mm+":"+ss);
                         }
                     });
@@ -421,7 +445,33 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         };
     }
 
-    /** 기기 해상도 가져오기  */
+
+    /**---------------------------------------------------------------------------
+     생명주기 ==> onResume
+     ---------------------------------------------------------------------------*/
+    @Override
+    protected void onResume() {
+        super.onResume();
+//        // 백업뷰 준비해놓기
+//        int random = new Random().nextInt(7);
+//
+//        back_img.setImageResource(myapp.back_img[random]);
+//        Blurry.with(this)
+//            .radius(10)
+//            .sampling(3)
+//            .async()
+//            .capture(back_img)
+//            .into(back_img);
+//        Glide
+//            .with(this)
+//            .load(R.drawable.test_1)
+//            .bitmapTransform(new CropCircleTransformation(this))
+//            .into(profile_img);
+    }
+
+    /**
+     * 기기 해상도 가져오기
+     */
     @TargetApi(17)
     private DisplayMetrics getDisplayMetrics() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -481,14 +531,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     }
 
 
-    /**---------------------------------------------------------------------------
-     메소드 ==> onActivityResult -- 통화 종료 | 로컬 파일 가져오기
-     ---------------------------------------------------------------------------*/
+    /**
+     * ---------------------------------------------------------------------------
+     * 메소드 ==> onActivityResult -- 통화 종료 | 로컬 파일 가져오기
+     * ---------------------------------------------------------------------------
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         /** 통화종료 */
-        if(requestCode==REQUEST_OUT && resultCode==RESULT_OK) {
+        if (requestCode == REQUEST_OUT && resultCode == RESULT_OK) {
             Thread.setDefaultUncaughtExceptionHandler(null);
             disconnect();
             if (logToast != null) {
@@ -498,7 +550,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         }
 
         /** 로컬 파일 가져오기 */
-        else if(requestCode==REQUEST_GET_LOCAL_FILE && resultCode==RESULT_OK) {
+        else if (requestCode == REQUEST_GET_LOCAL_FILE && resultCode == RESULT_OK) {
             String target_format = data.getStringExtra("FORMAT");
             Log.d(TAG, "target_format: " + target_format);
 
@@ -508,7 +560,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         }
 
         /** 파일들 업로드 선택 */
-        else if(requestCode==REQUEST_CONFIRM_UPLOAD_FILES && resultCode==RESULT_OK) {
+        else if (requestCode == REQUEST_CONFIRM_UPLOAD_FILES && resultCode == RESULT_OK) {
             boolean contain_pdf_file_orNot = data.getBooleanExtra("contain_pdf_file_orNot", false);
             Log.d(TAG, "contain_pdf_file_orNot: " + contain_pdf_file_orNot);
 
@@ -518,7 +570,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         }
 
         /** 파일들 업로드 취소선택 */
-        else if(requestCode==REQUEST_CONFIRM_UPLOAD_FILES && resultCode==RESULT_CANCELED) {
+        else if (requestCode == REQUEST_CONFIRM_UPLOAD_FILES && resultCode == RESULT_CANCELED) {
 
             // otto 를 통해, 프래그먼트로 이벤트 전달하기
             Event.Call_A__Call_F call_a__call_f = new Event.Call_A__Call_F("file_upload_cancel", "");
@@ -626,7 +678,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             logToast.cancel();
         }
         activityRunning = false;
-        if(rootEglBase != null) {
+        if (rootEglBase != null) {
             rootEglBase.release();
         }
         timeElapsed.stop();
@@ -634,7 +686,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         // otto 등록 해제
         BusProvider.getBus().unregister(this);
         // 메소드 호출
-        got_out_from_meeting();;
+        got_out_from_meeting();
+        ;
         super.onDestroy();
     }
 
@@ -648,9 +701,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
                     String retrofit_result = response.body().string();
-                    Log.d(TAG, "GOT_OUT_FROM_MEETING_result: "+retrofit_result);
+                    Log.d(TAG, "GOT_OUT_FROM_MEETING_result: " + retrofit_result);
 
-                    if(retrofit_result.equals("success")) {
+                    if (retrofit_result.equals("success")) {
                         // 내 회의 정보 정보 변경
                         myapp.setPresent_meeting_in_ornot("");
                         myapp.setMeeting_no("");
@@ -660,8 +713,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
                         myapp.setMeeting_authority_user_no("");
                         myapp.setProject_no("");
                         myapp.setMeeting_status("");
-                    }
-                    else if(retrofit_result.equals("fail")) {
+                    } else if (retrofit_result.equals("fail")) {
                         myapp.logAndToast("onResponse_fail");
                     }
                 } catch (IOException e) {
@@ -675,7 +727,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             }
         });
     }
-
 
 
     @Override
@@ -1089,7 +1140,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     }
 
     @Override
-    public void onPeerConnectionClosed() {}
+    public void onPeerConnectionClosed() {
+    }
 
     @Override
     public void onPeerConnectionStatsReady(final StatsReport[] reports) {
@@ -1109,6 +1161,53 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     }
 
 
+    /**
+     * ---------------------------------------------------------------------------
+     * otto ==> Call_F로 부터 message 수신
+     *          : 비디오모드가 on / off일 떄, 맞춰서 백업뷰를 키거나 끄라는 메세지
+     *          : 뷰 조절 메소드로 비디오 모드 on/off 상태 바로 전달
+     * ---------------------------------------------------------------------------
+     */
+    @Subscribe
+    public void getMessage(Event.Call_F__Call_A event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+        visible_when_video_off(event.getMessage());
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 비디오모드가 on/off 일 떄, 백업뷰를 조절하는 메소드
+     ---------------------------------------------------------------------------*/
+    public void visible_when_video_off(boolean video_status) {
+        // 비디오 모드가 off 일때, 백업뷰 VISIBLE
+        if(!video_status) {
+            video_off_backup_REL.setVisibility(View.VISIBLE);
+
+            // 프로필 이미지
+            Glide
+                .with(this)
+                .load(R.drawable.test_1)
+                .bitmapTransform(new CropCircleTransformation(this))
+                .into(profile_img);
+
+            // 백 이미지
+            int random = new Random().nextInt(3);
+
+            Glide
+                .with(this)
+                .load(myapp.video_off_back_img[random])
+//                .placeholder(myapp.video_off_back_img[random])
+//                .bitmapTransform(new BlurTransformation(this, 5))
+//                .bitmapTransform(new ColorFilterTransformation(this, Color.argb(50, 0, 0, 0)))
+                .into(back_img);
+
+        }
+        // 비디오 모드가 on 일때, 백업뷰 GONE
+        else if(video_status) {
+            video_off_backup_REL.setVisibility(View.INVISIBLE);
+        }
+
+    }
 
 
     /**---------------------------------------------------------------------------
