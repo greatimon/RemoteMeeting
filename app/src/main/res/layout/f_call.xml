@@ -276,7 +276,7 @@
                 android:paddingRight="10dp"
                 android:paddingTop="3dp"
                 android:text="대화상대"
-                android:textColor="#4b4b4b"
+                android:textColor="#e1e1e1"
                 android:textSize="12dp"/>
 
             <LinearLayout
@@ -287,19 +287,23 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp">
                 <ImageView
+                    android:id="@+id/profile_img"
                     android:layout_width="30dp"
                     android:layout_height="match_parent"
                     android:src="@drawable/default_profile"/>
                 <TextView
+                    android:id="@+id/nickName"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_gravity="center"
                     android:layout_marginLeft="10dp"
                     android:gravity="center|start"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     android:text="그레아티"
                     android:textColor="#cdd1d0"
-                    android:textSize="12dp"/>
+                    android:textSize="11dp"/>
             </LinearLayout>
 
             <View

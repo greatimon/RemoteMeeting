@@ -5,11 +5,10 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
-import com.example.jyn.remotemeeting.DataClass.Chat_log;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
-import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -24,9 +23,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * Created by JYN on 2017-12-14.
  */
 
-public class Chat_handler extends ChannelInboundHandlerAdapter {
+public class Netty_handler extends ChannelInboundHandlerAdapter {
 
-    private static final String TAG = "all_"+Chat_handler.class.getSimpleName();
+    private static final String TAG = "all_"+Netty_handler.class.getSimpleName();
     private Myapp myapp;
     public String user_no;
 
@@ -35,7 +34,7 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
      ---------------------------------------------------------------------------
      * @param user_no*/
     @SuppressLint("HandlerLeak")
-    public Chat_handler(String user_no) {
+    public Netty_handler(String user_no) {
         myapp = Myapp.getInstance();
         this.user_no = user_no;
 
@@ -110,6 +109,34 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                 msg.what = 1;
                 // 핸들러로 Message 객체 전달
                 Chat_A.chat_message_handler.sendMessage(msg);
+
+            }
+        }.start();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> otto -- to_Call_A
+     : 서버로 부터 받은 Data_for_netty 객체(비디오 on/off 상태 메세지)를 Call_A 로 전달
+     ---------------------------------------------------------------------------*/
+    public void to_Call_A(final String order, final Data_for_netty data) {
+        new Thread() {
+            public void run() {
+
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = Call_A.webrtc_message_handler.obtainMessage();
+
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'order' 변수 담기
+                bundle.putString("order", order);
+                // Message 객체에 bundle, 'data' 변수 담기
+                msg.setData(bundle);
+                msg.obj = data;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                msg.what = 1;
+                // 핸들러로 Message 객체 전달
+                Call_A.webrtc_message_handler.sendMessage(msg);
 
             }
         }.start();
@@ -266,6 +293,13 @@ public class Chat_handler extends ChannelInboundHandlerAdapter {
                         }.start();
                     }
                 }
+                break;
+            // 서버에서 중계한 다른 유저가 보낸 비디오 on/off 상태를 전달 받았을 때,
+            case "relay_video_status":
+                if(data.getNetty_type().equals("webrtc")) {
+                    Log.d(TAG, "relay_video_status 받음~!~!");
+                    to_Call_A("relay_video_status", data);
+        }
                 break;
         }
     }

@@ -115,6 +115,7 @@ public class Enter_room_D extends Activity {
     public void go_meeting() {
         Intent intent = new Intent();
         intent.putExtra("real_meeting_title", real_meeting_title);
+        intent.putExtra("creator_user_no", creator_user_no);
         setResult(RESULT_OK, intent);
         finish();
     }

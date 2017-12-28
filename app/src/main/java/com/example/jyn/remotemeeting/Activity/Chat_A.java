@@ -524,23 +524,6 @@ public class Chat_A extends Activity {
      otto ==> Chat_handler로 부터 message 수신
      ---------------------------------------------------------------------------*/
     @Subscribe
-    public void getMessage(Event.Chat_handler__Chat_A event) {
-        Log.d(TAG, "otto 받음_ " + event.getMessage());
-
-        // 어댑터로 연결
-        // 바로 어댑터로 연결 안하고, Chat_F를 거치는 이유
-        // - 어댑터 쪽에서는 otto 등록은 가능한데, 해제를 어느쪽에서 해야할지 몰라, 안정성을 위해 한번 거침
-        // (Chat_F는 해제할 부분이 확실함)
-        rcv_chat_log_list_adapter.update_last_msg(event.getMessage(), event.getData());
-        recyclerView.setAdapter(rcv_chat_log_list_adapter);
-
-    }
-
-
-    /**---------------------------------------------------------------------------
-     otto ==> Chat_handler로 부터 message 수신
-     ---------------------------------------------------------------------------*/
-    @Subscribe
     public void getMessage(Event.RCV_Chat_log_list_adapter__Chat_A event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
         if(event.getMessage().equals("update_chat_log")) {

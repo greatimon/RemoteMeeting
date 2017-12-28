@@ -8,8 +8,6 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
@@ -21,7 +19,6 @@ import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Chronometer;
@@ -30,15 +27,15 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
 import com.example.jyn.remotemeeting.Fragment.Hud_F;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
-import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
@@ -74,9 +71,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import jp.wasabeef.blurry.Blurry;
-import jp.wasabeef.glide.transformations.BlurTransformation;
-import jp.wasabeef.glide.transformations.ColorFilterTransformation;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -170,6 +164,12 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     RelativeLayout video_off_backup_REL;
     ImageView back_img;
     ImageView profile_img;
+    RelativeLayout video_off_backup_REL_full;
+    ImageView back_img_full;
+    ImageView profile_img_full;
+
+    // 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받는 핸들러 객체 생성
+    public static Handler webrtc_message_handler;
 
 
     /**---------------------------------------------------------------------------
@@ -203,6 +203,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         video_off_backup_REL = findViewById(R.id.video_off_backup_REL);
         back_img = findViewById(R.id.back_img);
         profile_img = findViewById(R.id.profile_img);
+        video_off_backup_REL_full = findViewById(R.id.video_off_backup_REL_full);
+        back_img_full = findViewById(R.id.back_img_full);
+        profile_img_full = findViewById(R.id.profile_img_full);
 
 
         call_f = new Call_F();
@@ -220,11 +223,19 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
 
         // Swap feeds on pip view click.
         /** 클릭 시, 뷰 스왑 */
-        pipRenderer.setClickable(false);
+        Log.d(TAG, "1_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+//        pipRenderer.setEnabled(false);
         pipRenderer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setSwappedFeeds(!isSwappedFeeds);
+                Log.d(TAG, "pip 화면 클릭");
+                if(pipRenderer.isEnabled()) {
+                    Log.d(TAG, "pip is Enabled");
+//                    setSwappedFeeds(!isSwappedFeeds);
+                }
+                else if(!pipRenderer.isEnabled()) {
+                    Log.d(TAG, "pip is not Enabled");
+                }
             }
         });
 
@@ -238,7 +249,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         /** SCALE_ASPECT_FIT, SCALE_ASPECT_BALANCED, SCALE_ASPECT_FILL */
         rootEglBase = EglBase.create();
         pipRenderer.init(rootEglBase.getEglBaseContext(), null);
+        Log.d(TAG, "2_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        pipRenderer.setClickable(false);
         pipRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+        Log.d(TAG, "3_pipRenderer.isClickable(): " + pipRenderer.isClickable());
 
 
         // TODO: PIP 뷰 비율 조정_ 파일 저장? => 일단은 안됨
@@ -267,8 +281,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         fullscreenRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
 
 
+        pipRenderer.setVisibility(View.INVISIBLE);
         pipRenderer.setZOrderMediaOverlay(true);
+        Log.d(TAG, "4_pipRenderer.isClickable(): " + pipRenderer.isClickable());
         pipRenderer.setEnableHardwareScaler(true /* enabled */);
+        Log.d(TAG, "5_pipRenderer.isClickable(): " + pipRenderer.isClickable());
         fullscreenRenderer.setEnableHardwareScaler(true /* enabled */);
 
         // Start with local feed in fullscreen and swap it to the pip when the call is connected.
@@ -443,6 +460,34 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
                 }
             }
         };
+
+        /** 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받음 */
+        webrtc_message_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                // 핸들러 메세지를 보낸 주체가 Chat_handler에 to_Call_A() 메소드일 때
+                if(msg.what == 1) {
+
+                    // Message 객체로 부터 전달된 값들 가져오기
+                    String order = msg.getData().getString("order");
+                    Data_for_netty received_data = (Data_for_netty) msg.obj;
+
+                    Log.d(TAG, "order: " + order);
+                    Log.d(TAG, "getNetty_type(): " + received_data.getNetty_type());
+                    Log.d(TAG, "getSubType(): " + received_data.getSubType());
+                    Log.d(TAG, "getSender_user_no(): " + received_data.getSender_user_no());
+                    Log.d(TAG, "getTarget_user_no(): " + received_data.getTarget_user_no());
+                    Log.d(TAG, "getExtra(): " + received_data.getExtra());
+
+                    String[] temp = received_data.getExtra().split(Static.SPLIT);
+
+                    // 뷰 조절 메소드 호출
+                    when_video_status_change(
+                            Boolean.valueOf(temp[0]), !pipRenderer.isClickable(), temp[1]);
+                }
+            }
+        };
     }
 
 
@@ -452,21 +497,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     @Override
     protected void onResume() {
         super.onResume();
-//        // 백업뷰 준비해놓기
-//        int random = new Random().nextInt(7);
-//
-//        back_img.setImageResource(myapp.back_img[random]);
-//        Blurry.with(this)
-//            .radius(10)
-//            .sampling(3)
-//            .async()
-//            .capture(back_img)
-//            .into(back_img);
-//        Glide
-//            .with(this)
-//            .load(R.drawable.test_1)
-//            .bitmapTransform(new CropCircleTransformation(this))
-//            .into(profile_img);
     }
 
     /**
@@ -687,7 +717,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         BusProvider.getBus().unregister(this);
         // 메소드 호출
         got_out_from_meeting();
-        ;
+
+        // static handler 객체 null 처리
+        if(webrtc_message_handler != null) {
+            webrtc_message_handler = null;
+        }
         super.onDestroy();
     }
 
@@ -879,8 +913,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         }
         // Enable statistics callback.
         peerConnectionClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
-        /** 여기야여기 */
+        /** pip view set VISIBLE */
         pipRenderer.setClickable(true);
+        Log.d(TAG, "6_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        // remote 뷰를 풀스크린으로, local뷰는 pip로
         setSwappedFeeds(false /* isSwappedFeeds */);
     }
 
@@ -1120,6 +1156,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             public void run() {
 //                logAndToast("ICE connected, delay=" + delta + "ms");
                 iceConnected = true;
+                /** pip 서피스뷰 set Visible */
+                pipRenderer.setVisibility(View.VISIBLE);
                 callConnected();
             }
         });
@@ -1171,42 +1209,130 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     @Subscribe
     public void getMessage(Event.Call_F__Call_A event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
-        visible_when_video_off(event.getMessage());
+
+        Log.d(TAG, "8_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        when_video_status_change(event.getMessage(), !pipRenderer.isClickable(), "me");
     }
 
 
     /**---------------------------------------------------------------------------
      메소드 ==> 비디오모드가 on/off 일 떄, 백업뷰를 조절하는 메소드
      ---------------------------------------------------------------------------*/
-    public void visible_when_video_off(boolean video_status) {
-        // 비디오 모드가 off 일때, 백업뷰 VISIBLE
-        if(!video_status) {
-            video_off_backup_REL.setVisibility(View.VISIBLE);
+    public void when_video_status_change(
+            boolean video_status, boolean loopback_mode, String from) {
 
-            // 프로필 이미지
-            Glide
-                .with(this)
-                .load(R.drawable.test_1)
-                .bitmapTransform(new CropCircleTransformation(this))
-                .into(profile_img);
+        Log.d(TAG, "video_status: " + video_status);
+        Log.d(TAG, "loopback_mode: " + loopback_mode);
+        Log.d(TAG, "9_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        Log.d(TAG, "from: " + from);
 
-            // 백 이미지
-            int random = new Random().nextInt(3);
+        // 일단 백업뷰 Visibility GONE으로 초기화
+//        video_off_backup_REL_full.setVisibility(View.GONE);
+//        video_off_backup_REL.setVisibility(View.GONE);
 
-            Glide
-                .with(this)
-                .load(myapp.video_off_back_img[random])
-//                .placeholder(myapp.video_off_back_img[random])
-//                .bitmapTransform(new BlurTransformation(this, 5))
-//                .bitmapTransform(new ColorFilterTransformation(this, Color.argb(50, 0, 0, 0)))
-                .into(back_img);
+        /** 비디오 모드 변동 주체가 '나' 일때 */
+        if(from.equals("me")) {
+            // 루프백 모드일 때 - 나 혼자 대기중일 때
+            if(loopback_mode) {
+                // 비디오 모드가 off 일때, 백업뷰 VISIBLE
+                if(!video_status) {
+                    video_off_backup_REL_full.setVisibility(View.VISIBLE);
+                    // 프로필 이미지
+                    Glide
+                        .with(this)
+                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                        .bitmapTransform(new CropCircleTransformation(this))
+                        .into(profile_img_full);
 
+                    // 백 이미지
+                    int random = new Random().nextInt(2);
+                    Glide
+                        .with(this)
+                        .load(myapp.video_off_back_img[random])
+                        .into(back_img_full);
+                }
+                // 비디오 모드가 on 일때, 백업뷰 GONE
+                else if(video_status) {
+                    video_off_backup_REL_full.setVisibility(View.GONE);
+                }
+            }
+            // 루프백 모드가 아닐 때 - 상대방이 영상회의에 들어와 있을 때
+            else if(!loopback_mode) {
+                // 비디오 모드가 off 일때, 백업뷰 VISIBLE
+                if(!video_status) {
+                    video_off_backup_REL.setVisibility(View.VISIBLE);
+                    // 프로필 이미지
+                    Glide
+                        .with(Call_A.this)
+                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                        .bitmapTransform(new CropCircleTransformation(Call_A.this))
+                        .into(profile_img);
+
+                    // 백 이미지
+                    int random = new Random().nextInt(2);
+                    Glide
+                        .with(Call_A.this)
+                        .load(myapp.video_off_back_img[random])
+                        .into(back_img);
+                }
+                // 비디오 모드가 on 일때, 백업뷰 GONE
+                else if(video_status) {
+                    video_off_backup_REL.setVisibility(View.INVISIBLE);
+                }
+
+                /** 상대방에게 나의 비디오 on/off 상태를 전달하는 메소드 호출 */
+                send_to_subject_my_video_status(video_status);
+            }
         }
-        // 비디오 모드가 on 일때, 백업뷰 GONE
-        else if(video_status) {
-            video_off_backup_REL.setVisibility(View.INVISIBLE);
-        }
+        /** 비디오 모드 변동 주체가 '상대' 일때 */
+        // 매개변수 'from' 에 상대방의 프로필 이미지 파일 이름이 담겨 온다
+        else if(!from.equals("me")) {
+            Log.d(TAG, "상대방 프로필 이미지 파일 이름: " + from);
+            // 비디오 모드가 off 일때, 백업뷰 VISIBLE
+            if(!video_status) {
+                video_off_backup_REL_full.setVisibility(View.VISIBLE);
+                // 프로필 이미지
+                Glide
+                    .with(Call_A.this)
+                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + from)
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .bitmapTransform(new CropCircleTransformation(Call_A.this))
+                    .into(profile_img_full);
 
+                // 백 이미지
+                int random = new Random().nextInt(2);
+                Glide
+                    .with(Call_A.this)
+                    .load(myapp.video_off_back_img[random])
+                    .into(back_img_full);
+            }
+            // 비디오 모드가 on 일때, 백업뷰 GONE
+            else if(video_status) {
+                video_off_backup_REL_full.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> netty를 통해, 회의하고 있는 상대방에게 나의 비디오 on/off 상태를 알림
+     ---------------------------------------------------------------------------*/
+    public void send_to_subject_my_video_status(boolean video_status) {
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("webrtc");
+        data.setSubType("sending_my_video_status");
+        data.setSender_user_no(myapp.getUser_no());
+        data.setTarget_user_no(myapp.getMeeting_subject_user_no());
+        // Data_for_netty 객체의 'extra' 변수에
+        // index 0. 내 프로필 이미지 파일 이름
+        // index 1. 현재 비디오의 상태
+        // 이 둘을 Split 구분자로 합하여 담아 보낸다
+        String send_this_string = String.valueOf(video_status) + Static.SPLIT + myapp.getUser_img_filename();
+        data.setExtra(send_this_string);
+
+        myapp.send_to_server(data);
     }
 
 

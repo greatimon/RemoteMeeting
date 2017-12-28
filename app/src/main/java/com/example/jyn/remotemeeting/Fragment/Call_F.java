@@ -22,9 +22,12 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_call_adapter;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Confirm_upload_files_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -47,6 +50,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
 
 /**
  * Created by JYN on 2017-11-10.
@@ -94,6 +98,7 @@ public class Call_F extends Fragment {
     @BindView(R.id.button_call_toggle_mic)  public ImageView button_call_toggle_mic;
     @BindView(R.id.video_on_show)           public ImageView video_on_show;
     @BindView(R.id.video_off_show)          public ImageView video_off_show;
+    @BindView(R.id.profile_img)             public ImageView subject_profile_img;
     @BindView(R.id.close_popup)             public RelativeLayout close_popup;
     @BindView(R.id.sequence)                public TextView sequence;
     @BindView(R.id.file_name)               public TextView file_name;
@@ -102,6 +107,7 @@ public class Call_F extends Fragment {
     @BindView(R.id.page_status)             public TextView page_status;
     @BindView(R.id.text_call_toggle_video)  public TextView text_call_toggle_video;
     @BindView(R.id.text_call_toggle_mic)    public TextView text_call_toggle_mic;
+    @BindView(R.id.nickName)                public TextView subject_nickName;
     @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
 
     public static CircularProgressBar circularProgressBar;
@@ -158,6 +164,10 @@ public class Call_F extends Fragment {
 
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 회의 상대 프로필사진, 닉네임 표시 메소드 호출
+        set_subject_user_data();
+
 
         /** 리사이클러뷰 - 프로젝트 파일 */
         recyclerView.setHasFixedSize(true);
@@ -278,6 +288,23 @@ public class Call_F extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         callEvents = (OnCallEvents) activity;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 회의 상대 프로필사진, 닉네임 표시
+     ---------------------------------------------------------------------------*/
+    public void set_subject_user_data() {
+        Users subject_user = myapp.get_user_info(myapp.getMeeting_subject_user_no());
+
+        Glide
+            .with(getActivity())
+            .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + subject_user.getUser_img_filename())
+            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+            .bitmapTransform(new CropCircleTransformation(getActivity()))
+            .into(subject_profile_img);
+        subject_nickName.setText(subject_user.getUser_nickname());
+
     }
 
 

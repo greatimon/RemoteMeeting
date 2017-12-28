@@ -23,7 +23,7 @@ import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
-import com.example.jyn.remotemeeting.Netty.Chat_handler;
+import com.example.jyn.remotemeeting.Netty.Netty_handler;
 import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
@@ -111,8 +111,7 @@ public class Myapp extends Application {
 
     public int[] video_off_back_img = {
             R.drawable.video_off_back_4,
-            R.drawable.video_off_back_5,
-            R.drawable.video_off_back_6
+            R.drawable.video_off_back_5
     };
 
     /** 내 정보 */
@@ -404,7 +403,7 @@ public class Myapp extends Application {
                                         pipeline.addLast(new StringEncoder(), new StringDecoder());
                                         pipeline.addLast(new GatheringHandler());
                                         // IO 이벤트 핸들러
-                                        pipeline.addLast(new Chat_handler(getUser_no()));
+                                        pipeline.addLast(new Netty_handler(getUser_no()));
                                     }
                                 });
 

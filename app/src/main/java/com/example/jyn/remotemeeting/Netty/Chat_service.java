@@ -1,7 +1,5 @@
 package com.example.jyn.remotemeeting.Netty;
 
-import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -96,7 +94,7 @@ public class Chat_service extends Service implements Runnable  {
                             pipeline.addLast(new StringEncoder(), new StringDecoder());
                             pipeline.addLast(new GatheringHandler());
                             // IO 이벤트 핸들러
-                            pipeline.addLast(new Chat_handler(user_no));
+                            pipeline.addLast(new Netty_handler(user_no));
                         }
                     });
 

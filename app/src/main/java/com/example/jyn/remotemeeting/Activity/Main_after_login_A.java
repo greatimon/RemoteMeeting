@@ -206,7 +206,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                             Log.d(TAG, "retrofit_result: "+retrofit_result);
 
                             if(retrofit_result.equals("fail")) {
-                                myapp.logAndToast("onResponse_fail" + response.errorBody().string());
+                                myapp.logAndToast("fail");
                             }
                             else if(retrofit_result.equals("no_result")) {
                                 myapp.logAndToast("초대된 회의가 없습니다");
@@ -235,7 +235,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         myapp.setMeeting_no(meeting_no);
                                         myapp.setReal_meeting_title(real_meeting_title);
                                         myapp.setMeeting_creator_user_no(meeting_creator_user_no);
-                                        myapp.setMeeting_subject_user_no(myapp.getUser_no());
+                                        myapp.setMeeting_subject_user_no(creator_user_no);
                                         myapp.setMeeting_authority_user_no(meeting_creator_user_no);
                                         myapp.setProject_no("0");
                                         myapp.setMeeting_status("on");
@@ -1122,7 +1122,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 회의 입장한다고 했을 때
         else if(requestCode==REQUEST_ENTER_ROOM && resultCode==RESULT_OK) {
             String real_meeting_title = data.getStringExtra("real_meeting_title");
+            String creator_user_no = data.getStringExtra("creator_user_no");
             Log.d(TAG, "real_meeting_title: " + real_meeting_title);
+            Log.d(TAG, "creator_user_no: " + creator_user_no);
 
             String convert = Hangul.convert(real_meeting_title);
 
