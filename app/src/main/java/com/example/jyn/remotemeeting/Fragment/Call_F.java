@@ -11,7 +11,8 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
+import android.support.v7.widget.SimpleItemAnimator;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,12 +29,15 @@ import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_call_adapter;
 import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.DataClass.Preview_selected_file;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Confirm_upload_files_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Recycler_helper.OnStartDragListener;
+import com.example.jyn.remotemeeting.Recycler_helper.SimpleItemTouchHelperCallback;
 import com.example.jyn.remotemeeting.Util.File_search;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
@@ -42,8 +46,6 @@ import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.pnikosis.materialishprogress.ProgressWheel;
 import com.squareup.otto.Subscribe;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.webrtc.RendererCommon;
 
 import java.util.ArrayList;
@@ -62,7 +64,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
  * Created by JYN on 2017-11-10.
  */
 
-public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapListener {
+public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapListener, OnStartDragListener {
 
     private LinearLayout exit_LIN;
     private RelativeLayout popup_menu_REL;
@@ -100,6 +102,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
 
     // 미리보기 화면으로 넘어갈 때, 미리보기할 파일 arr의 첫번째 파일의 이름을 담을 변수 선언
     String first_fileName = "";
+
+    // 리사이클러뷰 아이템 터치와 관련된 클래스
+    private ItemTouchHelper itemTouchHelper;
 
     /** 버터나이프 뷰 찾기*/
     public Unbinder unbinder;
@@ -217,7 +222,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         // 리사이클러뷰 구분선 - 가로(클래스 생성)
         recyclerView_preview.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
         // 리사이클러뷰 기본 애니메이션 설정
-        recyclerView_preview.setItemAnimator(new DefaultItemAnimator());
+//        recyclerView_preview.setItemAnimator(new DefaultItemAnimator());
+        // 애니메이션 설정 - 애니메이션 설정 끔
+        ((SimpleItemAnimator)recyclerView_preview.getItemAnimator()).setSupportsChangeAnimations(false);
 
 
         /**---------------------------------------------------------------------------
@@ -867,7 +874,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     public void activate_preview_RCV(String mode) {
 
         // 어댑터에 넘겨줄 어레이리스트
-        ArrayList<String> preview_file_arr = new ArrayList<>();
+        ArrayList<Preview_selected_file> preview_file_arr = new ArrayList<>();
         // 어플리케이션 객체에 있는 해쉬맵을 담을 옮겨담을 변수
         HashMap<String, String> checked_files_hash = myapp.getChecked_files();
         Log.d(TAG, "myapp.getChecked_files().size(): " + checked_files_hash.size());
@@ -883,7 +890,11 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
             String temp = (String)it.next();
             Log.d(TAG, temp + " = " + myapp.getChecked_files().get(temp));
 
-            preview_file_arr.add(temp);
+            Preview_selected_file preview_selected_file = new Preview_selected_file();
+            preview_selected_file.setFileName(temp);
+            preview_selected_file.setSelected(false);
+
+            preview_file_arr.add(preview_selected_file);
 
             if(first_fileName.equals("")) {
                 first_fileName = temp;
@@ -902,10 +913,16 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
             // 3. 선택한 파일들 파일 이름이 담긴 arrayList
             // 4. 모드 변별 변수
             rcv_selectFile_preview_adapter = new RCV_selectFile_preview_adapter(
-                    getActivity(), R.layout.i_selected_file, preview_file_arr, mode);
+                    getActivity(), R.layout.i_selected_file, preview_file_arr, mode, this);
 
             recyclerView_preview.setAdapter(rcv_selectFile_preview_adapter);
             rcv_selectFile_preview_adapter.notifyDataSetChanged();
+
+            // 리사이클러뷰 드래그 and 스와이프 기능 관련
+            ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(rcv_selectFile_preview_adapter);
+            itemTouchHelper = new ItemTouchHelper(callback);
+            itemTouchHelper.attachToRecyclerView(recyclerView_preview);
+
         }
         // 어댑터가 생성되어 있을 때, 셋팅되는 arrayList 만 교체
         else {
@@ -919,24 +936,15 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         preview_REL.setVisibility(View.VISIBLE);
         preview.setVisibility(View.GONE);
         go_share.setVisibility(View.VISIBLE);
+    }
 
-        // 첫번째 이미지를 나타내는 text String으로, title 변경하기
-//        file_box_title.setText("미리보기 - ["+ Html.fromHtml("<font color='#4CAF50'>1</font>") +"]");
-        // TODO: 방법 기억 - setText, string 값 부분 색 넣기
-        file_box_title.setText(Html.fromHtml("미리보기 - [<b><font color='#4CAF50'>1</font><b/>]"));
-        // 첫번째 이미지 셋팅하기
-//        Glide
-//            .with(this)
-//            .load(Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER + first_fileName)
-//                .fitCenter()
-//            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-//            .into(preview_display);
-        Glide
-            .with(this)
-            .load(Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER + first_fileName)
-            .fitCenter()
-            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-            .into(preview_display);
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> 리사이클러뷰 아이템 드래그가 발생할 때, 콜백되는 메소드
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+
     }
 
 
@@ -945,7 +953,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      ---------------------------------------------------------------------------*/
     public void activate_File_RCV(String target, String format) {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
-        // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
+        // 업로드할 파일 리스트를 담는 files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
         myapp.init_files_for_upload();
 
