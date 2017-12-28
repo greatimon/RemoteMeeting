@@ -8,6 +8,8 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
@@ -28,6 +30,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -71,6 +75,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -163,10 +168,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
     Handler time_handler;
     RelativeLayout video_off_backup_REL;
     ImageView back_img;
-    ImageView profile_img;
+    CircleImageView profile_img;
     RelativeLayout video_off_backup_REL_full;
     ImageView back_img_full;
-    ImageView profile_img_full;
+    CircleImageView profile_img_full;
 
     // 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받는 핸들러 객체 생성
     public static Handler webrtc_message_handler;
@@ -409,11 +414,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
         peerConnectionClient.createPeerConnectionFactory(
                 getApplicationContext(), peerConnectionParameters, Call_A.this);
 
-        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startScreenCapture();
-        } else {
-            startCall();
-        }
+        // TODO: 개발을 위해 임시적으로 주석처리
+        // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
+//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            startScreenCapture();
+//        } else {
+//            startCall();
+//        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기
@@ -1238,18 +1245,33 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
                 if(!video_status) {
                     video_off_backup_REL_full.setVisibility(View.VISIBLE);
                     // 프로필 이미지
+//                    Glide
+//                        .with(this)
+//                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+//                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                        .bitmapTransform(new CropCircleTransformation(this))
+//                        .into(profile_img_full);
                     Glide
                         .with(this)
                         .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+                        .asBitmap()
                         .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                        .bitmapTransform(new CropCircleTransformation(this))
-                        .into(profile_img_full);
+                        .dontAnimate()
+                        .into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                                profile_img_full.setImageBitmap(resource);
+                                profile_img_full.setBorderColor(Color.parseColor("#fffff5"));
+                                profile_img_full.setBorderWidth(18);
+                            }
+                        });
 
                     // 백 이미지
                     int random = new Random().nextInt(2);
                     Glide
                         .with(this)
-                        .load(myapp.video_off_back_img[random])
+//                        .load(myapp.video_off_back_img[random])
+                        .load(R.drawable.video_off_back_5)
                         .into(back_img_full);
                 }
                 // 비디오 모드가 on 일때, 백업뷰 GONE
@@ -1263,18 +1285,32 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
                 if(!video_status) {
                     video_off_backup_REL.setVisibility(View.VISIBLE);
                     // 프로필 이미지
+//                    Glide
+//                        .with(Call_A.this)
+//                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+//                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                        .bitmapTransform(new CropCircleTransformation(Call_A.this))
+//                        .into(profile_img);
                     Glide
-                        .with(Call_A.this)
+                        .with(this)
                         .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
+                        .asBitmap()
                         .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                        .bitmapTransform(new CropCircleTransformation(Call_A.this))
-                        .into(profile_img);
+                        .dontAnimate()
+                        .into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                                profile_img.setImageBitmap(resource);
+                                profile_img.setBorderColor(Color.parseColor("#fffff5"));
+                                profile_img.setBorderWidth(8);
+                            }
+                        });
 
                     // 백 이미지
                     int random = new Random().nextInt(2);
                     Glide
                         .with(Call_A.this)
-                        .load(myapp.video_off_back_img[random])
+                        .load(R.drawable.video_off_back_5)
                         .into(back_img);
                 }
                 // 비디오 모드가 on 일때, 백업뷰 GONE
@@ -1294,18 +1330,32 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,
             if(!video_status) {
                 video_off_backup_REL_full.setVisibility(View.VISIBLE);
                 // 프로필 이미지
+//                Glide
+//                    .with(Call_A.this)
+//                    .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + from)
+//                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                    .bitmapTransform(new CropCircleTransformation(Call_A.this))
+//                    .into(profile_img_full);
                 Glide
-                    .with(Call_A.this)
+                    .with(this)
                     .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + from)
+                    .asBitmap()
                     .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                    .bitmapTransform(new CropCircleTransformation(Call_A.this))
-                    .into(profile_img_full);
+                    .dontAnimate()
+                    .into(new SimpleTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                            profile_img_full.setImageBitmap(resource);
+                            profile_img_full.setBorderColor(Color.parseColor("#fffff5"));
+                            profile_img_full.setBorderWidth(18);
+                        }
+                    });
 
                 // 백 이미지
                 int random = new Random().nextInt(2);
                 Glide
                     .with(Call_A.this)
-                    .load(myapp.video_off_back_img[random])
+                    .load(R.drawable.video_off_back_5)
                     .into(back_img_full);
             }
             // 비디오 모드가 on 일때, 백업뷰 GONE

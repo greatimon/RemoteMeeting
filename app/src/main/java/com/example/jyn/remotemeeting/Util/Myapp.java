@@ -44,11 +44,14 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -303,6 +306,7 @@ public class Myapp extends Application {
         super.onCreate();
         appInstance = this;
         checked_files = new HashMap<>();
+        Collections.synchronizedMap(checked_files);
         files_for_upload = new HashMap<>();
         temp_my_chat_log_hash = new ConcurrentHashMap<>();
     }
@@ -1534,6 +1538,27 @@ public class Myapp extends Application {
         });
     }
 
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 맵에서 value 를 가지고 sorting
+     ---------------------------------------------------------------------------*/
+    public List sort_map_by_value(final HashMap map){
+        List<String> list = new ArrayList();
+        list.addAll(map.keySet());
+
+        Collections.sort(list, new Comparator(){
+
+            public int compare(Object o1,Object o2){
+                Object v1 = map.get(o1);
+                Object v2 = map.get(o2);
+
+                return ((Comparable) v1).compareTo(v2);
+            }
+
+        });
+//        Collections.reverse(list); // 주석시 오름차순
+        return list;
+    }
 
     @Override
     public void onTerminate() {

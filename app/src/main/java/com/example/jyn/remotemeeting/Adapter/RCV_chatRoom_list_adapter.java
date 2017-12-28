@@ -145,7 +145,7 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
     public void onBindViewHolder(final ViewHolder holder, final int pos) {
         Log.d(TAG, "onBindViewHolder");
 
-        final ArrayList<Bitmap> temp_bitmap_arr = new ArrayList<>();
+//        final ArrayList<Bitmap> temp_bitmap_arr = new ArrayList<>();
 
         // 메세지 내용 get
         String last_log_msg_content = "none exist";

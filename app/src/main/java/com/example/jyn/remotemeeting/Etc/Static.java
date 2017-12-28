@@ -12,7 +12,7 @@ public class Static {
 
     public static String SERVER_URL = "http://52.78.88.227";
     public static String SERVER_URL_PROFILE_FILE_FOLDER = "http://52.78.88.227/profile_img/";
-    public static String SERVER_URL_MEETING_UPLOAD_FILE_FOLDER = "http://115.71.232.211/meeting_upload_file/";
+    public static String SERVER_URL_MEETING_UPLOAD_FILE_FOLDER = "http://52.78.88.227/meeting_upload_file/";
     public static String EMAIL_JOIN = "email_join.php";
     public static String EMAIL_LOGIN = "email_login.php";
     public static String GET_PARTNER_LIST = "get_partner_list.php";

@@ -34,7 +34,7 @@
             android:layout_height="match_parent"
             android:background="#33000000"
             />
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_img_full"
             android:layout_width="200dp"
             android:layout_height="200dp"
@@ -81,7 +81,7 @@
             android:layout_height="match_parent"
             android:background="#33000000"
             />
-        <ImageView
+        <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_img"
             android:layout_width="50dp"
             android:layout_height="50dp"

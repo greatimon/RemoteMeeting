@@ -312,7 +312,7 @@ public class Chat_F extends Fragment {
     @Subscribe
     public void getMessage(Event.Main_after_login_A__Chat_F event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
-        if(event.getMessage().equals("activate_RCV")) {
+        if(event.getMessage().equals("activate_File_RCV")) {
             // 리사이클러뷰 동작 메소드 호출
             activate_RCV();
         }

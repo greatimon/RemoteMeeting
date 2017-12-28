@@ -952,7 +952,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             }
 
             /** otto 를 통해, Chat_F로 서버로부터 데이터를 다시 받아 채팅방 리스트를 갱신하라는 이벤트 전달하기 */
-            Event.Main_after_login_A__Chat_F event = new Event.Main_after_login_A__Chat_F("activate_RCV");
+            Event.Main_after_login_A__Chat_F event = new Event.Main_after_login_A__Chat_F("activate_File_RCV");
             BusProvider.getBus().post(event);
             Log.d(TAG, "otto 전달_ onActivityResult");
         }
@@ -961,7 +961,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         if(requestCode==REQUEST_SEARCH_PARTNER) {
             viewpager.setCurrentItem(1);
             /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
-            Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_RCV");
+            Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_File_RCV");
             BusProvider.getBus().post(event);
             Log.d(TAG, "otto 전달_ onActivityResult");
         }
@@ -969,7 +969,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 프로필 상세보기 액티비티에서 돌아왔을 때
         else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && requestCode==RESULT_CANCELED) {
             /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
-            Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_RCV");
+            Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_File_RCV");
             BusProvider.getBus().post(event);
 
         }

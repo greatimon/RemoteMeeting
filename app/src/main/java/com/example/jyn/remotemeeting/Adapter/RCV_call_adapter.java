@@ -19,6 +19,7 @@ import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -67,7 +68,6 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
             Log.d(TAG, "request: "+ request);
             ButterKnife.bind(this,itemView);
 
-
             /** 아이템 클릭 이벤트 설정 */
             list_item_container.setClickable(true);
             list_item_container.setOnClickListener(new View.OnClickListener() {
@@ -111,7 +111,39 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
 
                         // 체크되어 있지 않은 파일일 때 -> checked_files 에 put 하고, check 상태 'yes'로 바꾸기
                         if(checked_orNot.equals("no")) {
-                            myapp.getChecked_files().put(file_name, CanonicalPath);
+
+                            /** 프로젝트 뷰(회의 파일함)일 때는 value 값으로 시퀀스를 넣는다 */
+                            if(request.equals("project")) {
+                                // 체크파일 arr에 개수 구해서, 순서에 따른 번호를 붙여서 put할 value 값 만들기
+                                // sequence = 파일 개수에 따른 넘버링 (1부터 시작함)
+
+                                // 디폴트 시퀀스 값은 '1'
+                                String sequence = "1";
+
+                                // 만약 체크파일이 해쉬맵이 비어 있지 않다면
+                                if(!myapp.getChecked_files().isEmpty()) {
+                                    // 현재 해쉬맵에 들어 있는 체크파일의 시퀀스 값을 가져와 Integer arrayList를 만들고
+                                    ArrayList<Integer> sequence_arr = new ArrayList<>();
+                                    for(String key: myapp.getChecked_files().keySet()) {
+                                        sequence_arr.add(Integer.parseInt(myapp.getChecked_files().get(key)));
+                                    }
+
+                                    // 해당 arr 에서 숫자 최대값을 가져와, 거기에 '1'을 더한값을 시퀀스 값으로 한다
+                                    sequence = String.valueOf(Collections.max(sequence_arr) + 1);
+                                    Log.d(TAG, "현재 해쉬맵에 있는 파일의 최대 시퀀스 값: " + Collections.max(sequence_arr));
+                                    myapp.getChecked_files().put(file_name, sequence);
+                                }
+                                // 체크파일 해쉬맵이 비어있다면
+                                else if(myapp.getChecked_files().isEmpty()) {
+                                    myapp.getChecked_files().put(file_name, sequence);
+                                }
+                                Log.d(TAG, "myapp.getChecked_files().size(): " + myapp.getChecked_files().size());
+                            }
+                            /** 로컬 뷰(특정 파일포맷 리스트)일 때는 value 값으로 파일의 절대경로를 넣는다 */
+                            else if(!request.equals("project")) {
+                                myapp.getChecked_files().put(file_name, CanonicalPath);
+                            }
+
                             files.get(pos).setExtra("yes");
                             notifyItemChanged(pos);
                         }

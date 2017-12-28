@@ -7,11 +7,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +26,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_call_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Confirm_upload_files_D;
@@ -35,11 +36,14 @@ import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.File_search;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
 import com.example.jyn.remotemeeting.WebRTC.CaptureQualityController;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 import com.pnikosis.materialishprogress.ProgressWheel;
 import com.squareup.otto.Subscribe;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.webrtc.RendererCommon;
 
 import java.util.ArrayList;
@@ -51,12 +55,14 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
+import uk.co.senab.photoview.PhotoView;
+import uk.co.senab.photoview.PhotoViewAttacher;
 
 /**
  * Created by JYN on 2017-11-10.
  */
 
-public class Call_F extends Fragment {
+public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapListener {
 
     private LinearLayout exit_LIN;
     private RelativeLayout popup_menu_REL;
@@ -79,10 +85,21 @@ public class Call_F extends Fragment {
 
     private static final String TAG = "all_"+Call_F.class.getSimpleName();
 
-    // 리사이클러뷰 관련 클래스
+    //// 리사이클러뷰 관련 클래스
+    // 회의 파일함 파일리스트 리사이클러뷰
     public RCV_call_adapter rcv_call_adapter_project;
+    // 로컬파일, 파일리스트 리사이클러뷰
     public RCV_call_adapter rcv_call_adapter_local;
+    // 리사이클러뷰 레이아웃매니저_1
     private RecyclerView.LayoutManager layoutManager;
+
+    // 미리보기, 파일리스트 리사이클러뷰
+    public RCV_selectFile_preview_adapter rcv_selectFile_preview_adapter;
+    // 리사이클러뷰 레이아웃매니저_2
+    private RecyclerView.LayoutManager layoutManager_for_preview;
+
+    // 미리보기 화면으로 넘어갈 때, 미리보기할 파일 arr의 첫번째 파일의 이름을 담을 변수 선언
+    String first_fileName = "";
 
     /** 버터나이프 뷰 찾기*/
     public Unbinder unbinder;
@@ -90,20 +107,18 @@ public class Call_F extends Fragment {
     @BindView(R.id.preview_REL)             public RelativeLayout preview_REL;
     @BindView(R.id.recyclerView)            public RecyclerView recyclerView;
     @BindView(R.id.recyclerView_preview)    public RecyclerView recyclerView_preview;
-    @BindView(R.id.file_box_title)          public TextView file_box_title;
     @BindView(R.id.back_to_menu)            public ImageView back_to_menu;
     @BindView(R.id.preview)                 public ImageView preview;
-    @BindView(R.id.share_img_mode)          public ImageView share_img_mode;
     @BindView(R.id.button_call_toggle_video)public ImageView button_call_toggle_video;
     @BindView(R.id.button_call_toggle_mic)  public ImageView button_call_toggle_mic;
     @BindView(R.id.video_on_show)           public ImageView video_on_show;
     @BindView(R.id.video_off_show)          public ImageView video_off_show;
     @BindView(R.id.profile_img)             public ImageView subject_profile_img;
+    @BindView(R.id.go_share)                public ImageView go_share;
     @BindView(R.id.close_popup)             public RelativeLayout close_popup;
     @BindView(R.id.sequence)                public TextView sequence;
     @BindView(R.id.file_name)               public TextView file_name;
     @BindView(R.id.percent)                 public TextView percent;
-    @BindView(R.id.share_img_mode_text)     public TextView share_img_mode_text;
     @BindView(R.id.page_status)             public TextView page_status;
     @BindView(R.id.text_call_toggle_video)  public TextView text_call_toggle_video;
     @BindView(R.id.text_call_toggle_mic)    public TextView text_call_toggle_mic;
@@ -115,7 +130,22 @@ public class Call_F extends Fragment {
     public static ImageView add_files;
     @SuppressLint("StaticFieldLeak")
     public static TextView comment;
+    @SuppressLint("StaticFieldLeak")
+//    public static ImageView preview_display;
+    public static PhotoView preview_display;
+    @SuppressLint("StaticFieldLeak")
+    public static TextView file_box_title;
+
     public ProgressWheel progress_wheel;
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> 포토뷰 탭, 콜백
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onViewTap(View view, float x, float y) {
+        Log.d(TAG, "포토뷰 탭!");
+    }
 
     /**
      * Call control interface for container activity.
@@ -153,6 +183,8 @@ public class Call_F extends Fragment {
         circularProgressBar = controlView.findViewById(R.id.circularProgressbar);
         progress_wheel = controlView.findViewById(R.id.progress_wheel);
         comment = controlView.findViewById(R.id.comment);
+        preview_display = controlView.findViewById(R.id.preview_display);
+        file_box_title = controlView.findViewById(R.id.file_box_title);
 
         // progress_wheel 설정
         progress_wheel.setBarColor(Color.parseColor("#4CAF50"));
@@ -176,6 +208,17 @@ public class Call_F extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 에니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+
+        /** 미리보기 리사이클러뷰 */
+        recyclerView_preview.setHasFixedSize(true);
+        // 리사이클러뷰 - LinearLayoutManager 사용
+        layoutManager_for_preview = new LinearLayoutManager(getActivity());
+        recyclerView_preview.setLayoutManager(layoutManager_for_preview);
+        // 리사이클러뷰 구분선 - 가로(클래스 생성)
+        recyclerView_preview.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
+        // 리사이클러뷰 기본 애니메이션 설정
+        recyclerView_preview.setItemAnimator(new DefaultItemAnimator());
+
 
         /**---------------------------------------------------------------------------
          클릭이벤트 ==> 통화 종료확인 요청 -- static Handler 이용
@@ -236,6 +279,22 @@ public class Call_F extends Fragment {
                         popup_menu_REL.setVisibility(View.GONE);
                         popup_file_manager_REL.setVisibility(View.GONE);
                         break;
+                }
+            }
+        });
+
+
+        /**---------------------------------------------------------------------------
+         클릭리스너 ==> PhotoView 탭(클릭) 리스너, 스케일체인지 리너스 등록
+         ---------------------------------------------------------------------------*/
+        final PhotoViewAttacher mAttacher = new PhotoViewAttacher(preview_display);
+        mAttacher.setScale(1.0f);
+        mAttacher.setOnViewTapListener(this);
+        mAttacher.setOnScaleChangeListener(new PhotoViewAttacher.OnScaleChangeListener() {
+            @Override
+            public void onScaleChange(float scaleFactor, float focusX, float focusY) {
+                if(scaleFactor >= 1.0f) {
+                    mAttacher.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 }
             }
         });
@@ -311,10 +370,19 @@ public class Call_F extends Fragment {
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> 회의 파일함 아이콘 클릭
      ---------------------------------------------------------------------------*/
-    @OnClick({R.id.file_box_IV})
-    public void go_file_box(View view) {
+    @OnClick({R.id.file_box_LIN})
+    public void go_file_box() {
         // 회의 파일함 oepn 메소드 호출
         file_box();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 파일 공유하기 아이콘 클릭
+     ---------------------------------------------------------------------------*/
+    @OnClick({R.id.go_share})
+    public void go_share() {
+        Log.d(TAG, "파일 공유하기 아이콘 클릭");
     }
 
 
@@ -382,7 +450,7 @@ public class Call_F extends Fragment {
         myapp.init_files_for_upload();
 
         // 리사이클러뷰 동작 메소드 호출
-        activate_RCV("project", "");
+        activate_File_RCV("project", "");
 
         popup_menu_REL.setVisibility(View.GONE);
         popup_menu_icon.setVisibility(View.GONE);
@@ -390,6 +458,12 @@ public class Call_F extends Fragment {
         back_to_menu.setVisibility(View.VISIBLE);
         add_files.setVisibility(View.GONE);
         close_popup.setVisibility(View.VISIBLE);
+        preview.setVisibility(View.VISIBLE);
+        // 미리보기 로직 관련 뷰들 visibility 처리
+        recyclerView.setVisibility(View.VISIBLE);
+        preview_display.setVisibility(View.GONE);
+        preview_REL.setVisibility(View.GONE);
+        go_share.setVisibility(View.GONE);
         preview.setVisibility(View.VISIBLE);
 
         file_box_title.setText("회의 파일함");
@@ -419,7 +493,32 @@ public class Call_F extends Fragment {
             popup_menu_icon.setVisibility(View.VISIBLE);
             popup_file_manager_REL.setVisibility(View.GONE);
             close_popup.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+            preview_display.setVisibility(View.GONE);
+            preview_REL.setVisibility(View.GONE);
+            go_share.setVisibility(View.GONE);
+            preview.setVisibility(View.VISIBLE);
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 회의 파일함에서 선택한 파일들의 미리보기 모드
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.preview)
+    public void selectFile_preview_mode() {
+
+        if(myapp.getChecked_files().size() == 0) {
+            myapp.logAndToast("선택한 파일이 없습니다.");
+            return;
+        }
+
+        for(String key: myapp.getChecked_files().keySet()) {
+            Log.d(TAG, "key: " + key + ", value: " + myapp.getChecked_files().get(key));
+        }
+
+        activate_preview_RCV("preview");
+
     }
 
 
@@ -484,6 +583,12 @@ public class Call_F extends Fragment {
         popup_menu_icon.setVisibility(View.VISIBLE);
         popup_file_manager_REL.setVisibility(View.GONE);
         close_popup.setVisibility(View.GONE);
+        // 미리보기 로직 관련 뷰들 visibility 처리
+        recyclerView.setVisibility(View.VISIBLE);
+        preview_display.setVisibility(View.GONE);
+        preview_REL.setVisibility(View.GONE);
+        go_share.setVisibility(View.GONE);
+        preview.setVisibility(View.VISIBLE);
     }
 
 
@@ -517,7 +622,7 @@ public class Call_F extends Fragment {
         /** 로컬 파일을 보여주기 위한 로직 */
         if(event.getMessage().equals("local")) {
             // 리사이클러뷰 동작 메소드 호출
-            activate_RCV("local", event.getData());
+            activate_File_RCV("local", event.getData());
 
             //// 회의 파일함 -> 로컬파일함으로 이동
             // 뷰 Visibility 조절
@@ -546,27 +651,6 @@ public class Call_F extends Fragment {
 
             // 파일 업로드 시작점 메소드 호출
             myapp.checed_pdf_files(contain_pdf_file_orNot, getActivity());
-
-//            // pdf 파일이 하나라도 포함되어 있다면
-//            if(contain_pdf_file_orNot.equals("true")) {
-//
-//            }
-//            // pdf 파일이 없다면
-//            else if(contain_pdf_file_orNot.equals("false")) {
-//
-//            }
-
-//        //// 로컬 파일함 -> 회의파일함으로 이동
-//        // 뷰 Visibility 조절
-//        popup_menu_REL.setVisibility(View.GONE);
-//        popup_menu_icon.setVisibility(View.GONE);
-//        popup_file_manager_REL.setVisibility(View.VISIBLE);
-//        back_to_menu.setVisibility(View.VISIBLE);
-//        add_files.setVisibility(View.GONE);
-//        go_share.setVisibility(View.VISIBLE);
-//
-//        // 뷰 comment 셋팅
-//        file_box_title.setText("회의 파일함");
         }
 
         /** 파일 업로드 취소 선택 시 */
@@ -777,9 +861,89 @@ public class Call_F extends Fragment {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> 서버로부터 공유 파일 리스트 받아와서, 어댑터로 넘기기
+     메소드 ==> 선택된 파일들, '미리보기' 담당 리사이클러뷰 어댑터로 넘기기
      ---------------------------------------------------------------------------*/
-    public void activate_RCV(String target, String format) {
+    @SuppressLint("SetTextI18n")
+    public void activate_preview_RCV(String mode) {
+
+        // 어댑터에 넘겨줄 어레이리스트
+        ArrayList<String> preview_file_arr = new ArrayList<>();
+        // 어플리케이션 객체에 있는 해쉬맵을 담을 옮겨담을 변수
+        HashMap<String, String> checked_files_hash = myapp.getChecked_files();
+        Log.d(TAG, "myapp.getChecked_files().size(): " + checked_files_hash.size());
+
+        // value 값으로 sorting(사용자가 파일 추가 클릭한 순서대로 sorting)
+        Iterator it = myapp.sort_map_by_value(checked_files_hash).iterator();
+
+        // 미리보기 첫번째 파일의 이름을 담을 변수, 초기화
+        first_fileName = "";
+
+        // sorting 한 결과대로, 어댑터에 넘겨줄 어레이리스트에 add
+        while(it.hasNext()) {
+            String temp = (String)it.next();
+            Log.d(TAG, temp + " = " + myapp.getChecked_files().get(temp));
+
+            preview_file_arr.add(temp);
+
+            if(first_fileName.equals("")) {
+                first_fileName = temp;
+            }
+        }
+        Log.d(TAG, "preview_file_arr.size(): " + preview_file_arr.size());
+
+        // 어플리케이션 객체, 체크파일 해쉬맵 초기화
+        myapp.init_checked_files();
+
+        // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+        if(rcv_selectFile_preview_adapter == null) {
+            // 생성자 인수
+            // 1. 액티비티(context 객체 넘기기)
+            // 2. 인플레이팅 되는 레이아웃
+            // 3. 선택한 파일들 파일 이름이 담긴 arrayList
+            // 4. 모드 변별 변수
+            rcv_selectFile_preview_adapter = new RCV_selectFile_preview_adapter(
+                    getActivity(), R.layout.i_selected_file, preview_file_arr, mode);
+
+            recyclerView_preview.setAdapter(rcv_selectFile_preview_adapter);
+            rcv_selectFile_preview_adapter.notifyDataSetChanged();
+        }
+        // 어댑터가 생성되어 있을 때, 셋팅되는 arrayList 만 교체
+        else {
+            rcv_selectFile_preview_adapter.refresh_arr(preview_file_arr, "");
+            recyclerView_preview.setAdapter(rcv_selectFile_preview_adapter);
+        }
+
+        // 뷰 Visibility 조절
+        recyclerView.setVisibility(View.GONE);
+        preview_display.setVisibility(View.VISIBLE);
+        preview_REL.setVisibility(View.VISIBLE);
+        preview.setVisibility(View.GONE);
+        go_share.setVisibility(View.VISIBLE);
+
+        // 첫번째 이미지를 나타내는 text String으로, title 변경하기
+//        file_box_title.setText("미리보기 - ["+ Html.fromHtml("<font color='#4CAF50'>1</font>") +"]");
+        // TODO: 방법 기억 - setText, string 값 부분 색 넣기
+        file_box_title.setText(Html.fromHtml("미리보기 - [<b><font color='#4CAF50'>1</font><b/>]"));
+        // 첫번째 이미지 셋팅하기
+//        Glide
+//            .with(this)
+//            .load(Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER + first_fileName)
+//                .fitCenter()
+//            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//            .into(preview_display);
+        Glide
+            .with(this)
+            .load(Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER + first_fileName)
+            .fitCenter()
+            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+            .into(preview_display);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 파일 종류에 따른 리스트, 어댑터로 넘기기
+     ---------------------------------------------------------------------------*/
+    public void activate_File_RCV(String target, String format) {
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
         // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();
@@ -861,6 +1025,4 @@ public class Call_F extends Fragment {
             }
         }
     }
-
-
 }
