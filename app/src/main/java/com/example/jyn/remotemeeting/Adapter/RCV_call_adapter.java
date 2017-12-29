@@ -11,18 +11,25 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Dialog.Register_file_to_project_D;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.BuildConfig;
+import com.orhanobut.logger.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
 
 /**
  * Created by JYN on 2017-11-17.
@@ -35,7 +42,6 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
     private String request;
     private ArrayList<File_info> files;
     public static String TAG = "all_"+RCV_call_adapter.class.getSimpleName();
-//    private static HashMap<String, String> checked_files;
     public Myapp myapp;
 
     /** RecyclerAdapter 생성자 */
@@ -46,12 +52,18 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
         this.itemLayout = itemLayout;
         this.files = files;
         this.request = request;
-
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
-        // 체크된 파일들의 canonicalPath 를 담을 Hashmap 생성
-//        checked_files = new HashMap<>();
+        // 커스텀 로거 생성
+        Logger.clearLogAdapters();
+        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_call_adapter.class)) {
+            @Override public boolean isLoggable(int priority, String tag) {
+                // true - Logger 활성화
+                // false - Logger 비활성화
+                return true;
+            }
+        });
     }
 
     /** 뷰홀더 */
@@ -189,7 +201,8 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
 
         // 파일 이름 확인 - project / local 인지에 따라 다른 변수값 가져옴
         String file_name = files.get(position).getFile_name();
-        Log.d(TAG, "file_name: " + file_name);
+//        Log.d(TAG, "file_name: " + file_name);
+        Logger.d("file_name: " + file_name);
 
         if(file_name.contains("&__&")) {
             String[] temp = file_name.split("&__&");
@@ -211,11 +224,31 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
         if(fileFormat.equals("pdf")) {
             holder.file_img.setImageResource(R.drawable.pdf);
         }
-        else if(fileFormat.equals("jpg")) {
-            holder.file_img.setImageResource(R.drawable.jpg);
-        }
-        else if(fileFormat.equals("png")) {
-            holder.file_img.setImageResource(R.drawable.png);
+        // TODO: 파일 썸네일을 보여줄지 or 파일형식에 따른 파일그림을 보여줄지
+        /** 원래 코드 */
+//        else if(fileFormat.equals("jpg")) {
+//            holder.file_img.setImageResource(R.drawable.jpg);
+//        }
+//        else if(fileFormat.equals("png")) {
+//            holder.file_img.setImageResource(R.drawable.png);
+//        }
+        /** try 코드 */
+        else if(fileFormat.equals("jpg") || fileFormat.equals("png")) {
+            String load_str = "";
+            // 프로젝트 뷰 일 때 - 파일전환할 파일을 담는다
+            if(request.equals("project")) {
+                load_str = Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER
+                        + files.get(position).getFile_name();
+            }
+            else if(!request.equals("project")) {
+                load_str = files.get(position).getCanonicalPath();
+            }
+            Glide
+                .with(context)
+                .load(load_str)
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//                    .bitmapTransform(new CropCircleTransformation(context))
+                .into(holder.file_img);
         }
 
         // 파일 이름 set

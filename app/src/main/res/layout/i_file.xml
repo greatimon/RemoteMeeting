@@ -18,7 +18,7 @@
             android:layout_height="60dp"
             android:paddingTop="20dp"
             android:layout_gravity="bottom"
-            tools:src="@drawable/add_file_1"
+            tools:src="@drawable/back_6"
             android:scaleType="centerInside"/>
         <TextView
             android:id="@+id/file_name"

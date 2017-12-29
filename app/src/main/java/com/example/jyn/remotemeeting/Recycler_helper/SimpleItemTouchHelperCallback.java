@@ -39,8 +39,15 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
             final int swipeFlags = 0;
             return makeMovementFlags(dragFlags, swipeFlags);
         } else {
+            // 드래그 작동 방향: 위, 아래
             final int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-            final int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+            // 스와이프 작동 방향: 좌, 우
+//            final int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+            // 스와이프 작동 방향: 좌
+//            final int swipeFlags = ItemTouchHelper.START;
+            // 스와이프 작동 방향: 우
+            final int swipeFlags = ItemTouchHelper.END;
+
             return makeMovementFlags(dragFlags, swipeFlags);
         }
     }

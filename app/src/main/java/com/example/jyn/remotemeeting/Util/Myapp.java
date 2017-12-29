@@ -18,6 +18,7 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
@@ -30,6 +31,10 @@ import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.FormatStrategy;
+import com.orhanobut.logger.Logger;
+import com.orhanobut.logger.PrettyFormatStrategy;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.rendering.PDFRenderer;
 import com.tom_roush.pdfbox.util.PDFBoxResourceLoader;
@@ -357,6 +362,34 @@ public class Myapp extends Application {
         }
         logToast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
         logToast.show();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 커스텀 로그(라이브러리: Logger-pretty Logger)
+     ---------------------------------------------------------------------------*/
+    public FormatStrategy custom_log(Class target_class) {
+        FormatStrategy formatStrategy = PrettyFormatStrategy.newBuilder()
+            // (Optional) Whether to show thread info or not. Default true
+            .showThreadInfo(false)
+            // (Optional) How many method line to show. Default 2
+            .methodCount(0)
+            // (Optional) Skips some method invokes in stack trace. Default 5
+            .methodOffset(5)
+            // (Optional) Custom tag for each log. Default PRETTY_LOGGER
+            .tag(target_class.getSimpleName())
+            .build();
+
+        return formatStrategy;
+
+        // 로그 출력 on/off 조절 방법: 메모임
+//        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_selectFile_preview_adapter.class)) {
+//            @Override public boolean isLoggable(int priority, String tag) {
+//                // true - Logger 활성화
+//                // false - Logger 비활성화
+//                return true;
+//            }
+//        });
     }
 
 

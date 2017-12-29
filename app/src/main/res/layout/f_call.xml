@@ -61,10 +61,10 @@
                     android:id="@+id/preview"
                     android:layout_width="50dp"
                     android:layout_height="match_parent"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="6dp"
+                    android:padding="11dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_alignParentEnd="true"
-                    android:src="@drawable/preview"/>
+                    android:src="@drawable/share_img_5"/>
                 <ImageView
                     android:id="@+id/go_share"
                     android:visibility="gone"
@@ -576,6 +576,21 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--사용 안함-->
     <!--시크바 내용 표시 텍스트뷰 / 시크바-->
     <TextView
         android:visibility="gone"

@@ -76,4 +76,6 @@ dependencies {
     compile 'jp.wasabeef:blurry:2.1.1'
     /** 포토뷰 - 이미지 확대 */
     compile 'com.commit451:PhotoView:1.2.4'
+    /** 로그(pretty logger) */
+    compile 'com.orhanobut:logger:2.1.1'
 }
