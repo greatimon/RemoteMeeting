@@ -110,7 +110,7 @@
             <TextView
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
-                android:maxWidth="180dp"
+                android:maxWidth="165dp"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:gravity="center"
