@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.jyn.remotemeeting"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -78,4 +78,8 @@ dependencies {
     compile 'com.commit451:PhotoView:1.2.4'
     /** 로그(pretty logger) */
     compile 'com.orhanobut:logger:2.1.1'
+    /** realm - 화면 드로잉 */
+    // 최신버전인 4.3.1 로 설정하면, 에러가 남
+    compile 'io.realm:realm-gradle-plugin:4.1.1'
+    compile 'io.realm:realm-android-library-object-server:4.1.1'
 }
