@@ -145,7 +145,6 @@ public class Event {
     }
 
 
-
     /** 이벤트
      *    Main_after_login_A --> Profile_F
      *    : 이미지 셋팅하라는 이벤트 메시지를 전달
@@ -165,6 +164,24 @@ public class Event {
 
         public String getData() {
             return data;
+        }
+    }
+
+
+    /** 이벤트
+     *    Call_F --> Call_A
+     *    : 파일 공유 모드 버튼 클릭되었으니,
+     *      '상대방에게 파일공유모드 요청을 보내' 라는 이벤트 메시지를 전달
+     * */
+    public static class Call_F__Call_A_file_share {
+        private String message;
+
+        public Call_F__Call_A_file_share(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 

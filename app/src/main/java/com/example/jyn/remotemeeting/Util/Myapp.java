@@ -44,6 +44,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -69,6 +70,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.realm.Realm;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -314,6 +316,8 @@ public class Myapp extends Application {
         Collections.synchronizedMap(checked_files);
         files_for_upload = new HashMap<>();
         temp_my_chat_log_hash = new ConcurrentHashMap<>();
+
+        Realm.init(this);
     }
 
     /** 싱글톤 */
@@ -1598,5 +1602,42 @@ public class Myapp extends Application {
         // TODO: 서비스 돌리기 이전, 테스트 코드 - 나중에 삭제
 //        channel.close();
         super.onTerminate();
+    }
+
+
+    /**
+     * 비트맵 -> 파일로 저장하기
+     * Image SDCard Save (input Bitmap -> saved Image File)
+     * @param bitmap : input bitmap file
+     * @param folder : input folder name
+     * @param name   : output file name
+     */
+    public String saveBitmaptoImage(Bitmap bitmap, String folder, String name){
+        String ex_storage = Environment.getExternalStorageDirectory().getAbsolutePath();
+        // Get Absolute Path in External Sdcard
+
+        String folder_name = "/"+folder+"/";
+        String file_name = name+".png";
+        String string_path = ex_storage+folder_name;
+//        Logger.d("string_path + file_name: " + string_path + file_name);
+
+        File file_path;
+        try{
+            file_path = new File(string_path);
+            if(!file_path.isDirectory()){
+                file_path.mkdirs();
+            }
+            FileOutputStream out = new FileOutputStream(string_path+file_name);
+
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.close();
+            return string_path;
+
+        }catch(FileNotFoundException exception){
+            Log.e("FileNotFoundException", exception.getMessage());
+        }catch(IOException exception){
+            Log.e("IOException", exception.getMessage());
+        }
+        return null;
     }
 }

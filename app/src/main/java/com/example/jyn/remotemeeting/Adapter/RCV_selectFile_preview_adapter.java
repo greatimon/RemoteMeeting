@@ -48,7 +48,7 @@ public class RCV_selectFile_preview_adapter
     private int on_moving_index = -1;
 
 
-    public ArrayList<Preview_selected_file> selected_file_arr;
+    public static ArrayList<Preview_selected_file> selected_file_arr;
 
     // 리사이클러뷰 아이템이 드래그가 발생했을 때, 콜백되는 리스너
     private final OnStartDragListener onStartDragListener;
@@ -168,8 +168,16 @@ public class RCV_selectFile_preview_adapter
 //            Log.d(TAG, "file_URL: " + file_URL);
 //            Log.d(TAG, "selected_file_arr.size(): " + selected_file_arr.size());
 
+            String selected_file_arr_str = "";
             for(int i=0; i<getItemCount(); i++) {
-//                Log.d(TAG, "selected_file_arr(" + i + "): "+selected_file_arr.get(i).getFileName());
+                StringBuilder stringBuilder = new StringBuilder();
+                if(i==getItemCount()-1) {
+                    stringBuilder.append("selected_file_arr(" + i + "): "+selected_file_arr.get(i).getFileName());
+                }
+                else {
+                    stringBuilder.append("selected_file_arr(" + i + "): "+selected_file_arr.get(i).getFileName() + "\n");
+                }
+                Logger.d(selected_file_arr_str);
             }
 
             // 파일 순서 넘버링 set

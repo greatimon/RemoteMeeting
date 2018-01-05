@@ -8,11 +8,14 @@ import android.util.Log;
 import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
+import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.Logger;
 
 import java.io.StringReader;
 
@@ -38,6 +41,10 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
         myapp = Myapp.getInstance();
         this.user_no = user_no;
 
+        // 커스텀 로거 생성
+        Logger.clearLogAdapters();
+        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_selectFile_preview_adapter.class)));
+
     }
 
 
@@ -55,91 +62,6 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
         // 통신 전송 메소드 호출
         myapp.send_to_server(data);
 
-    }
-
-
-    /**---------------------------------------------------------------------------
-     메소드 ==> otto -- to_Char_F
-                    : Data_for_netty 객체와 함께 채팅방 리사이클러뷰에 대한 변경점 이벤트 메시지를 전달
-     ---------------------------------------------------------------------------*/
-    public void to_Char_F(final String order, final Data_for_netty data) {
-        new Thread() {
-            @Override
-            public void run() {
-
-                // 핸들러로 전달할 Message 객체 생성
-                Message msg = Main_after_login_A.chat_room_handler.obtainMessage();
-
-                // Message 객체에 넣을 bundle 객체 생성
-                Bundle bundle = new Bundle();
-                // bundle 객체에 'order' 변수 담기
-                bundle.putString("order", order);
-                // Message 객체에 bundle, 'data' 변수 담기
-                msg.setData(bundle);
-                msg.obj = data;
-                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
-                msg.what = 0;
-                // 핸들러로 Message 객체 전달
-                Main_after_login_A.chat_room_handler.sendMessage(msg);
-
-            }
-        }.start();
-    }
-
-
-    /**---------------------------------------------------------------------------
-     메소드 ==> otto -- to_Chat_A
-     : 서버로 부터 받은 Data_for_netty 객체(채팅 메세지)를 Chat_A 로 전달
-     ---------------------------------------------------------------------------*/
-    public void to_Chat_A(final String order, final Data_for_netty data) {
-        new Thread() {
-            public void run() {
-
-                // 핸들러로 전달할 Message 객체 생성
-                Message msg = Chat_A.chat_message_handler.obtainMessage();
-
-                // Message 객체에 넣을 bundle 객체 생성
-                Bundle bundle = new Bundle();
-                // bundle 객체에 'order' 변수 담기
-                bundle.putString("order", order);
-                // Message 객체에 bundle, 'data' 변수 담기
-                msg.setData(bundle);
-                msg.obj = data;
-                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
-                msg.what = 1;
-                // 핸들러로 Message 객체 전달
-                Chat_A.chat_message_handler.sendMessage(msg);
-
-            }
-        }.start();
-    }
-
-
-    /**---------------------------------------------------------------------------
-     메소드 ==> otto -- to_Call_A
-     : 서버로 부터 받은 Data_for_netty 객체(비디오 on/off 상태 메세지)를 Call_A 로 전달
-     ---------------------------------------------------------------------------*/
-    public void to_Call_A(final String order, final Data_for_netty data) {
-        new Thread() {
-            public void run() {
-
-                // 핸들러로 전달할 Message 객체 생성
-                Message msg = Call_A.webrtc_message_handler.obtainMessage();
-
-                // Message 객체에 넣을 bundle 객체 생성
-                Bundle bundle = new Bundle();
-                // bundle 객체에 'order' 변수 담기
-                bundle.putString("order", order);
-                // Message 객체에 bundle, 'data' 변수 담기
-                msg.setData(bundle);
-                msg.obj = data;
-                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
-                msg.what = 1;
-                // 핸들러로 Message 객체 전달
-                Call_A.webrtc_message_handler.sendMessage(msg);
-
-            }
-        }.start();
     }
 
 
@@ -294,12 +216,32 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
                     }
                 }
                 break;
-            // 서버에서 중계한 다른 유저가 보낸 비디오 on/off 상태를 전달 받았을 때,
+            // 서버에서 중계한, 다른 유저가 보낸 비디오 on/off 상태를 전달 받았을 때,
             case "relay_video_status":
                 if(data.getNetty_type().equals("webrtc")) {
                     Log.d(TAG, "relay_video_status 받음~!~!");
+
+                    // Call_A 로 전달받은 데이터 그대로 전달
                     to_Call_A("relay_video_status", data);
-        }
+                }
+                break;
+            // 서버에서 중계한, 파일 공유 요청을 전달 받았을 때,
+            case "relay_request_image_file_share":
+                if(data.getNetty_type().equals("webrtc")) {
+                    Logger.d("relay_request_image_file_share, 받음~~~");
+
+                    // Call_A 로 전달받은 데이터 그대로 전달
+                    to_Call_A("relay_request_image_file_share", data);
+                }
+                break;
+            // 서버에서 중계한, 파일 공유 요청에 대한 답변을 전달 받았을 때,
+            case "relay_answer_image_file_share":
+                if(data.getNetty_type().equals("webrtc")) {
+                    Logger.d("relay_answer_image_file_share, 받음~~~");
+
+                    // Call_A 로 전달받은 데이터 그대로 전달
+                    to_Call_A("relay_answer_image_file_share", data);
+                }
                 break;
         }
     }
@@ -314,5 +256,91 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         //ctx.close();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> otto -- to_Char_F
+     : Data_for_netty 객체와 함께 채팅방 리사이클러뷰에 대한 변경점 이벤트 메시지를 전달
+     ---------------------------------------------------------------------------*/
+    public void to_Char_F(final String order, final Data_for_netty data) {
+        new Thread() {
+            @Override
+            public void run() {
+
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = Main_after_login_A.chat_room_handler.obtainMessage();
+
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'order' 변수 담기
+                bundle.putString("order", order);
+                // Message 객체에 bundle, 'data' 변수 담기
+                msg.setData(bundle);
+                msg.obj = data;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                msg.what = 0;
+                // 핸들러로 Message 객체 전달
+                Main_after_login_A.chat_room_handler.sendMessage(msg);
+
+            }
+        }.start();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> otto -- to_Chat_A
+     : 서버로 부터 받은 Data_for_netty 객체(채팅 메세지)를 Chat_A 로 전달
+     ---------------------------------------------------------------------------*/
+    public void to_Chat_A(final String order, final Data_for_netty data) {
+        new Thread() {
+            public void run() {
+
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = Chat_A.chat_message_handler.obtainMessage();
+
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'order' 변수 담기
+                bundle.putString("order", order);
+                // Message 객체에 bundle, 'data' 변수 담기
+                msg.setData(bundle);
+                msg.obj = data;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                msg.what = 1;
+                // 핸들러로 Message 객체 전달
+                Chat_A.chat_message_handler.sendMessage(msg);
+
+            }
+        }.start();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> otto -- to_Call_A
+        1. 서버로 부터 받은 Data_for_netty 객체(비디오 on/off 상태 메세지) 전달
+        2. 서버로 부터 받은 Data_for_netty 객체(파일 공유 요청) 전달
+     ---------------------------------------------------------------------------*/
+    public void to_Call_A(final String order, final Data_for_netty data) {
+        new Thread() {
+            public void run() {
+
+                // 핸들러로 전달할 Message 객체 생성
+                Message msg = Call_A.webrtc_message_handler.obtainMessage();
+
+                // Message 객체에 넣을 bundle 객체 생성
+                Bundle bundle = new Bundle();
+                // bundle 객체에 'order' 변수 담기
+                bundle.putString("order", order);
+                // Message 객체에 bundle, 'data' 변수 담기
+                msg.setData(bundle);
+                msg.obj = data;
+                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                msg.what = 1;
+                // 핸들러로 Message 객체 전달
+                Call_A.webrtc_message_handler.sendMessage(msg);
+
+            }
+        }.start();
     }
 }

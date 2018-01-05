@@ -14,7 +14,7 @@
     <!--비디오 전송을 껐을 때 나타나는 백업 뷰: for fullscreen-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/video_off_backup_REL_full"
         android:background="#e8ecff"
         android:layout_height="match_parent"
@@ -141,5 +141,91 @@
     <!--android:textColor="#cecece"-->
     <!--android:gravity="center"-->
     <!--android:layout_gravity="center_horizontal" />-->
+
+
+
+    <!--이미지 공유 레이아웃: 서피스뷰 포함-->
+    <RelativeLayout
+        android:visibility="gone"
+        tools:visibility="gone"
+        android:id="@+id/image_share_REL"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!--미리보기 리사이클러뷰 레이아웃-->
+        <RelativeLayout
+            android:id="@+id/share_image_list_REL"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:background="#FFF"
+            >
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/recyclerView_share_image"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="0.5dp"
+                >
+            </android.support.v7.widget.RecyclerView>
+            <View
+                android:id="@+id/divider_right"
+                android:layout_width="0.5dp"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@+id/recyclerView_share_image"
+                android:background="#4b4b4b"
+                android:alpha="0.5"/>
+        </RelativeLayout>
+
+        <SurfaceView
+            tools:visibility="visible"
+            android:layout_toEndOf="@+id/share_image_list_REL"
+            android:id="@+id/surface_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_toEndOf="@+id/share_image_list_REL"
+            android:layout_marginBottom="10dp"
+            >
+            <Button
+                android:id="@+id/remove_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="remove_all"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                />
+            <Button
+                android:id="@+id/enable_drag_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="이동 off"
+                android:layout_toRightOf="@+id/remove_all"
+                android:layout_alignParentBottom="true"
+                />
+            <Button
+                android:id="@+id/save_Image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/remove_all"
+                android:layout_alignBottom="@+id/remove_all"
+                android:layout_toLeftOf="@+id/remove_all"
+                android:text="save_Image"/>
+        </RelativeLayout>
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginBottom="7dp"
+            android:layout_marginEnd="7dp"
+            android:padding="10dp"
+            android:src="@drawable/up_arrow"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            />
+
+    </RelativeLayout>
 
 </RelativeLayout>

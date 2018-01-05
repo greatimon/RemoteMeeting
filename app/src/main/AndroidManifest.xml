@@ -204,6 +204,15 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
+        // 파일 공유 모드 요청
+        <activity
+            android:name=".Dialog.Confirm_img_share_mode_accept_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="landscape"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // 채팅 서비스(백그라운드)
         <service
             android:name=".Netty.Chat_service"

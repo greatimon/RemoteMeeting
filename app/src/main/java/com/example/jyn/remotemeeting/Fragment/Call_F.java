@@ -31,6 +31,7 @@ import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Preview_selected_file;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
 import com.example.jyn.remotemeeting.Dialog.Confirm_upload_files_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -110,6 +111,8 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     public Unbinder unbinder;
     @BindView(R.id.popup_file_manager)      public RelativeLayout popup_file_manager_REL;
     @BindView(R.id.preview_REL)             public RelativeLayout preview_REL;
+    @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
+    @BindView(R.id.close_popup)             public RelativeLayout close_popup;
     @BindView(R.id.recyclerView)            public RecyclerView recyclerView;
     @BindView(R.id.recyclerView_preview)    public RecyclerView recyclerView_preview;
     @BindView(R.id.back_to_menu)            public ImageView back_to_menu;
@@ -120,7 +123,6 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @BindView(R.id.video_off_show)          public ImageView video_off_show;
     @BindView(R.id.profile_img)             public ImageView subject_profile_img;
     @BindView(R.id.go_share)                public ImageView go_share;
-    @BindView(R.id.close_popup)             public RelativeLayout close_popup;
     @BindView(R.id.sequence)                public TextView sequence;
     @BindView(R.id.file_name)               public TextView file_name;
     @BindView(R.id.percent)                 public TextView percent;
@@ -128,7 +130,6 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @BindView(R.id.text_call_toggle_video)  public TextView text_call_toggle_video;
     @BindView(R.id.text_call_toggle_mic)    public TextView text_call_toggle_mic;
     @BindView(R.id.nickName)                public TextView subject_nickName;
-    @BindView(R.id.circularProgressbar_REL) public RelativeLayout circularProgressbar_REL;
 
     public static CircularProgressBar circularProgressBar;
     @SuppressLint("StaticFieldLeak")
@@ -142,6 +143,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     public static TextView file_box_title;
 
     public ProgressWheel progress_wheel;
+
+    // '미리보기' 담당 리사이클러뷰 어댑터에 넘겨줄 어레이리스트
+    ArrayList<Preview_selected_file> preview_file_arr;
 
 
     /**---------------------------------------------------------------------------
@@ -164,6 +168,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         boolean onToggleVideo();
     }
 
+
+    /**---------------------------------------------------------------------------
+     생명주기 ==> onCreateView
+     ---------------------------------------------------------------------------*/
     @SuppressLint("HandlerLeak")
     @Override
     public View onCreateView(
@@ -390,6 +398,19 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @OnClick({R.id.go_share})
     public void go_share() {
         Log.d(TAG, "파일 공유하기 아이콘 클릭");
+
+        if(RCV_selectFile_preview_adapter.selected_file_arr.size() == 0) {
+            myapp.logAndToast("공유할 파일이 없습니다.");
+        }
+
+        else if(RCV_selectFile_preview_adapter.selected_file_arr.size() > 0) {
+            // 파일 공유 모드 버튼 클릭되었으니,
+            // 상대방에게 파일공유모드 요청을 보내' 라는 이벤트 메시지를 전달
+            Event.Call_F__Call_A_file_share call_f__call_a_file_share
+                    = new Event.Call_F__Call_A_file_share("go_share");
+
+            BusProvider.getBus().post(call_f__call_a_file_share);
+        }
     }
 
 
@@ -524,6 +545,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
             Log.d(TAG, "key: " + key + ", value: " + myapp.getChecked_files().get(key));
         }
 
+        // 선택된 파일들, '미리보기' 담당 리사이클러뷰 어댑터로 넘기는, 클래스 내부 메소드 호출
         activate_preview_RCV("preview");
 
     }
@@ -873,8 +895,8 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @SuppressLint("SetTextI18n")
     public void activate_preview_RCV(String mode) {
 
-        // 어댑터에 넘겨줄 어레이리스트
-        ArrayList<Preview_selected_file> preview_file_arr = new ArrayList<>();
+        // '미리보기' 담당 리사이클러뷰 어댑터에 넘겨줄 어레이리스트
+        preview_file_arr = new ArrayList<>();
         // 어플리케이션 객체에 있는 해쉬맵을 담을 옮겨담을 변수
         HashMap<String, String> checked_files_hash = myapp.getChecked_files();
         Log.d(TAG, "myapp.getChecked_files().size(): " + checked_files_hash.size());
