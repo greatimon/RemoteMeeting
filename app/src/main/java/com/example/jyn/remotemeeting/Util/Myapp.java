@@ -18,12 +18,12 @@ import android.support.multidex.MultiDex;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
+import com.example.jyn.remotemeeting.Netty.GatheringHandler;
 import com.example.jyn.remotemeeting.Netty.Netty_handler;
 import com.example.jyn.remotemeeting.Netty.Chat_service;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -31,9 +31,7 @@ import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.FormatStrategy;
-import com.orhanobut.logger.Logger;
 import com.orhanobut.logger.PrettyFormatStrategy;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.rendering.PDFRenderer;
@@ -57,7 +55,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.netty.bootstrap.Bootstrap;
@@ -160,6 +157,9 @@ public class Myapp extends Application {
 
     // 요일 배열
     String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
+
+    // 영상통화에서 문서 공유를 요청받았을 때, 공유할 문서 리스트를 저장할 변수
+    String share_image_file_name_arr_str;
 
     /** GET, SET */
     public String getUser_no() {
@@ -305,6 +305,14 @@ public class Myapp extends Application {
 
     public void setTemp_my_chat_log_hash(ConcurrentHashMap<String, Long> temp_my_chat_log_hash) {
         this.temp_my_chat_log_hash = temp_my_chat_log_hash;
+    }
+
+    public String getShare_image_file_name_arr_str() {
+        return share_image_file_name_arr_str;
+    }
+
+    public void setShare_image_file_name_arr_str(String share_image_file_name_arr_str) {
+        this.share_image_file_name_arr_str = share_image_file_name_arr_str;
     }
 
     /** 생명주기 - onCreate */

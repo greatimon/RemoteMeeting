@@ -6,7 +6,6 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.example.jyn.remotemeeting.Util.GatheringHandler;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import io.netty.bootstrap.Bootstrap;

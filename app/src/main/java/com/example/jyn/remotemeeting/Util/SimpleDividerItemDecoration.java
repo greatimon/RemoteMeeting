@@ -1,9 +1,11 @@
 package com.example.jyn.remotemeeting.Util;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 
 import com.example.jyn.remotemeeting.R;
@@ -15,8 +17,17 @@ import com.example.jyn.remotemeeting.R;
 public class SimpleDividerItemDecoration extends RecyclerView.ItemDecoration {
     private Drawable mDivider;
 
-    public SimpleDividerItemDecoration(Context context) {
-        mDivider = context.getResources().getDrawable(R.drawable.shape_line_divider);
+    @SuppressLint("LongLogTag")
+    public SimpleDividerItemDecoration(Context context, String requestFrom) {
+
+        // 일반적으로 이 드로어블을 디바이더로 사용하지만
+        int drawable_id = R.drawable.shape_line_divider;
+
+        // Call_A의 share_image 리사이클러뷰의 디바이더는 다른 드로어블을 사용한다
+        if(requestFrom.equals("Call_A")) {
+            drawable_id = R.drawable.shape_line_divider_for_share_img;
+        }
+        mDivider = context.getResources().getDrawable(drawable_id);
     }
 
     @Override

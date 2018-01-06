@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -23,7 +22,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -43,7 +44,9 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_share_image_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.DataClass.Preview_share_img_file;
 import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -57,6 +60,7 @@ import com.example.jyn.remotemeeting.Realm_and_drawing.DrawPoint;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
+import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
 import com.example.jyn.remotemeeting.Util.UnhandledExceptionHandler;
 import com.example.jyn.remotemeeting.WebRTC.AppRTCAudioManager;
 import com.example.jyn.remotemeeting.WebRTC.AppRTCAudioManager.AudioDevice;
@@ -219,12 +223,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     // Realm and Drawing 관련 변수 ==============
     // =========================================
     private volatile Realm realm;
+    private Realm bgRealm;
     // realm 서버로 부터 받아온 DrawPath
     RealmResults<DrawPath> results_main;
     // realm 서버로 부터 받아온 DrawPath 중 마지막 drawPath 의 인덱스 번호
     int last_realmResult_index = -1;
     // 각 경우에 따라, draw()를 호출할 핸들러
-    Handler call_draw_handler;
+    public static Handler call_draw_handler;
     // 서피스뷰를 감싸고 있는 뷰의 크기
     int container_width;
     int container_height;
@@ -232,7 +237,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     int surfaceView_width;
     int surfaceView_height;
     // 서피스뷰 배경에 깔릴 문서(비트맵) - original
-    Bitmap document_bitmap;
+//    Bitmap document_bitmap;
     // newWidth, newHight로 생성된 서피스뷰 배경에 깔릴 문서(비트맵) - custom
     Bitmap scaled;
     // 서피스뷰 배경에 깔릴 문서의 새로운 width, height
@@ -279,7 +284,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     // top_y 값에 따라 서피스뷰의 height 만큼 더한 값
     int bottom_y;
     // 디폴트 컬러 이름
-    private String currentColor = "Charcoal";
+//    private String currentColor = "Charcoal";
+//    private String currentColor = "Mulberry";
+    private String currentColor = "Indigo";
     // 컬러 인트값과, 컬러 스트링 값을 담는 해쉬맵
     private HashMap<String, Integer> nameToColorMap;
     private HashMap<Integer, String> colorIdToName;
@@ -288,6 +295,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     // 그리는 drawing 선의 투명도
     int alpha = 255;
 
+    // 리사이클러 관련 변수 ==============
+    // =================================
+    // 리사이클러뷰 레이아웃매니저
+    private RecyclerView.LayoutManager layoutManager;
+    // 리사이클러뷰 어댑터
+    public RCV_share_image_adapter rcv_share_image_adapter;
+    // 리사이클러뷰에 넘겨줄 arrayList
+    ArrayList<Preview_share_img_file> share_img_file_arr;
+    // 리사이클러뷰 메소드 요청에 의해, 백그라운드 이미지를 새로 셋팅되었을 때, 그 내용을 알기 위한 변수
+    public static boolean got_reset_order_from_rcv_adapter;
 
 
     /**---------------------------------------------------------------------------
@@ -316,7 +333,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
         // 커스텀 로거 생성
         Logger.clearLogAdapters();
-        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_selectFile_preview_adapter.class)));
+        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(Call_A.class)));
 
         iceConnected = false;
         signalingParameters = null;
@@ -331,7 +348,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         video_off_backup_REL_full = findViewById(R.id.video_off_backup_REL_full);
         back_img_full = findViewById(R.id.back_img_full);
         profile_img_full = findViewById(R.id.profile_img_full);
-
 
         call_f = new Call_F();
         hud_f = new Hud_F();
@@ -589,7 +605,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             }
         };
 
-        /** 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받음 */
         webrtc_message_handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -621,6 +636,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     else if(order.equals("relay_request_image_file_share")) {
                         Intent intent = new Intent(Call_A.this, Confirm_img_share_mode_accept_D.class);
                         startActivityForResult(intent, REQUEST_CONFIRM_IMAGE_SHARE_MODE);
+                        String share_file_arr_str =  received_data.getAttachment();
+                        Logger.d("서버에서 중계한, 파일 공유 요청 리스트: "+share_file_arr_str);
+                        myapp.setShare_image_file_name_arr_str(share_file_arr_str);
                     }
 
                     // 서버에서 중계한, 파일 공유 요청에 대한 답변 전달일 때
@@ -629,6 +647,21 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         String answer = received_data.getExtra();
                         Logger.d("answer: " + answer);
                         // todo: answer 의 'yes', 'no'에 따라서 맞춰 코딩하기
+                        if(answer.equals("yes")) {
+                            // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
+                            if(Call_F.visibility_control_handler != null) {
+                                Call_F.visibility_control_handler.sendEmptyMessage(0);
+                            }
+
+                            /**
+                             * 문서 공유모드 진행을 위한 내부 메소드 호출
+                             ==> realm 서버 접속 및 드로잉 준비
+                             */
+                            initializing_for_image_share_mode();
+                        }
+                        else if(answer.equals("no")) {
+                            myapp.logAndToast("상대방이 파일 공유 요청을 거절하였습니다");
+                        }
                     }
                 }
             }
@@ -744,6 +777,72 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
 
     /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 이미지 쉐어 모드 -- 드로잉 관련 메뉴 팝업
+     // todo: 현재는 테스트 용으로 이미지 쉐어 모드 종료로 용도로 사용
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.drawing_menu)
+    public void drawing_menu() {
+        // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
+        myapp.setShare_image_file_name_arr_str("");
+
+        // Call_F 의 뷰들을 초기화 위한 핸들러 메세지 전달
+        if(image_share_REL.getVisibility() == View.VISIBLE
+                && Call_F.visibility_control_handler != null) {
+            Call_F.visibility_control_handler.sendEmptyMessage(1);
+        }
+
+        /** 테스트용 코드 */
+        // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
+        image_share_REL.setVisibility(View.GONE);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 이미지 쉐어 모드 -- 내가 그린 DrawPath, undo
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.undo)
+    public void undo() {
+        Realm temp_realm = Realm.getDefaultInstance();
+        // 해당 이미지의 내가 그린 drawPath 만 다 가져오기
+        RealmResults<DrawPath> results = temp_realm
+                .where(DrawPath.class)
+                .equalTo("canvas_image_fileName", rcv_share_image_adapter.current_big_share_img_fileName)
+                .equalTo("user_id", myapp.getUser_no())
+                .findAll();
+
+
+        int realmCount = results.size();
+
+//        // realm
+//        realm.beginTransaction();
+//        results.get(realmCount-1).deleteFromRealm();
+//        realm.commitTransaction();
+
+        for(int i=realmCount-1; i>=0; i--) {
+//        for(int i=0; i<realmCount; i++) {
+            if(results.get(i).getUser_id().equals(myapp.getUser_no()) &&
+                    results.get(i).getCanvas_image_fileName().equals(rcv_share_image_adapter.current_big_share_img_fileName)) {
+
+                realm.beginTransaction();
+
+                results.get(i).deleteFromRealm();
+
+                if(i == 0) {
+                    results.deleteAllFromRealm();
+                }
+
+                // 만약 서버에 DrawPath 개수가 0개라면 DrawPoint도 모두 삭제한다
+                if(results_main.size() == 0) {
+                    temp_realm.where(DrawPoint.class).findAll().deleteAllFromRealm();
+                }
+                realm.commitTransaction();
+                break;
+            }
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
      클릭이벤트 ==> 이미지 쉐어 모드 -- 뷰에 보여지는 상태 그대로, 이미지 파일 저장하기
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.save_Image})
@@ -816,6 +915,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             if(resultCode == RESULT_OK) {
                 data_for_answer.setExtra("yes");
 
+                // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
+                if(Call_F.visibility_control_handler != null) {
+                    Call_F.visibility_control_handler.sendEmptyMessage(0);
+                }
+
                 /**
                  * 문서 공유모드 진행을 위한 내부 메소드 호출
                     ==> realm 서버 접속 및 드로잉 준비
@@ -826,10 +930,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             else if(resultCode == RESULT_CANCELED) {
                 data_for_answer.setExtra("no");
 
-                /** 테스트용 코드 */
-                // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
-                image_share_REL.setVisibility(View.GONE);
-
+                // 내 어플리케이션 객체의 문서 공유 파일 리스트 string 값도 초기화
+                myapp.setShare_image_file_name_arr_str("");
             }
 
             myapp.send_to_server(data_for_answer);
@@ -956,6 +1058,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         }
         // realm 객체 닫고 null 처리하기
         if (realm != null) {
+            // todo: 개발용도로, 액티비티가 종료되면 realm에 있는 데이터를 삭제하는것으로 함
+            realm.beginTransaction();
+            realm.deleteAll();
+            realm.commitTransaction();
+
             realm.close();
             realm = null;
         }
@@ -1470,12 +1577,29 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             data.setSubType("request_image_file_share");
             data.setSender_user_no(myapp.getUser_no());
             data.setTarget_user_no(myapp.getMeeting_subject_user_no());
+
             // Data_for_netty 객체의 'extra' 변수에
             // 내 닉네임을 담아 보낸다
             String requester_nickName = myapp.getUser_nickname();
             data.setExtra(requester_nickName);
+
             // Data_for_netty 객체의 'attachment' 변수에
             // 공유할 파일들의 이름을 담아 보낸다
+            int selected_file_arr_size = RCV_selectFile_preview_adapter.selected_file_arr.size();
+            StringBuilder selected_file_arr_str = new StringBuilder();
+            for(int i=0; i<selected_file_arr_size; i++) {
+                if(i == selected_file_arr_size - 1) {
+                    selected_file_arr_str.append(RCV_selectFile_preview_adapter.selected_file_arr.get(i).getFileName());
+                }
+                else {
+                    selected_file_arr_str.append(RCV_selectFile_preview_adapter.selected_file_arr.get(i).getFileName()).append(Static.SPLIT);
+                }
+            }
+            Logger.d("selected_file_arr_str: " + String.valueOf(selected_file_arr_str));
+            data.setAttachment(String.valueOf(selected_file_arr_str));
+
+            // 내 어플리케이션 객체의 해당 변수에도 저장
+            myapp.setShare_image_file_name_arr_str(String.valueOf(selected_file_arr_str));
 
             myapp.send_to_server(data);
         }
@@ -1667,19 +1791,27 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         nameToColorMap = new HashMap<>();
 //        colorIdToName= new HashMap<>();
 
+        /** 임의 값임, 나중에 다른 방법으로 변경 */
+        // 컬러맵 생성
+        generateColorMap();
+
+        // 리사이클러뷰 어댑터에 넘겨줄 어레이리스트
+        share_img_file_arr = new ArrayList<>();
+
+        // draw 관련 핸들러 생성
+        draw_handler_create();
+
         // realm 서버 로그인
         createUserIfNeededAndAndLogin();
 
         // 서피스뷰에 콜백 붙이기
         surfaceView.getHolder().addCallback(Call_A.this);
 
-        // draw 관련 핸들러 생성
-        draw_handler_create();
-
-        /** 임의 값임, 나중에 다른 방법으로 변경 */
-        // 컬러맵 생성
-        generateColorMap();
-
+        // 어댑터가 한번이라도 생성되었으면, 서피스뷰가 살아 있는 것이므로
+        if(rcv_share_image_adapter != null) {
+            // 공유 문서들, 리사이클러뷰 어댑터로 넘기는, 클래스 내부 메소드 호출
+            activate_share_image_RCV();
+        }
     }
 
 
@@ -1706,6 +1838,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 Realm.setDefaultConfiguration(syncConfiguration);
                 realm = Realm.getDefaultInstance();
                 results_main = realm.where(DrawPath.class).findAll();
+
                 // 현재 realm Result 의 마지막 인덱스를 변수에 저장한다
                 if(results_main.size() > 0) {
                     last_realmResult_index = results_main.size()-1;
@@ -1732,149 +1865,197 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      ---------------------------------------------------------------------------*/
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-
-        // 서피스 뷰를 감싸고 있는 뷰의 크기 구하기
-        container_width = image_share_REL.getWidth();
-        container_height = image_share_REL.getHeight();
-//        Logger.d("container_width/2: " + container_width/2);
-//        Logger.d("container_height/2: " + container_height/2);
-
-        /** surfaceView 백그라운드에 이미지 넣기, 방법 1
-         - 이미지 가로, 세로 길이 체크해서 1080 이상이면 사이즈 줄이기*/
-//        // 메모리에 비트맵을 올리지 않고 이미지의 width, height 가져오기
-//        try {
-//            BitmapFactory.Options options = new BitmapFactory.Options();
-//            options.inJustDecodeBounds = true;
-//            BitmapFactory.decodeResource(getResources(), R.drawable.lion);
+        Log.d(TAG, "=== surfaceCreated ===");
+//        // 서피스 뷰를 감싸고 있는 뷰의 크기 구하기
+//        container_width = surfaceView.getWidth();
+//        container_height = surfaceView.getHeight();
 //
-//            // 해당 이미지의 비트맵의 가로나 세로의 길이가 1080을 넘는다면, 1/2만큼 리사이즈
-//            if(options.outWidth > 1080 || options.outHeight > 1080) {
-//                BitmapFactory.Options options_reduction = new BitmapFactory.Options();
-//                options_reduction.inSampleSize = 4;
-//                document_bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.lion);
-//            }
+//        /** surfaceView 백그라운드에 이미지 넣기, 방법 2
+//         - 글라이드로 비트맵 변환해서 줄이기 */
 //
-//            else {
-//                document_bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.lion);
-//            }
-//        } catch(Exception e) {
-//            Logger.d("e.getMessage(): " + e.getMessage());
-//        }
-
-//        double background_scale = (double)document_bitmap.getHeight()/(double)document_bitmap.getWidth();
-//        double surfaceView_scale = (double)surfaceView.getHeight()/(double)surfaceView.getWidth();
-////        Logger.d("background_scale: " + (float)background_scale);
-////        Logger.d("surfaceView_scale: " + (float)surfaceView_scale);
-//        Logger.d("background_scale: " + String.valueOf(background_scale) + "\n" +
-//                "surfaceView_scale: " + String.valueOf(surfaceView_scale));
-//
-//        int document_bitmap_width = document_bitmap.getWidth();
-//        int document_bitmap_height = document_bitmap.getHeight();
-//
+//        // 서피스뷰의 가로, 세로 길이 구하기
 //        surfaceView_width = surfaceView.getWidth();
 //        surfaceView_height = surfaceView.getHeight();
-//        Logger.d("document_bitmap_width: " + document_bitmap_width + "\n" +
-//                "document_bitmap_height: " + document_bitmap_height + "\n" +
-//                "surfaceView_width: " + surfaceView_width + "\n" +
-//                "surfaceView_height: " + surfaceView_height + "\n"
-//        );
 //
-//        /** 가로 길이를 디바이스 가로 크기에 맞춰서,
-//         * 가로는 Match_Parent 처럼, 세로는 드래그가 가능하도록 밑으로 길게 빼서 보여주기 위한 길이 계산 - 코드시작 */
-//        // 가로는 서피스뷰 가로길이로 고정
-//        newWidth = surfaceView_width;
-//        //// 세로는, 이미지가 서피스뷰 가로길이에 변경된 비율에 맞게 계산하여 조정하기
-//        // 이미지의 가로 길이가 서피스뷰의 가로길이보다 같거나 클 경우
-//        double width_transform_scale = 0;
-//        if(document_bitmap_width >= surfaceView_width) {
-//            width_transform_scale = ((double)document_bitmap_width/(double) surfaceView_width);
-//            newHeight = (int)((double)document_bitmap_height/width_transform_scale);
-//        }
-//        // 이미지의 가로 길이가 서피스뷰의 가로길이보다 작을 경우
-//        else if(document_bitmap_width < surfaceView_width) {
-//            width_transform_scale = ((double) surfaceView_width /(double)document_bitmap_width);
-//            newHeight = (int)((double)document_bitmap_height*width_transform_scale);
-//        }
-//        Logger.d("width_transform_scale: " + width_transform_scale + "\n" +
-//                "newWidth: " + newWidth + "\n" +
-//                "newHeight: " + newHeight + "\n" +
-//                "background_new_scale: " + (double)newHeight/(double)newWidth + "\n"
-//        );
-//        surfaceView_fill_width = true;
+//        Glide
+//            .with(this)
+//            .load(R.drawable.lion)
+//            .asBitmap()
+//            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+//            .dontAnimate()
+//            // 글라이드로 처리되는 비트맵의 가로 길이를 서피스뷰의 가로 길이로 넣기
+//            .override(surfaceView_width, 1)
+//            .into(new SimpleTarget<Bitmap>() {
+//                @Override
+//                public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
 //
-//        scaled = Bitmap.createScaledBitmap(document_bitmap, newWidth, newHeight, true);
-//        /** 가로 길이를 디바이스 가로 크기에 맞춰서,
-//         * 가로는 Match_Parent 처럼, 세로는 드래그가 가능하도록 밑으로 길게 빼서 보여주기 위한 길이 계산 - 코드끝 */
+//                    // document_bitmap, recycle 하는 메소드
+////                    document_bitmap = reset_bitmap(document_bitmap, resource);
+//                    document_bitmap = resource;
 //
-//        /** 가로 or 세로 길이를 디바이스 화면 크기 한쪽에 맞춰서, 최대한 크게 보여주기 위한 길이 계산 - 코드시작 */
-////        // 이미지가 가로가 더 길거나 같을 때
-////        if(background_width >= background_height) {
-////            // 이미지의 가로세로 비율이 서피스뷰의 가로세로 비율보다 높거나 같을 때
-////            // 세로 꽉차게 하기
-////            if(background_scale >= surfaceView_scale) {
-////                newWidth = (background_width*surfaceView_height)/background_height;
-////                newHeight = surfaceView_height;
-////                surfaceView_fill_width = false;
-////            }
-////            // 이미지의 가로세로 비율이 서피스뷰의 가로세로 비율보다 낮을 때
-////            // 가로 꽉차게 하기
-////            else if(background_scale < surfaceView_scale) {
-////                newWidth = surfaceview_width;
-////                newHeight = (background_height*surfaceview_width)/background_width;
-////                surfaceView_fill_width = true;
-////            }
-////        }
-////        // 이미지가 세로가 더 길 때
-////        // 세로 꽉차게 하기
-////        if(background_width < background_height) {
-////            newWidth = (background_width*surfaceView_height)/background_height;
-////            newHeight = surfaceView_height;
-////            surfaceView_fill_width = false;
-////        }
-////        Logger.d("newWidth: " + newWidth);
-////        Logger.d("newHeight: " + newHeight);
-////
-////        scaled = Bitmap.createScaledBitmap(background, newWidth, newHeight, true);
-//        /** 가로 or 세로 길이를 디바이스 화면 크기 한쪽에 맞춰서, 최대한 크게 보여주기 위한 길이 계산 - 코드끝 */
+//                    double background_scale = (double)document_bitmap.getHeight()/(double)document_bitmap.getWidth();
+//                    double surfaceView_scale = (double)surfaceView.getHeight()/(double)surfaceView.getWidth();
+////                    Logger.d("background_scale: " + (float)background_scale);
+////                    Logger.d("surfaceView_scale: " + (float)surfaceView_scale);
+//                    Logger.d("background_scale: " + String.valueOf(background_scale) + "\n" +
+//                            "surfaceView_scale: " + String.valueOf(surfaceView_scale));
 //
-//        // 최초 서피스뷰 그리기
-//        call_draw_handler.sendEmptyMessage(2);
+//                    int document_bitmap_width = document_bitmap.getWidth();
+//                    int document_bitmap_height = document_bitmap.getHeight();
 //
-//        if (drawThread == null) {
-//            drawThread = new DrawThread();
-//            drawThread.start();
-//        }
+//                    Log.d(TAG, "document_bitmap_width: " + document_bitmap_width);
+//                    Log.d(TAG, "document_bitmap_height: " + document_bitmap_height);
+//                    Log.d(TAG, "surfaceView_width: " + surfaceView_width);
+//                    Log.d(TAG, "surfaceView_height: " + surfaceView_height);
+//
+//                    /** 가로 길이를 디바이스 가로 크기에 맞춰서,
+//                     * 가로는 Match_Parent 처럼, 세로는 드래그가 가능하도록 밑으로 길게 빼서 보여주기 위한 길이 계산 */
+//                    // 가로는 서피스뷰 가로길이로 고정
+//                    newWidth = surfaceView_width;
+//                    //// 세로는, 이미지가 서피스뷰 가로길이에 변경된 비율에 맞게 계산하여 조정하기
+//                    // 이미지의 가로 길이가 서피스뷰의 가로길이보다 같거나 클 경우
+//                    double width_transform_scale = 0;
+//                    if(document_bitmap_width >= surfaceView_width) {
+//                        width_transform_scale = ((double)document_bitmap_width/(double) surfaceView_width);
+//                        newHeight = (int)((double)document_bitmap_height/width_transform_scale);
+//                    }
+//                    // 이미지의 가로 길이가 서피스뷰의 가로길이보다 작을 경우
+//                    else if(document_bitmap_width < surfaceView_width) {
+//                        width_transform_scale = ((double) surfaceView_width /(double)document_bitmap_width);
+//                        newHeight = (int)((double)document_bitmap_height*width_transform_scale);
+//                    }
+//                    Logger.d("width_transform_scale: " + width_transform_scale + "\n" +
+//                            "newWidth: " + newWidth + "\n" +
+//                            "newHeight: " + newHeight + "\n" +
+//                            "background_new_scale: " + (double)newHeight/(double)newWidth + "\n"
+//                    );
+//                    surfaceView_fill_width = true;
+//
+//                    scaled = Bitmap.createScaledBitmap(document_bitmap, newWidth, newHeight, true);
+//                    // scaled, recycle 하는 메소드
+////                    scaled = reset_bitmap(scaled, Bitmap.createScaledBitmap(document_bitmap, newWidth, newHeight, true));
+//
+//                    // 최초 서피스뷰 그리기
+//                    call_draw_handler.sendEmptyMessage(2);
+//
+//                    if (drawThread == null) {
+//                        drawThread = new DrawThread();
+//                        drawThread.start();
+//                    }
+//
+//                    /** 공유문서 썸네일 리사이클러뷰 */
+//                    recyclerView_share_image.setHasFixedSize(true);
+//                    // 리사이클러뷰 - LinearLayoutManager 사용
+//                    layoutManager = new LinearLayoutManager(getBaseContext());
+//                    recyclerView_share_image.setLayoutManager(layoutManager);
+//                    // 리사이클러뷰 구분선 - 가로(클래스 생성)
+//                    recyclerView_share_image.addItemDecoration(new SimpleDividerItemDecoration(getBaseContext(), "Call_A"));
+//                    // 애니메이션 설정 - 애니메이션 설정 끔
+//                    ((SimpleItemAnimator)recyclerView_share_image.getItemAnimator()).setSupportsChangeAnimations(false);
+//
+//                    // 공유 문서들, 리사이클러뷰 어댑터로 넘기는, 클래스 내부 메소드 호출
+//                    activate_share_image_RCV();
+//                }
+//            });
 
-        /** surfaceView 백그라운드에 이미지 넣기, 방법 2
-         - 글라이드로 비트맵 변환해서 줄이기 */
+        /** 공유문서 썸네일 리사이클러뷰 */
+        recyclerView_share_image.setHasFixedSize(true);
+        // 리사이클러뷰 - LinearLayoutManager 사용
+        layoutManager = new LinearLayoutManager(getBaseContext());
+        recyclerView_share_image.setLayoutManager(layoutManager);
+        // 리사이클러뷰 구분선 - 가로(클래스 생성)
+        recyclerView_share_image.addItemDecoration(new SimpleDividerItemDecoration(getBaseContext(), "Call_A"));
+        // 애니메이션 설정 - 애니메이션 설정 끔
+        ((SimpleItemAnimator)recyclerView_share_image.getItemAnimator()).setSupportsChangeAnimations(false);
+
+        // 서피스뷰의 가로, 세로 길이 구하기
+        surfaceView_width = surfaceView.getWidth();
+        surfaceView_height = surfaceView.getHeight();
+
+        // 공유 문서들, 리사이클러뷰 어댑터로 넘기는, 클래스 내부 메소드 호출
+        activate_share_image_RCV();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> SurfaceHolder.Callback -- surfaceChanged
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
+        Log.d(TAG, "=== surfaceChanged ===");
+        boolean isPortrait = width < height;
+        if (isPortrait) {
+            ratio = (double) EDGE_WIDTH / height;
+        } else {
+            ratio = (double) EDGE_WIDTH / width;
+        }
+
+        // 서피스 뷰 rect 생성
+        surfaceView_rect = new Rect();
+        surfaceView_rect.set(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
+//        Logger.d("surfaceView_rect.left: " + surfaceView_rect.left);
+//        Logger.d("surfaceView_rect.top: " + surfaceView_rect.top);
+//        Logger.d("surfaceView_rect.right: " + surfaceView_rect.right);
+//        Logger.d("surfaceView_rect.bottom: " + surfaceView_rect.bottom);
+
+        // crop 할 rect 생성
+        crop_img_rect = new Rect();
+        crop_img_rect.set(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
+//        Logger.d("crop_img_rect.left: " + crop_img_rect.left);
+//        Logger.d("crop_img_rect.top: " + crop_img_rect.top);
+//        Logger.d("crop_img_rect.right: " + crop_img_rect.right);
+//        Logger.d("crop_img_rect.bottom: " + crop_img_rect.bottom);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> SurfaceHolder.Callback -- surfaceDestroyed
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+        Log.d(TAG, "=== surfaceDestroyed ===");
+        if (drawThread != null) {
+            drawThread.shutdown();
+            drawThread = null;
+        }
+        ratio = -1;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 해당 이미지를 서피스뷰 백그라운드로 set 하는 메소드
+     ---------------------------------------------------------------------------*/
+    public void set_share_file_image(String target_share_image_file_name) {
+
         Glide
             .with(this)
-            .load(R.drawable.lion)
+            .load(Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER + target_share_image_file_name)
             .asBitmap()
             .diskCacheStrategy(DiskCacheStrategy.SOURCE)
             .dontAnimate()
+            // 글라이드로 처리되는 비트맵의 가로 길이를 서피스뷰의 가로 길이로 넣기
             .into(new SimpleTarget<Bitmap>() {
                 @Override
-                public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                    document_bitmap = resource;
+                public void onResourceReady(Bitmap resource_bitmap, GlideAnimation<? super Bitmap> glideAnimation) {
 
-                    double background_scale = (double)document_bitmap.getHeight()/(double)document_bitmap.getWidth();
+                    // document_bitmap, recycle 하는 메소드
+//                    document_bitmap = reset_bitmap(document_bitmap, resource);
+//                    document_bitmap = resource_bitmap;
+
+                    double background_scale = (double)resource_bitmap.getHeight()/(double)resource_bitmap.getWidth();
                     double surfaceView_scale = (double)surfaceView.getHeight()/(double)surfaceView.getWidth();
 //                    Logger.d("background_scale: " + (float)background_scale);
 //                    Logger.d("surfaceView_scale: " + (float)surfaceView_scale);
                     Logger.d("background_scale: " + String.valueOf(background_scale) + "\n" +
                             "surfaceView_scale: " + String.valueOf(surfaceView_scale));
 
-                    int document_bitmap_width = document_bitmap.getWidth();
-                    int document_bitmap_height = document_bitmap.getHeight();
+                    int document_bitmap_width = resource_bitmap.getWidth();
+                    int document_bitmap_height = resource_bitmap.getHeight();
 
-                    surfaceView_width = surfaceView.getWidth();
-                    surfaceView_height = surfaceView.getHeight();
-                    Logger.d("document_bitmap_width: " + document_bitmap_width + "\n" +
-                            "document_bitmap_height: " + document_bitmap_height + "\n" +
-                            "surfaceView_width: " + surfaceView_width + "\n" +
-                            "surfaceView_height: " + surfaceView_height + "\n"
-                    );
+                    Log.d(TAG, "document_bitmap_width: " + document_bitmap_width);
+                    Log.d(TAG, "document_bitmap_height: " + document_bitmap_height);
+                    Log.d(TAG, "surfaceView_width: " + surfaceView_width);
+                    Log.d(TAG, "surfaceView_height: " + surfaceView_height);
 
                     /** 가로 길이를 디바이스 가로 크기에 맞춰서,
                      * 가로는 Match_Parent 처럼, 세로는 드래그가 가능하도록 밑으로 길게 빼서 보여주기 위한 길이 계산 */
@@ -1899,61 +2080,28 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     );
                     surfaceView_fill_width = true;
 
-                    scaled = Bitmap.createScaledBitmap(document_bitmap, newWidth, newHeight, true);
+                    scaled = Bitmap.createScaledBitmap(resource_bitmap, newWidth, newHeight, true);
+                    // scaled, recycle 하는 메소드
+//                    scaled = reset_bitmap(scaled, Bitmap.createScaledBitmap(document_bitmap, newWidth, newHeight, true));
 
-                    // 최초 서피스뷰 그리기
+                    // 이미지를 서피스뷰 백그라운드로 draw 하는 메소드를 호출하라는 핸들러 메세지 전송
                     call_draw_handler.sendEmptyMessage(2);
 
+                    // bitmap_for_drag == null 인 경우 ==> 새로운 공유 문서를 크게보기 선택한 경우
+//                    if(bitmap_for_drag == null) {
+//                        // 초기화 한 뒤, 재생성
+//                        bitmap_for_drag = Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888);
+//                        canvas_for_drag = new Canvas(bitmap_for_drag);
+//                    }
+
+                    // realm object server 와 연결 뒤, 서버의 'DrawPath' 테이블이 변경 될때마다
+                    // 콜백을 주기 위한 쓰레드 클래스, 시작
                     if (drawThread == null) {
                         drawThread = new DrawThread();
                         drawThread.start();
                     }
                 }
             });
-    }
-
-
-    /**---------------------------------------------------------------------------
-     콜백메소드 ==> SurfaceHolder.Callback -- surfaceChanged
-     ---------------------------------------------------------------------------*/
-    @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
-        boolean isPortrait = width < height;
-        if (isPortrait) {
-            ratio = (double) EDGE_WIDTH / height;
-        } else {
-            ratio = (double) EDGE_WIDTH / width;
-        }
-
-        // 서피스 뷰 rect 생성
-        surfaceView_rect = new Rect();
-        surfaceView_rect.set(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
-//        Logger.d("surfaceView_rect.left: " + surfaceView_rect.left);
-//        Logger.d("surfaceView_rect.top: " + surfaceView_rect.top);
-//        Logger.d("surfaceView_rect.right: " + surfaceView_rect.right);
-//        Logger.d("surfaceView_rect.bottom: " + surfaceView_rect.bottom);
-
-        // crop 할 rect 생성
-        crop_img_rect = new Rect();
-        crop_img_rect.set(0, 0, surfaceView.getWidth(), surfaceView.getHeight());
-//        Logger.d("crop_img_rect.left: " + crop_img_rect.left);
-//        Logger.d("crop_img_rect.top: " + crop_img_rect.top);
-//        Logger.d("crop_img_rect.right: " + crop_img_rect.right);
-//        Logger.d("crop_img_rect.bottom: " + crop_img_rect.bottom);
-
-    }
-
-
-    /**---------------------------------------------------------------------------
-     콜백메소드 ==> SurfaceHolder.Callback -- surfaceDestroyed
-     ---------------------------------------------------------------------------*/
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-        if (drawThread != null) {
-            drawThread.shutdown();
-            drawThread = null;
-        }
-        ratio = -1;
     }
 
 
@@ -1981,6 +2129,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     draw("surfaceCreated");
                 }
                 // realm 서버에 변동이 있음을 감지했을 때(waitForChange()), 전달되는 메세지
+                // 변동이 있는 경우, 새로 drawPath가 그려지는 경우나 삭제되는 경우
                 else if(msg.what == 0) {
 //                    Logger.d("realm 서버에 변동이 있음을 감지했을 때, ");
                     // 현재 realm Result 의 마지막 인덱스를 변수에 저장한다
@@ -2008,11 +2157,134 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 // 그리기 전체 삭제 했을 때, 전달되는 메세지
                 else if(msg.what == 5) {
                     Logger.d("그리기 전체 삭제 했을 때, 전달되는 메세지");
-                    draw("wipeCanvas");
-                }
 
+                    initializing_when_share_image_changed();
+
+                    // initializing_when_share_image_changed() 가 실행되어 캔버스가 그려질 시간을 범
+                    // drawPath 가 하나도 없기 때문에, realm 서버로 부터 받아오는 정보가 없어
+                    // 해당 메소드가 완료 되기까지는 짧은 시간이 걸릴 것으로 예상하고 0.1초만 지연시킴
+                    new Handler().postDelayed(new Runnable() {
+                        // 0.1 초 후에 실행
+                        @Override public void run() {
+                            draw("wipeCanvas");
+                        }
+                    }, 100);
+
+                }
+                // 공유 파일 이미지를 배경으로 그리라는 메세지 전달
+                else if(msg.what == 6) {
+                    // Message 객체로 부터 전달된 값들 가져오기
+                    String fileName = msg.getData().getString("fileName");
+                    Log.d(TAG, "fileName: " + fileName);
+
+                    bitmap_for_drag = null;
+                    last_top_y_when_action_up = 0;
+                    crop_img_rect.set(0, 0, surfaceView_width, surfaceView_height);
+
+                    // 해당 파일을 배경으로 set 하는 내부 메소드 호출
+                    set_share_file_image(fileName);
+                }
             }
         };
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 공유 문서 모드 중, 크게 보여주는 문서 이미지가 바뀌었을 때 관련 변수 초기화
+     ---------------------------------------------------------------------------*/
+    public void initializing_when_share_image_changed() {
+        if(bitmap_for_drag == null) {
+            Log.d(TAG, "draw() 안에서 bitmap_for_drag == null, 이라서 bitmap_for_drag 재생성");
+            bitmap_for_drag = Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888);
+            // bitmap_for_drag, recycle 하는 메소드
+//            bitmap_for_drag = reset_bitmap(bitmap_for_drag,
+//                    Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888));
+            canvas_for_drag = new Canvas(bitmap_for_drag);
+        }
+
+        // 선을 그리 위해서, 서피스뷰의 Holder를 가져와서 lockCanvas 처리
+        SurfaceHolder holder = surfaceView.getHolder();
+        canvas_main = holder.lockCanvas();
+
+        // 비트맵(배경) 그리기 - 원본에서 기기의 Width에 맞게 scaled 처리한 원본 비트맵임(draw 없음)
+        canvas_main.drawColor(Color.WHITE);
+        canvas_main.drawBitmap(scaled, crop_img_rect, surfaceView_rect, null);
+
+        canvas_for_drag.drawBitmap(scaled, 0, 0, null);
+
+        if(results_main != null) {
+            /** realm 서버에 DrawPath가 하나라도 있다면 */
+            Log.d(TAG, "results_main.size(): " + results_main.size());
+            if(results_main.size() > 0) {
+
+                synchronized (holder) {
+                    final Paint paint = new Paint();
+
+                    for(int i=0; i<results_main.size(); i++) {
+
+                        // 현재 그림에 그렸던  DrawPath만 가져와서 그리기
+                        if(results_main.get(i).getCanvas_image_fileName()
+                                .equals(rcv_share_image_adapter.current_big_share_img_fileName)) {
+
+                            final RealmList<DrawPoint> points = results_main.get(i).getPoints();
+                            final Integer color = nameToColorMap.get(results_main.get(i).getColor());
+                            final int strokeWidth = results_main.get(i).getStrokeWidth();
+                            final int strokeAlpha = results_main.get(i).getStrokeAlpha();
+
+                            // 색상 정보 찾아와서 적용
+                            if (color != null) {
+                                paint.setColor(color);
+                            }
+                            // 색상 정보 못찾을 시에 디폴트색 적용
+                            else {
+                                paint.setColor(nameToColorMap.get(currentColor));
+                            }
+                            // 선 종류
+                            paint.setStyle(Paint.Style.STROKE);
+                            // 선 두께
+                            paint.setStrokeWidth((float) (strokeWidth / ratio));
+                            // 선 투명도
+                            paint.setAlpha(strokeAlpha);
+
+                            final Iterator<DrawPoint> iterator = points.iterator();
+                            final DrawPoint firstPoint = iterator.next();
+
+                            float firstX = (float) ((firstPoint.getX() / ratio));
+                            float firstY = (float) ((firstPoint.getY() / ratio));
+//                        Logger.d("firstX: " + firstX + "\nfirstY:" + firstY);
+
+                            // 화면에 그릴 Path
+                            Path path = null;
+                            // 비트맵으로 저장할 Path
+                            Path path_for_save = null;
+
+                            path_for_save = new Path();
+                            path_for_save.moveTo(firstX, firstY);
+
+                            // DrawPoint 의 개수대로 path를 그린다
+                            while(iterator.hasNext()) {
+                                DrawPoint point = iterator.next();
+                                float x = (float) ((point.getX() / ratio));
+                                float y = (float) ((point.getY() / ratio));
+                                path_for_save.lineTo(x, y);
+                            }
+
+                            canvas_for_drag.drawPath(path_for_save, paint);
+                        }
+                    }
+                    // 다 그려진 비트맵으로 백그라운드 이미지 다시 셋팅
+//                        canvas_main.drawBitmap(bitmap_for_drag, point_X, point_Y, null);
+                    canvas_main.drawBitmap(bitmap_for_drag, crop_img_rect, surfaceView_rect, null);
+                    Log.d(TAG, "다 그려진 비트맵으로 백그라운드 이미지 다시 셋팅");
+                }
+            }
+            /** realm 서버에 DrawPath가 하나도 없다면 */
+            else if(results_main.size() == 0) {
+                canvas_main.drawBitmap(scaled, crop_img_rect, surfaceView_rect, null);
+            }
+        }
+        // 서피스뷰에 캔버스 unlock 하고 post
+        surfaceView.getHolder().unlockCanvasAndPost(canvas_main);
     }
 
 
@@ -2029,15 +2301,20 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             bitmap_for_save = Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888);
             canvas_for_save = new Canvas(bitmap_for_save);
         }
-        // 문서(비트맵)을 이동시키는 요청일 때, 비트맵, 캔버스 생성
-        else if(requestFrom.equals("drag") && bitmap_for_drag == null) {
+        // 드래그 버튼을 클릭했을 때, 조건에 따라 비트맵/캔버스 생성
+//        else if(requestFrom.equals("drag") && bitmap_for_drag == null) {
+        else if(bitmap_for_drag == null) {
+            Log.d(TAG, "draw() 안에서 bitmap_for_drag == null, 이라서 bitmap_for_drag 재생성");
             bitmap_for_drag = Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888);
+            // bitmap_for_drag, recycle 하는 메소드
+//            bitmap_for_drag = reset_bitmap(bitmap_for_drag,
+//                    Bitmap.createBitmap(scaled.getWidth(), scaled.getHeight(), Bitmap.Config.ARGB_8888));
             canvas_for_drag = new Canvas(bitmap_for_drag);
         }
         // 모든 DrawPath, DrawPoint를 지우는 요청일 때, 드래그 할때 보여주는 비트맵 초기화(원본 복사해서 set)
         else if(requestFrom.equals("wipeCanvas")) {
-            bitmap_for_drag = scaled.copy(Bitmap.Config.ARGB_8888, true);
-            canvas_for_drag.setBitmap(bitmap_for_drag);
+//            bitmap_for_drag = scaled.copy(Bitmap.Config.ARGB_8888, true);
+//            canvas_for_drag.drawBitmap(scaled, 0, 0, null);
         }
 
         // 선을 그리 위해서, 서피스뷰의 Holder를 가져와서 lockCanvas 처리
@@ -2045,6 +2322,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         canvas_main = holder.lockCanvas();
 
         // 비트맵(배경) 그리기 - 원본에서 기기의 Width에 맞게 scaled 처리한 원본 비트맵임(draw 없음)
+        canvas_main.drawColor(Color.WHITE);
         canvas_main.drawBitmap(scaled, crop_img_rect, surfaceView_rect, null);
 
         // 비트맵 파일 저장요청이라면, 저장용 비트맵을 그릴 캔버스에 비트맵을 그린다
@@ -2068,97 +2346,104 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
                     for(int i=0; i<results_main.size(); i++) {
 
-                        final RealmList<DrawPoint> points = results_main.get(i).getPoints();
-                        final Integer color = nameToColorMap.get(results_main.get(i).getColor());
-                        final int strokeWidth = results_main.get(i).getStrokeWidth();
-                        final int strokeAlpha = results_main.get(i).getStrokeAlpha();
+                        // 현재 그림에 그렸던  DrawPath만 가져와서 그리기
+                        if(results_main.get(i).getCanvas_image_fileName()
+                                .equals(rcv_share_image_adapter.current_big_share_img_fileName)) {
+                            final RealmList<DrawPoint> points = results_main.get(i).getPoints();
+                            final Integer color = nameToColorMap.get(results_main.get(i).getColor());
+                            final int strokeWidth = results_main.get(i).getStrokeWidth();
+                            final int strokeAlpha = results_main.get(i).getStrokeAlpha();
 
-                        // 색상 정보 찾아와서 적용
-                        if (color != null) {
-                            paint.setColor(color);
-                        }
-                        // 색상 정보 못찾을 시에 디폴트색 적용
-                        else {
-                            paint.setColor(nameToColorMap.get(currentColor));
-                        }
-                        // 선 종류
-                        paint.setStyle(Paint.Style.STROKE);
-                        // 선 두께
-                        paint.setStrokeWidth((float) (strokeWidth / ratio));
-                        // 선 투명도
-                        paint.setAlpha(strokeAlpha);
+                            // 색상 정보 찾아와서 적용
+                            if (color != null) {
+                                paint.setColor(color);
+                            }
+                            // 색상 정보 못찾을 시에 디폴트색 적용
+                            else {
+                                paint.setColor(nameToColorMap.get(currentColor));
+                            }
+                            // 선 종류
+                            paint.setStyle(Paint.Style.STROKE);
+                            // 선 두께
+                            paint.setStrokeWidth((float) (strokeWidth / ratio));
+                            // 선 투명도
+                            paint.setAlpha(strokeAlpha);
 
-                        final Iterator<DrawPoint> iterator = points.iterator();
-                        final DrawPoint firstPoint = iterator.next();
+                            final Iterator<DrawPoint> iterator = points.iterator();
+                            if(iterator.hasNext()) {
 
-                        float firstX = (float) ((firstPoint.getX() / ratio));
-                        float firstY = (float) ((firstPoint.getY() / ratio));
+                            }
+                            final DrawPoint firstPoint = iterator.next();
+
+                            float firstX = (float) ((firstPoint.getX() / ratio));
+                            float firstY = (float) ((firstPoint.getY() / ratio));
 //                        Logger.d("firstX: " + firstX + "\nfirstY:" + firstY);
 
-                        // 화면에 그릴 Path
-                        Path path = null;
-                        // 비트맵으로 저장할 Path
-                        Path path_for_save = null;
+                            // 화면에 그릴 Path
+                            Path path = null;
+                            // 비트맵으로 저장할 Path
+                            Path path_for_save = null;
 
-                        // 현재 화면이 드래그되어, 서피스 뷰의 top_y 값이 0이 아닐 때,
-                        // drawPath의 y값에서 빼줘야할 top_height값 변수 선언
-                        float subtract_Top_y = 0;
+                            // 현재 화면이 드래그되어, 서피스 뷰의 top_y 값이 0이 아닐 때,
+                            // drawPath의 y값에서 빼줘야할 top_height값 변수 선언
+                            float subtract_Top_y = 0;
 
-                        // DrawPath 가 변경이 있을때 or 서피스뷰를 처음 그릴 때
-                        if(requestFrom.equals("realm") || requestFrom.equals("surfaceCreated")) {
-                            path = new Path();
-
-                            if(last_realmResult_index > -1 && i <= last_realmResult_index) {
-                                subtract_Top_y = subtract_Top_y + ((float)last_top_y_when_action_up - subtract_Top_y);
-                            }
-                            else if(last_realmResult_index > -1 && i > last_realmResult_index) {
-                                subtract_Top_y = (float)firstPoint.getTop_y();
-                            }
-                            /** 현재 화면이 crop 하고 있는 뷰의 Y값에 맞게 화면에 그려져야 하기 때문에
-                             getTop_y 값을 빼줌 */
-                            path.moveTo(firstX, firstY - subtract_Top_y);
-                        }
-
-                        // 저장요청일 때 or 배경을 움직일 때
-                        else if((requestFrom.equals("save") || (requestFrom.equals("drag")))
-                                && surfaceView_fill_width) {
-                            path_for_save = new Path();
-                            path_for_save.moveTo(firstX, firstY);
-                        }
-
-                        // DrawPoint 의 개수대로 path를 그린다
-                        while(iterator.hasNext()) {
-                            DrawPoint point = iterator.next();
-                            float x = (float) ((point.getX() / ratio));
-                            float y = (float) ((point.getY() / ratio));
-
+                            // DrawPath 가 변경이 있을때 or 서피스뷰를 처음 그릴 때
                             if(requestFrom.equals("realm") || requestFrom.equals("surfaceCreated")) {
+                                path = new Path();
+
+                                if(last_realmResult_index > -1 && i <= last_realmResult_index) {
+                                    subtract_Top_y = subtract_Top_y + ((float)last_top_y_when_action_up - subtract_Top_y);
+                                }
+                                else if(last_realmResult_index > -1 && i > last_realmResult_index) {
+                                    subtract_Top_y = (float)firstPoint.getTop_y();
+                                }
                                 /** 현재 화면이 crop 하고 있는 뷰의 Y값에 맞게 화면에 그려져야 하기 때문에
                                  getTop_y 값을 빼줌 */
-                                path.lineTo(x, y - subtract_Top_y);
+                                path.moveTo(firstX, firstY - subtract_Top_y);
                             }
-                            // 가로가 꽉찬 상태라면 ==> - point_Y
+
+                            // 저장요청일 때 or 배경을 움직일 때
                             else if((requestFrom.equals("save") || (requestFrom.equals("drag")))
                                     && surfaceView_fill_width) {
-                                path_for_save.lineTo(x, y);
+                                path_for_save = new Path();
+                                path_for_save.moveTo(firstX, firstY);
                             }
-                        }
 
-                        // DrawPath 가 변경이 있을때 or 서피스뷰를 처음 그릴 때 (즉, 배경 이동중이 아닐 때)
-                        // 메인 켄버스에 Path를 그린다
-                        if(requestFrom.equals("realm") || requestFrom.equals("surfaceCreated")) {
-                            canvas_main.drawPath(path, paint);
-                        }
+                            // DrawPoint 의 개수대로 path를 그린다
+                            while(iterator.hasNext()) {
+                                DrawPoint point = iterator.next();
+                                float x = (float) ((point.getX() / ratio));
+                                float y = (float) ((point.getY() / ratio));
 
-                        // 만약 비트맵 저장요청이라면, 저장용 캔버스에 Path를 그린다
-                        if(requestFrom.equals("save")) {
-                            if (canvas_for_save != null) {
-                                canvas_for_save.drawPath(path_for_save, paint);
+                                if(requestFrom.equals("realm") || requestFrom.equals("surfaceCreated")) {
+                                    /** 현재 화면이 crop 하고 있는 뷰의 Y값에 맞게 화면에 그려져야 하기 때문에
+                                     getTop_y 값을 빼줌 */
+                                    path.lineTo(x, y - subtract_Top_y);
+                                }
+                                // 가로가 꽉찬 상태라면 ==> - point_Y
+                                else if((requestFrom.equals("save") || (requestFrom.equals("drag")))
+                                        && surfaceView_fill_width) {
+                                    path_for_save.lineTo(x, y);
+                                }
                             }
-                        }
-                        // 드래그 요청이라면, 드래그할 때 보여주는 캔버스에 Path를 그린다
-                        else if(requestFrom.equals("drag")) {
-                            canvas_for_drag.drawPath(path_for_save, paint);
+
+                            // DrawPath 가 변경이 있을때 or 서피스뷰를 처음 그릴 때 (즉, 배경 이동중이 아닐 때)
+                            // 메인 켄버스에 Path를 그린다
+                            if(requestFrom.equals("realm") || requestFrom.equals("surfaceCreated")) {
+                                canvas_main.drawPath(path, paint);
+                            }
+
+                            // 만약 비트맵 저장요청이라면, 저장용 캔버스에 Path를 그린다
+                            if(requestFrom.equals("save")) {
+                                if (canvas_for_save != null) {
+                                    canvas_for_save.drawPath(path_for_save, paint);
+                                }
+                            }
+                            // 드래그 요청이라면, 드래그할 때 보여주는 캔버스에 Path를 그린다
+                            else if(requestFrom.equals("drag")) {
+                                canvas_for_drag.drawPath(path_for_save, paint);
+                            }
                         }
                     }
                     if(requestFrom.equals("save")) {
@@ -2169,7 +2454,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                                                         "testBitmap_" + myapp.get_time("yyyyMMdd HH_mm_ss"));
                         Logger.d("saveBitmaptoImage_result: " + saveBitmaptoImage_result);
                         if (bitmap_for_save != null) {
-                            bitmap_for_save.recycle();
+                            bitmap_for_save = null;
                         }
                     }
                     // 드래그를 위한 비트맵을 메인 켄버스에 셋팅
@@ -2177,8 +2462,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         // 다 그려진 비트맵으로 백그라운드 이미지 다시 셋팅
 //                        canvas_main.drawBitmap(bitmap_for_drag, point_X, point_Y, null);
                         canvas_main.drawBitmap(bitmap_for_drag, crop_img_rect, surfaceView_rect, null);
-                        Toast toast = Toast.makeText(this, "다 그려진 비트맵으로 백그라운드 이미지 다시 셋팅", Toast.LENGTH_SHORT);
-                        toast.show();
+                        Log.d(TAG, "다 그려진 비트맵으로 백그라운드 이미지 다시 셋팅");
                     }
                 }
             }
@@ -2192,6 +2476,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         }
         // 서피스뷰에 캔버스 unlock 하고 post
         surfaceView.getHolder().unlockCanvasAndPost(canvas_main);
+
+        if(got_reset_order_from_rcv_adapter) {
+            initializing_when_share_image_changed();
+            got_reset_order_from_rcv_adapter = false;
+        }
     }
 
 
@@ -2200,8 +2489,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 콜백을 주기 위한 쓰레드 클래스
      ---------------------------------------------------------------------------*/
     class DrawThread extends Thread {
-
-        private Realm bgRealm;
 
         public void shutdown() {
             synchronized(this) {
@@ -2314,6 +2601,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     currentPath.setUser_id(myapp.getUser_no());
                     currentPath.setStrokeWidth(stroke);
                     currentPath.setStrokeAlpha(alpha);
+                    currentPath.setCanvas_image_fileName(
+                            RCV_share_image_adapter.current_big_share_img_fileName);
 
                     // DrawPoint를 realm 객체로 만들어서 변수값 넣기
                     DrawPoint point = realm.createObject(DrawPoint.class);
@@ -2382,10 +2671,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
             // 드래그 모드일 때
             if(on_moving) {
+                // 현재 백그라운드로 깔려 있는 이미지의 height가 서피스뷰의 height 보다 작다면 드래그 하지 않음
+                if(scaled.getHeight() <= surfaceView_height) {
+                    return false;
+                }
+
                 // 처음 클릭했을 때 좌표 구하기
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     saveX = event.getX();
                     saveY = event.getY();
+                    return true;
                 }
                 // 이동중일 때, 이동한 좌표와 처음 클릭 좌표간의 거리를 구해서 이동한 x, y 거리 구하기
                 else if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -2397,13 +2692,14 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     // 배경으로 있는 문서 이미지를 움직이기 위해,
                     // 이동한 y 값을 거리를 매개변수로 하는내부 메소드 호출
                     drag_back_img(diffY);
+                    return true;
                 }
                 else if (action == MotionEvent.ACTION_UP) {
                     // 마지막 손가락을 땠을 때의 top_y 값으로,
                     // 배경으로 있는 문서 이미지를 움직이기 위한 내부 메소드 호출
                     save_last_top_y();
+                    return true;
                 }
-                return true;
             }
         }
         return false;
@@ -2416,6 +2712,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                문서 이미지(비트맵)을 세로로 스크롤효과를 내는 메소드
      ---------------------------------------------------------------------------*/
     public void drag_back_img(float move_Y) {
+
         // 이동한 거리값에 따라 top_y, bottom_y 값을 계산
         top_y = (int)((float)last_top_y_when_action_up + move_Y);
         bottom_y = top_y + surfaceView_height;
@@ -2436,6 +2733,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
             surfaceView.getHolder().unlockCanvasAndPost(canvas);
         }
+
     }
 
 
@@ -2486,13 +2784,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      메소드 ==> drawing 할 때 고를 수 있는 색을 String 값과 매칭 시키는 메소드
      ---------------------------------------------------------------------------*/
     private void generateColorMap() {
-        nameToColorMap.put("Charcoal", 0xff1c283f);
+//        nameToColorMap.put("Charcoal", 0xff1c283f);
 //        nameToColorMap.put("Elephant", 0xff9a9ba5);
 //        nameToColorMap.put("Dove", 0xffebebf2);
 //        nameToColorMap.put("Ultramarine", 0xff39477f);
-//        nameToColorMap.put("Indigo", 0xff59569e);
+        nameToColorMap.put("Indigo", 0xff59569e);
 //        nameToColorMap.put("GrapeJelly", 0xff9a50a5);
-//        nameToColorMap.put("Mulberry", 0xffd34ca3);
+        nameToColorMap.put("Mulberry", 0xffd34ca3);
 //        nameToColorMap.put("Flamingo", 0xfffe5192);
 //        nameToColorMap.put("SexySalmon", 0xfff77c88);
 //        nameToColorMap.put("Peach", 0xfffc9f95);
@@ -2510,4 +2808,65 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 //        colorIdToName.put(R.id.peach, "Peach");
 //        colorIdToName.put(R.id.melon, "Melon");
     }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 공유 문서들, 리사이클러뷰 어댑터로 넘기기
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("SetTextI18n")
+    public void activate_share_image_RCV() {
+        // 공유할 문서 이름 가져오기
+        Logger.d("myapp.getShare_image_file_name_arr_str(): "
+                + myapp.getShare_image_file_name_arr_str());
+
+        share_img_file_arr.clear();
+        String[] temp = myapp.getShare_image_file_name_arr_str().split(Static.SPLIT);
+        for(int i=0; i<temp.length; i++) {
+            Preview_share_img_file temp_object = new Preview_share_img_file();
+            temp_object.setFileName(temp[i]);
+            temp_object.setSelected(false);
+            share_img_file_arr.add(temp_object);
+        }
+        Log.d(TAG, "share_img_file_arr.size(): " + share_img_file_arr.size());
+
+        // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+        if(rcv_share_image_adapter == null) {
+            // 생성자 인수
+            // 1. 액티비티(context 객체 넘기기)
+            // 2. 인플레이팅 되는 레이아웃
+            // 3. 선택한 파일들 파일 이름이 담긴 arrayList
+            rcv_share_image_adapter = new RCV_share_image_adapter(
+                    getBaseContext(), R.layout.i_selected_file, share_img_file_arr);
+            recyclerView_share_image.setAdapter(rcv_share_image_adapter);
+            rcv_share_image_adapter.notifyDataSetChanged();
+        }
+        // 어댑터가 생성되어 있을 때, 셋팅되는 arrayList 만 교체
+        else {
+            rcv_share_image_adapter.refresh_arr(share_img_file_arr);
+            recyclerView_share_image.setAdapter(rcv_share_image_adapter);
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 메모리 관리를 위해 기존 bitmap 메모리를 해제하고 recycle 하기
+     ---------------------------------------------------------------------------*/
+    public Bitmap reset_bitmap(Bitmap targetBitmap, Bitmap new_bitmap) {
+        if (targetBitmap != null && !targetBitmap.isRecycled()) {
+            targetBitmap.recycle();
+        }
+        targetBitmap = new_bitmap;
+
+        return targetBitmap;
+    }
+
+
+
+
+
+
+
+
+
+
 }

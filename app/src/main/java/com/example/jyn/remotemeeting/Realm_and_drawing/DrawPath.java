@@ -2,6 +2,7 @@ package com.example.jyn.remotemeeting.Realm_and_drawing;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Required;
 
 /**
  * Created by JYN on 2018-01-05.
@@ -19,6 +20,8 @@ public class DrawPath extends RealmObject {
     private String user_id;
     private int strokeWidth;
     private int strokeAlpha;
+    @Required
+    private String canvas_image_fileName;
 
     public boolean isCompleted() {
         return completed;
@@ -70,5 +73,13 @@ public class DrawPath extends RealmObject {
 
     public int getLength() {
         return points.size();
+    }
+
+    public String getCanvas_image_fileName() {
+        return canvas_image_fileName;
+    }
+
+    public void setCanvas_image_fileName(String canvas_image_fileName) {
+        this.canvas_image_fileName = canvas_image_fileName;
     }
 }

@@ -57,13 +57,7 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
 
         // 커스텀 로거 생성
         Logger.clearLogAdapters();
-        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_call_adapter.class)) {
-            @Override public boolean isLoggable(int priority, String tag) {
-                // true - Logger 활성화
-                // false - Logger 비활성화
-                return true;
-            }
-        });
+        Logger.addLogAdapter(new AndroidLogAdapter(myapp.custom_log(RCV_call_adapter.class)));
     }
 
     /** 뷰홀더 */

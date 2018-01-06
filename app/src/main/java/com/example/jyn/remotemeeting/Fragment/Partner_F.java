@@ -105,7 +105,7 @@ public class Partner_F extends Fragment {
         layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 구분선 - 가로(클래스 생성)
-        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
+        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(getActivity(), "Partner_F"));
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 

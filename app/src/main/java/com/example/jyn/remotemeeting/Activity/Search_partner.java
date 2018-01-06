@@ -75,7 +75,7 @@ public class Search_partner extends Activity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 구분선 - 가로 (클래스 생성)
-        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(this));
+        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(this, "Search_partner"));
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 

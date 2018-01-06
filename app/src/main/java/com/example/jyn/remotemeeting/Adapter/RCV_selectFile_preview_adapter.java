@@ -104,7 +104,7 @@ public class RCV_selectFile_preview_adapter
                 public void onClick(View v) {
                     int pos = getAdapterPosition();
                     Log.d(TAG, "클릭 아이템 position: " + pos);
-                    Log.d(TAG, "클릭 아이템 파일이름: " + selected_file_arr.get(pos));
+                    Log.d(TAG, "클릭 아이템 파일이름: " + selected_file_arr.get(pos).getFileName());
 
                     // 클릭한 해당 이미지, 리사이클러뷰 왼쪽에 프리뷰 화면에 크게 보여주게 하는 메소드 호출
                     preview_into_big_imageView(context, selected_file_arr.get(pos).getFileName(), pos+1);
@@ -167,18 +167,6 @@ public class RCV_selectFile_preview_adapter
             String file_URL = selected_file_arr.get(position).getFileName();
 //            Log.d(TAG, "file_URL: " + file_URL);
 //            Log.d(TAG, "selected_file_arr.size(): " + selected_file_arr.size());
-
-            String selected_file_arr_str = "";
-            for(int i=0; i<getItemCount(); i++) {
-                StringBuilder stringBuilder = new StringBuilder();
-                if(i==getItemCount()-1) {
-                    stringBuilder.append("selected_file_arr(" + i + "): "+selected_file_arr.get(i).getFileName());
-                }
-                else {
-                    stringBuilder.append("selected_file_arr(" + i + "): "+selected_file_arr.get(i).getFileName() + "\n");
-                }
-                Logger.d(selected_file_arr_str);
-            }
 
             // 파일 순서 넘버링 set
             holder.preview_sequence.setText(String.valueOf(position+1));

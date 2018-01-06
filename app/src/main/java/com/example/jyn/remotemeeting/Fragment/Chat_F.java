@@ -142,7 +142,7 @@ public class Chat_F extends Fragment {
         layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 구분선 - 가로(클래스 생성)
-        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
+        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(getActivity(), "Chat_F"));
         // 애니메이션 설정 - 애니메이션 설정 끔
         ((SimpleItemAnimator)recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         // 애니메이션 설정 - 기본 애니메이션

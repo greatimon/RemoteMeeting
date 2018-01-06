@@ -91,6 +91,7 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
         final Data_for_netty data = gson.fromJson(reader, Data_for_netty.class);
         Log.d(TAG, "data.getType(): " + data.getNetty_type());
         Log.d(TAG, "data.getSubType(): " + data.getSubType());
+        Log.d(TAG, "data.getAttachment(): " + data.getAttachment());
         Log.d(TAG, "reader: " + reader.toString());
 
         // 현재 액티비티 확인해보기

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -147,6 +148,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     // '미리보기' 담당 리사이클러뷰 어댑터에 넘겨줄 어레이리스트
     ArrayList<Preview_selected_file> preview_file_arr;
 
+    // Call_A 로 부터, 뷰 조절을 하라는 메세지를 전달받을 핸들러
+    public static Handler visibility_control_handler;
+
 
     /**---------------------------------------------------------------------------
      콜백메소드 ==> 포토뷰 탭, 콜백
@@ -213,6 +217,28 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         // 회의 상대 프로필사진, 닉네임 표시 메소드 호출
         set_subject_user_data();
 
+        // 핸들러 생성
+        visibility_control_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                // Call_A 로 부터 전달받는 핸들러 메세지
+                // 오픈되어 있는 뷰들을 GONE 처리 해라
+                if(msg.what == 0) {
+                    popup_file_manager_REL.setVisibility(View.GONE);
+                    close_popup.setVisibility(View.GONE);
+                    preview_REL.setVisibility(View.GONE);
+                    popup_menu_REL.setVisibility(View.GONE);
+                    popup_menu_icon.setVisibility(View.GONE);
+                }
+                // Call_A 로 부터 전달받는 핸들러 메세지
+                // 팝업 메뉴만 VISIBLE 처리 해라 - 뷰 초기화
+                else if(msg.what == 1) {
+                    popup_menu_icon.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+
 
         /** 리사이클러뷰 - 프로젝트 파일 */
         recyclerView.setHasFixedSize(true);
@@ -228,7 +254,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         layoutManager_for_preview = new LinearLayoutManager(getActivity());
         recyclerView_preview.setLayoutManager(layoutManager_for_preview);
         // 리사이클러뷰 구분선 - 가로(클래스 생성)
-        recyclerView_preview.addItemDecoration(new SimpleDividerItemDecoration(getActivity()));
+        recyclerView_preview.addItemDecoration(new SimpleDividerItemDecoration(getActivity(), "Call_F"));
         // 리사이클러뷰 기본 애니메이션 설정
 //        recyclerView_preview.setItemAnimator(new DefaultItemAnimator());
         // 애니메이션 설정 - 애니메이션 설정 끔
