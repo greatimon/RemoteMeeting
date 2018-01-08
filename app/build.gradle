@@ -30,12 +30,12 @@ android {
 //    }
 
     buildTypes {
-        def host = InetAddress.getLocalHost().getCanonicalHostName()
+//        def host = InetAddress.getLocalHost().getCanonicalHostName()
         debug {
             // This will automatically detect the IP address of the machine building RealmTasks.
             // It is assumed that this machine is also running the Object Server.
             // If not, replace 'host' with the IP of the machine hosting the server.
-            buildConfigField "String", "OBJECT_SERVER_IP", "\"${host}\""
+//            buildConfigField "String", "OBJECT_SERVER_IP", "\"${host}\""
         }
 
         release {
@@ -44,7 +44,7 @@ android {
             // This will automatically detect the IP address of the machine building RealmTasks.
             // It is assumed that this machine is also running the Object Server.
             // If not, replace 'host' with the IP of the machine hosting the server.
-            buildConfigField "String", "OBJECT_SERVER_IP", "\"${host}\""
+//            buildConfigField "String", "OBJECT_SERVER_IP", "\"${host}\""
         }
     }
 }
@@ -56,6 +56,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
 
     /** WebRTC */
     compile files('libs/audio_device_java.jar')

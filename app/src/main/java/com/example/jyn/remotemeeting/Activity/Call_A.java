@@ -181,7 +181,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     private boolean callControlFragmentVisible = true;
     private long callStartedTimeMs = 0;
     private boolean micEnabled = true;
-    private boolean videoEnabled = true;
+    public static boolean videoEnabled = true;
     private boolean screencaptureEnabled = false;
     private static Intent mediaProjectionPermissionResultData;
     private static int mediaProjectionPermissionResultCode;
@@ -214,7 +214,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
     /** 버터나이프 */
     public Unbinder unbinder;
-    @BindView(R.id.image_share_REL)         public RelativeLayout image_share_REL;
     @BindView(R.id.recyclerView_share_image)public RecyclerView recyclerView_share_image;
     @BindView(R.id.surface_view)            public SurfaceView surfaceView;
     @BindView(R.id.enable_drag_btn)         public Button enable_drag_btn;
@@ -285,8 +284,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     int bottom_y;
     // 디폴트 컬러 이름
 //    private String currentColor = "Charcoal";
-//    private String currentColor = "Mulberry";
-    private String currentColor = "Indigo";
+    private String currentColor = "Mulberry";
+//    private String currentColor = "Indigo";
     // 컬러 인트값과, 컬러 스트링 값을 담는 해쉬맵
     private HashMap<String, Integer> nameToColorMap;
     private HashMap<Integer, String> colorIdToName;
@@ -294,6 +293,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     int stroke = 6;
     // 그리는 drawing 선의 투명도
     int alpha = 255;
+    // 이미지 공유 모드, root View
+    public static RelativeLayout image_share_REL;
 
     // 리사이클러 관련 변수 ==============
     // =================================
@@ -348,6 +349,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         video_off_backup_REL_full = findViewById(R.id.video_off_backup_REL_full);
         back_img_full = findViewById(R.id.back_img_full);
         profile_img_full = findViewById(R.id.profile_img_full);
+        image_share_REL = findViewById(R.id.image_share_REL);
 
         call_f = new Call_F();
         hud_f = new Hud_F();
@@ -553,11 +555,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // TODO: == webRTC 구동을 끄기위한 주석 ==
         // TODO: 개발을 위해 임시적으로 주석처리
         // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
-//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            startScreenCapture();
-//        } else {
-//            startCall();
-//        }
+        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startScreenCapture();
+        } else {
+            startCall();
+        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기
@@ -611,7 +613,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 super.handleMessage(msg);
                 // 핸들러 메세지를 보낸 주체가 Chat_handler에 to_Call_A() 메소드일 때
                 if(msg.what == 1) {
-
                     // Message 객체로 부터 전달된 값들 가져오기
                     String order = msg.getData().getString("order");
                     Data_for_netty received_data = (Data_for_netty) msg.obj;
@@ -648,21 +649,72 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         Logger.d("answer: " + answer);
                         // todo: answer 의 'yes', 'no'에 따라서 맞춰 코딩하기
                         if(answer.equals("yes")) {
-                            // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
-                            if(Call_F.visibility_control_handler != null) {
-                                Call_F.visibility_control_handler.sendEmptyMessage(0);
-                            }
 
-                            /**
-                             * 문서 공유모드 진행을 위한 내부 메소드 호출
-                             ==> realm 서버 접속 및 드로잉 준비
-                             */
-                            initializing_for_image_share_mode();
+                            // * to: Call_F
+                            // 이미지 공유 모드를 진행하기 전에, webRTC의 비디오 전송상태를 확인하여
+                            // 전송상태가 on면 off로 처리하는 로직
+                            // (전송상태가 off면 바로 이미지 공유 모드를 진행하도록 함)
+                            Call_F.visibility_control_handler.sendEmptyMessage(2);
+
+//                            // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
+//                            if(Call_F.visibility_control_handler != null) {
+//                                Call_F.visibility_control_handler.sendEmptyMessage(0);
+//                            }
+//
+//                            /**
+//                             * 문서 공유모드 진행을 위한 내부 메소드 호출
+//                             ==> realm 서버 접속 및 드로잉 준비
+//                             */
+//                            initializing_for_image_share_mode();
                         }
                         else if(answer.equals("no")) {
                             myapp.logAndToast("상대방이 파일 공유 요청을 거절하였습니다");
                         }
                     }
+                }
+                // * from Call_F
+                // video 모드가 off인 상태이니, 이미지 공유 모드를 진행해도 된다
+                else if(msg.what == 2) {
+
+                    // pipRenderer false 처리
+//                    pipRenderer.setZOrderMediaOverlay(false);
+//                    pipRenderer.setEnableHardwareScaler(false);
+                    pipRenderer.setVisibility(View.GONE);
+                    // 이미지 공유 하는 서피스뷰를 최상단으로 올린다
+                    surfaceView.setVisibility(View.VISIBLE);
+                    surfaceView.setZOrderMediaOverlay(true);
+
+
+                    // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
+                    if(Call_F.visibility_control_handler != null) {
+                        Call_F.visibility_control_handler.sendEmptyMessage(0);
+                    }
+
+                    /**
+                     * 문서 공유모드 진행을 위한 내부 메소드 호출
+                     ==> realm 서버 접속 및 드로잉 준비
+                     */
+                    initializing_for_image_share_mode();
+                }
+                // * from Call_F
+                // video 모드를 이전 상태로 복구 되었으니, 이미지 공유 모드를 종료 해도 된다.
+                else if(msg.what == 3) {
+                    // Call_F 의 뷰들을 초기화 위한 핸들러 메세지 전달
+                    if(image_share_REL.getVisibility() == View.VISIBLE
+                            && Call_F.visibility_control_handler != null) {
+                        Call_F.visibility_control_handler.sendEmptyMessage(1);
+                    }
+
+                    // 이미지 공유 하는 서피스뷰를 내린다
+                    surfaceView.setVisibility(View.GONE);
+                    surfaceView.setZOrderMediaOverlay(false);
+                    // pipRenderer true 처리
+//                    pipRenderer.setZOrderMediaOverlay(true);
+//                    pipRenderer.setEnableHardwareScaler(true);
+                    pipRenderer.setVisibility(View.VISIBLE);
+
+                    // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
+                    image_share_REL.setVisibility(View.GONE);
                 }
             }
         };
@@ -785,15 +837,22 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
         myapp.setShare_image_file_name_arr_str("");
 
-        // Call_F 의 뷰들을 초기화 위한 핸들러 메세지 전달
-        if(image_share_REL.getVisibility() == View.VISIBLE
-                && Call_F.visibility_control_handler != null) {
-            Call_F.visibility_control_handler.sendEmptyMessage(1);
-        }
 
-        /** 테스트용 코드 */
-        // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
-        image_share_REL.setVisibility(View.GONE);
+        // * to: Call_F
+        // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
+        // 해당 비디오 전송 모드로 복구하기 위한 로직
+        Call_F.visibility_control_handler.sendEmptyMessage(3);
+
+
+//        // Call_F 의 뷰들을 초기화 위한 핸들러 메세지 전달
+//        if(image_share_REL.getVisibility() == View.VISIBLE
+//                && Call_F.visibility_control_handler != null) {
+//            Call_F.visibility_control_handler.sendEmptyMessage(1);
+//        }
+//
+//        /** 테스트용 코드 */
+//        // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
+//        image_share_REL.setVisibility(View.GONE);
     }
 
 
@@ -915,16 +974,22 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             if(resultCode == RESULT_OK) {
                 data_for_answer.setExtra("yes");
 
-                // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
-                if(Call_F.visibility_control_handler != null) {
-                    Call_F.visibility_control_handler.sendEmptyMessage(0);
-                }
+                // * to: Call_F
+                // 이미지 공유 모드를 진행하기 전에, webRTC의 비디오 전송상태를 확인하여
+                // 전송상태가 on면 off로 처리하는 로직
+                // (전송상태가 off면 바로 이미지 공유 모드를 진행하도록 함)
+                Call_F.visibility_control_handler.sendEmptyMessage(2);
 
-                /**
-                 * 문서 공유모드 진행을 위한 내부 메소드 호출
-                    ==> realm 서버 접속 및 드로잉 준비
-                 */
-                initializing_for_image_share_mode();
+//                // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
+//                if(Call_F.visibility_control_handler != null) {
+//                    Call_F.visibility_control_handler.sendEmptyMessage(0);
+//                }
+//
+//                /**
+//                 * 문서 공유모드 진행을 위한 내부 메소드 호출
+//                    ==> realm 서버 접속 및 드로잉 준비
+//                 */
+//                initializing_for_image_share_mode();
             }
             // 거절
             else if(resultCode == RESULT_CANCELED) {
@@ -1052,6 +1117,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if(webrtc_message_handler != null) {
             webrtc_message_handler = null;
         }
+        if(image_share_REL != null) {
+            image_share_REL = null;
+        }
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
@@ -1066,6 +1134,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             realm.close();
             realm = null;
         }
+
         super.onDestroy();
     }
 
@@ -1259,7 +1328,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         peerConnectionClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
         /** pip view set VISIBLE */
         pipRenderer.setClickable(true);
-        Log.d(TAG, "6_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        Log.d(TAG, "pipRenderer.isClickable(): " + pipRenderer.isClickable());
         // remote 뷰를 풀스크린으로, local뷰는 pip로
         setSwappedFeeds(false /* isSwappedFeeds */);
     }
@@ -1554,7 +1623,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public void getMessage(Event.Call_F__Call_A event) {
         Log.d(TAG, "otto 받음_ " + event.getMessage());
 
-        Log.d(TAG, "8_pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        Log.d(TAG, "pipRenderer.isClickable(): " + pipRenderer.isClickable());
         when_video_status_change(event.getMessage(), !pipRenderer.isClickable(), "me");
     }
 
@@ -2137,7 +2206,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         last_realmResult_index = results_main.size()-1;
 //                        Logger.d("현재 realm Result 의 마지막 인덱스: " + last_realmResult_index);
                     }
-                    draw("realm");
+                    if(surfaceView.getVisibility() == View.VISIBLE) {
+                        draw("realm");
+                    }
                 }
                 // 줌인했을 때, 전달되는 메세지 - 사용 안함
                 else if(msg.what == 1) {

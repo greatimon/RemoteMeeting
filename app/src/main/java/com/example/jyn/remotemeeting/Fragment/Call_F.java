@@ -236,6 +236,41 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
                 else if(msg.what == 1) {
                     popup_menu_icon.setVisibility(View.VISIBLE);
                 }
+
+                // 문서 공유 모드를 진행하기 전에, 현재 비디오 전송 모드를 확인해서
+                // video_on_off() 메소드를 호출해서
+                // 만약에 비디오 전송모드가 on이면, off로 하고 / 백업뷰를 VISIBLE 처리한다
+                // 만약에 비디오 전송모드가 off이면, 바로 call_A에게 이미지 공유 모드를 진행하라고 알린다
+                else if(msg.what == 2) {
+                    if(Call_A.videoEnabled) {
+                        // 어플리케이션 객체(myapp)에, 비디오 전송모드가 원래 on 이었음을 저장
+                        myapp.setVideo_state_was(true);
+
+                        video_on_off(Call_A.image_share_REL);
+                    }
+                    else if(!Call_A.videoEnabled) {
+                        // 어플리케이션 객체(myapp)에, 비디오 전송모드가 원래 off 이었음을 저장
+                        myapp.setVideo_state_was(false);
+
+                        Call_A.webrtc_message_handler.sendEmptyMessage(2);
+                    }
+                }
+
+                // from: Call_A
+                // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서, 거기에 맞게
+                // video_on_off() 메소드를 호출해서
+                // 만약에 비디오 전송모드가 on이었으면, 다시 on으로 복구하고 / 백업뷰를 GONE 처리한다
+                // 만약에 비디오 전송모드가 off었으면, 다시 off로 복구하고 / 백업뷰를 VISIBLE 처리 한다
+                else if(msg.what == 3) {
+                    if(myapp.isVideo_state_was()) {
+                        video_on_off(Call_A.image_share_REL);
+                    }
+                    else if(!myapp.isVideo_state_was()) {
+                        // 비디오 모드를 원래 off였으니, 이미지 공유 모드를 종료하라는 메세지 전달
+                        Call_A.webrtc_message_handler.sendEmptyMessage(3);
+                    }
+
+                }
             }
         };
 
@@ -465,31 +500,94 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
 
 
     /**---------------------------------------------------------------------------
+     // todo: 기능 테스트 버튼 - xml 문서에서 해당 버튼 주석처리하면, 얘도 반드시 주석처리하기
+     클릭이벤트 ==> 테스트 버튼!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     ---------------------------------------------------------------------------*/
+//    @OnClick(R.id.test_btn)
+//    public void test_btn() {
+//        video_on_off(popup_menu_icon);
+//    }
+
+
+    /**---------------------------------------------------------------------------
      클릭이벤트 ==> 비디오 on/off
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.button_call_toggle_video, R.id.text_call_toggle_video})
-    public void video_on_off() {
-        boolean enabled = callEvents.onToggleVideo();
-        Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
+    public void video_on_off(View view) {
 
-        button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
-        text_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
-        String test = String.valueOf(enabled);
-        switch (test) {
-            case "true":
-                video_off_show.setVisibility(View.GONE);
-                video_on_show.setVisibility(View.VISIBLE);
-                // 비디오 전송 모드가 On 이니, 백업뷰를 끄라는 메세지 전달하기
-                Event.Call_F__Call_A call_f__call_a_on = new Event.Call_F__Call_A(enabled);
-                BusProvider.getBus().post(call_f__call_a_on);
-                break;
-            case "false":
-                video_on_show.setVisibility(View.GONE);
-                video_off_show.setVisibility(View.VISIBLE);
-                // 비디오 전송 모드가 Off 이니, 백업뷰를 키라는 메세지 전달하기
-                Event.Call_F__Call_A call_f__call_a_off = new Event.Call_F__Call_A(enabled);
-                BusProvider.getBus().post(call_f__call_a_off);
-                break;
+//        if(view.getId() == R.id.button_call_toggle_video || view.getId() == R.id.text_call_toggle_video) {
+//            Log.d(TAG, "원래 버튼 클릭을 통한 비디오 on/off 기능 실행");
+//        }
+//        else if(view.getId() == R.id.popup_menu_icon) {
+//            Log.d(TAG, "테스트 버튼 클릭을 통한 비디오 on/off 기능 실행");
+//            Log.d(TAG, "view.getId(): " + view.getId());
+//        }
+
+        /**
+         버튼 클릭이 아닌,
+         이미지 공유 모드 on,off 관련하여 이 메소드가 호출되었을 때
+         */
+        if(view.getId() == R.id.image_share_REL) {
+
+            boolean enabled = callEvents.onToggleVideo();
+            Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
+
+            button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+            text_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+            String video_state = String.valueOf(enabled);
+            switch (video_state) {
+                case "true":
+                    video_off_show.setVisibility(View.GONE);
+                    video_on_show.setVisibility(View.VISIBLE);
+                    // 비디오 전송 모드가 On 이니, 백업뷰를 끄라는 메세지 전달하기
+                    Event.Call_F__Call_A call_f__call_a_on = new Event.Call_F__Call_A(enabled);
+                    BusProvider.getBus().post(call_f__call_a_on);
+                    break;
+                case "false":
+                    video_on_show.setVisibility(View.GONE);
+                    video_off_show.setVisibility(View.VISIBLE);
+                    // 비디오 전송 모드가 Off 이니, 백업뷰를 키라는 메세지 전달하기
+                    Event.Call_F__Call_A call_f__call_a_off = new Event.Call_F__Call_A(enabled);
+                    BusProvider.getBus().post(call_f__call_a_off);
+                    break;
+            }
+
+            Log.d(TAG, "view.getVisibility(): " + String.valueOf(view.getVisibility()));
+            // 이미지 공유 모드 off --> on
+            if(view.getVisibility() == View.GONE) {
+                // 비디오 모드를 off로 바꾸었으니, 이제 이미지 공유 모드를 진행하라는 메세지 전달
+                Call_A.webrtc_message_handler.sendEmptyMessage(2);
+            }
+            else if(view.getVisibility() == View.VISIBLE) {
+                // 비디오 모드를 on 으로 복구했으니, 이제 이미지 공유 모드를 종료하라는 메세지 전달
+                Call_A.webrtc_message_handler.sendEmptyMessage(3);
+            }
+        }
+
+        /** 비디오 on/off 토글 버튼으로 이 메소드가 호출되었을 때 */
+        else  {
+            boolean enabled = callEvents.onToggleVideo();
+            Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
+
+            button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+            text_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);
+            String video_state = String.valueOf(enabled);
+            switch (video_state) {
+                case "true":
+                    video_off_show.setVisibility(View.GONE);
+                    video_on_show.setVisibility(View.VISIBLE);
+                    // 비디오 전송 모드가 On 이니, 백업뷰를 끄라는 메세지 전달하기
+                    Event.Call_F__Call_A call_f__call_a_on = new Event.Call_F__Call_A(enabled);
+                    BusProvider.getBus().post(call_f__call_a_on);
+                    break;
+                case "false":
+                    video_on_show.setVisibility(View.GONE);
+                    video_off_show.setVisibility(View.VISIBLE);
+                    // 비디오 전송 모드가 Off 이니, 백업뷰를 키라는 메세지 전달하기
+                    Event.Call_F__Call_A call_f__call_a_off = new Event.Call_F__Call_A(enabled);
+                    BusProvider.getBus().post(call_f__call_a_off);
+                    break;
+            }
         }
     }
 

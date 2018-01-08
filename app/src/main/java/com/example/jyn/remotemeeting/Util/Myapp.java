@@ -161,6 +161,9 @@ public class Myapp extends Application {
     // 영상통화에서 문서 공유를 요청받았을 때, 공유할 문서 리스트를 저장할 변수
     String share_image_file_name_arr_str;
 
+    // 영상통화 중, 이미지 공유 모드를 진행하기 전의 비디오 전송모드가 어떤 모드였는지 저장하기 위한 변수
+    boolean video_state_was;
+
     /** GET, SET */
     public String getUser_no() {
         return user_no;
@@ -313,6 +316,14 @@ public class Myapp extends Application {
 
     public void setShare_image_file_name_arr_str(String share_image_file_name_arr_str) {
         this.share_image_file_name_arr_str = share_image_file_name_arr_str;
+    }
+
+    public boolean isVideo_state_was() {
+        return video_state_was;
+    }
+
+    public void setVideo_state_was(boolean video_state_was) {
+        this.video_state_was = video_state_was;
     }
 
     /** 생명주기 - onCreate */
