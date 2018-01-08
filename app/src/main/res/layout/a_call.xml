@@ -3,7 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    tools:context="com.example.jyn.remotemeeting.Activity.Call_A"
+    >
 
     <!--full_screen 서피스뷰-->
     <org.webrtc.SurfaceViewRenderer
@@ -189,49 +191,201 @@
             android:layout_height="match_parent"
             />
 
+        <!-- 드로잉 도구 레이아웃 -->
         <RelativeLayout
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:id="@+id/drawing_layout"
+            android:layout_toEndOf="@+id/share_image_list_REL"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_toEndOf="@+id/share_image_list_REL"
-            android:layout_marginBottom="10dp"
             >
-            <Button
-                android:id="@+id/save_Image"
-                android:layout_width="wrap_content"
+
+            <!--뒤에 검은색 약간 불투명 검은색 까는 뷰-->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#000000"
+                android:alpha="0.7"/>
+            <!--빈공간 채우는 뷰: 현재 안씀-->
+            <!--<View-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_above="@+id/btn_view"-->
+                <!--/>-->
+            <!--버튼 모여있는 뷰-->
+            <LinearLayout
+                android:id="@+id/btn_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:layout_above="@+id/stroke_alpha_bar_LIN"
+                >
+                <!--<Button-->
+                    <!--android:id="@+id/save_Image"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:text="save_Image"/>-->
+                <!--<Button-->
+                    <!--android:id="@+id/undo"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:text="undo"-->
+                    <!--/>-->
+                <!--<Button-->
+                    <!--android:visibility="gone"-->
+                    <!--android:id="@+id/remove_all"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:text="remove_all"-->
+                    <!--/>-->
+                <!--<Button-->
+                    <!--android:id="@+id/enable_drag_btn"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:text="이동 off"-->
+                    <!--/>-->
+            </LinearLayout>
+
+
+            <!-- 펜 두께 / 펜 투명도 조절 시크바 레이아웃 -->
+            <LinearLayout
+                android:id="@+id/stroke_alpha_bar_LIN"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_above="@+id/pencil_layout"
+                android:orientation="horizontal">
+                <LinearLayout
+                    android:id="@+id/stroke_seek_bar_root"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <!--시크바, 자바에서 코드로 넣음-->
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/alpha_seek_bar_root"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <!--시크바, 자바에서 코드로 넣음-->
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 색연필 -->
+            <LinearLayout
+                android:id="@+id/pencil_layout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_toStartOf="@+id/undo"
-                android:text="save_Image"/>
-            <Button
-                android:id="@+id/undo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_toStartOf="@+id/remove_all"
                 android:layout_alignParentBottom="true"
                 android:layout_centerHorizontal="true"
-                android:text="undo"
-                />
-            <Button
-                android:visibility="gone"
-                android:id="@+id/remove_all"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="remove_all"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                />
-            <Button
-                android:id="@+id/enable_drag_btn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="이동 off"
-                android:layout_toRightOf="@+id/undo"
-                android:layout_alignParentBottom="true"
-                />
+                android:gravity="center"
+                >
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/black"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/black"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/white"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/white"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/elephant"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/elephant"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/blue"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/blue"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/indigo"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/indigo"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/grape_jelly"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/grape_jelly"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/green"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/green"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/teal"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/teal"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/orange"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/orange"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/yellow"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/yellow"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/mulberry"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/mulberry"/>
+
+                <com.example.jyn.remotemeeting.Realm_and_drawing.PencilView
+                    android:id="@+id/sexy_salmon"
+                    android:layout_width="30dp"
+                    android:layout_height="88.197dp"
+                    android:layout_marginRight="1dp"
+                    android:src="@drawable/sexy_salmon"/>
+
+            </LinearLayout>
+
         </RelativeLayout>
 
+
+
+        <!--드로잉 도구 open-->
         <ImageView
-            android:id="@+id/drawing_menu"
+            android:visibility="visible"
+            tools:visibility="visible"
+            android:id="@+id/open_drawing_tool"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_marginBottom="7dp"
@@ -239,6 +393,53 @@
             android:padding="10dp"
             android:src="@drawable/up_arrow"
             android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            />
+        <!--드로잉 도구 close-->
+        <ImageView
+            android:visibility="gone"
+            tools:visibility="gone"
+            android:id="@+id/close_drawing_tool"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginBottom="7dp"
+            android:layout_marginEnd="7dp"
+            android:padding="10dp"
+            android:src="@drawable/down_arrow"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            />
+
+        <ImageView
+            android:id="@+id/enable_drag_btn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="7dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:src="@drawable/scroll"
+            android:layout_alignParentEnd="true"
+            />
+        <ImageView
+            android:id="@+id/undo"
+            android:layout_below="@+id/enable_drag_btn"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="7dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:src="@drawable/undo"
+            android:layout_alignParentEnd="true"
+            />
+        <ImageView
+            android:id="@+id/save_Image"
+            android:layout_below="@+id/undo"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="7dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:src="@drawable/save_image"
             android:layout_alignParentEnd="true"
             />
 

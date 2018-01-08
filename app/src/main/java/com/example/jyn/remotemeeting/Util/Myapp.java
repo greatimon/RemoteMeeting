@@ -121,6 +121,22 @@ public class Myapp extends Application {
             R.drawable.video_off_back_5
     };
 
+    /** 색연필 버튼 id 값들 */
+    public int[] color_pen_buttonIds = {
+            R.id.black,
+            R.id.white,
+            R.id.elephant,
+            R.id.blue,
+            R.id.indigo,
+            R.id.grape_jelly,
+            R.id.green,
+            R.id.teal,
+            R.id.orange,
+            R.id.yellow,
+            R.id.mulberry,
+            R.id.sexy_salmon
+    };
+
     /** 내 정보 */
     public String user_no = "";
     public String join_path = "";

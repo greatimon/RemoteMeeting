@@ -128,6 +128,9 @@ dependencies {
     compile 'io.realm:realm-android-library-object-server:4.3.1'
     // ==> 프로젝트 레벨의 build.gradle 의 dependencies 로 보냄
 
+    /** 커스텀 시크바 */
+    compile 'com.github.warkiz.widget:indicatorseekbar:1.2.4'
+
 }
 
 realm {

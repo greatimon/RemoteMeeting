@@ -36,7 +36,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -57,6 +59,7 @@ import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Realm_and_drawing.DrawPath;
 import com.example.jyn.remotemeeting.Realm_and_drawing.DrawPoint;
+import com.example.jyn.remotemeeting.Realm_and_drawing.PencilView;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
@@ -71,6 +74,9 @@ import com.example.jyn.remotemeeting.WebRTC.WebSocketRTCClient;
 import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
 import com.squareup.otto.Subscribe;
+import com.warkiz.widget.IndicatorSeekBar;
+import com.warkiz.widget.IndicatorSeekBarType;
+import com.warkiz.widget.IndicatorType;
 
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
@@ -209,14 +215,20 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     ImageView back_img_full;
     CircleImageView profile_img_full;
 
-    // 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받는 핸들러 객체 생성
+    // 서버로 부터 받은 상대방의 비디오 on/off 상태를 Chat_handler로부터 전달받는 핸들러 객체
     public static Handler webrtc_message_handler;
 
     /** 버터나이프 */
     public Unbinder unbinder;
     @BindView(R.id.recyclerView_share_image)public RecyclerView recyclerView_share_image;
+    @BindView(R.id.drawing_layout)          public RelativeLayout drawing_layout;
     @BindView(R.id.surface_view)            public SurfaceView surfaceView;
-    @BindView(R.id.enable_drag_btn)         public Button enable_drag_btn;
+    // 펜 두께, 투명도 조절하는 시크바를 감싸고 있는 루트뷰
+    @BindView(R.id.stroke_seek_bar_root)    public LinearLayout stroke_seek_bar_root;
+    @BindView(R.id.alpha_seek_bar_root)     public LinearLayout alpha_seek_bar_root;
+    @BindView(R.id.open_drawing_tool)       public ImageView open_drawing_tool;
+    @BindView(R.id.close_drawing_tool)      public ImageView close_drawing_tool;
+
 
 
     // Realm and Drawing 관련 변수 ==============
@@ -284,7 +296,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     int bottom_y;
     // 디폴트 컬러 이름
 //    private String currentColor = "Charcoal";
-    private String currentColor = "Mulberry";
+    private String currentColor = "black";
 //    private String currentColor = "Indigo";
     // 컬러 인트값과, 컬러 스트링 값을 담는 해쉬맵
     private HashMap<String, Integer> nameToColorMap;
@@ -295,6 +307,21 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     int alpha = 255;
     // 이미지 공유 모드, root View
     public static RelativeLayout image_share_REL;
+    // 현재 select 한 펜 색깔 뷰
+    private PencilView currentPencil;
+    // 펜 두께, 펜 투명도 조절 시크바 설정 관련 상수
+    private static final int THICKNESS_STEP = 2;
+    private static final int THICKNESS_MAX = 80;
+    private static final int THICKNESS_MIN = 6;
+    private static final int ALPHA_STEP = 1;
+    private static final int ALPHA_MAX = 255;
+    private static final int ALPHA_MIN = 10;
+    // 선 두께 조절 커스텀 시크바
+    IndicatorSeekBar slider_thickness;
+    // 선 투명도 조절 커스텀 시크바
+    IndicatorSeekBar slider_alpha;
+    // 드로잉 메뉴 오픈중임을 확인하는 변수
+    boolean drawing_tool_is_open;
 
     // 리사이클러 관련 변수 ==============
     // =================================
@@ -555,11 +582,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // TODO: == webRTC 구동을 끄기위한 주석 ==
         // TODO: 개발을 위해 임시적으로 주석처리
         // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
-        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startScreenCapture();
-        } else {
-            startCall();
-        }
+//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            startScreenCapture();
+//        } else {
+//            startCall();
+//        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기
@@ -587,11 +614,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         @Override
                         public void onChronometerTick(Chronometer cArg) {
                             timeElapsed.setVisibility(View.VISIBLE);
-//                long time = SystemClock.elapsedRealtime() - cArg.getBase() + onAir_Elapsed_time_mil;
                             long time = SystemClock.elapsedRealtime() - cArg.getBase();
-//                        Log.d("TCP", "onAir_Elapsed_time_mil: " + String.valueOf(onAir_Elapsed_time_mil));
-//                        Log.d("TCP", "cArg.getBase(): " + String.valueOf(cArg.getBase()));
-//                        Log.d("TCP", "time: " + String.valueOf(time));
+
 
                             int h = (int) (time / 3600000);
                             int m = (int) (time - h * 3600000) / 60000;
@@ -656,16 +680,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             // (전송상태가 off면 바로 이미지 공유 모드를 진행하도록 함)
                             Call_F.visibility_control_handler.sendEmptyMessage(2);
 
-//                            // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
-//                            if(Call_F.visibility_control_handler != null) {
-//                                Call_F.visibility_control_handler.sendEmptyMessage(0);
-//                            }
-//
-//                            /**
-//                             * 문서 공유모드 진행을 위한 내부 메소드 호출
-//                             ==> realm 서버 접속 및 드로잉 준비
-//                             */
-//                            initializing_for_image_share_mode();
                         }
                         else if(answer.equals("no")) {
                             myapp.logAndToast("상대방이 파일 공유 요청을 거절하였습니다");
@@ -676,9 +690,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 // video 모드가 off인 상태이니, 이미지 공유 모드를 진행해도 된다
                 else if(msg.what == 2) {
 
-                    // pipRenderer false 처리
-//                    pipRenderer.setZOrderMediaOverlay(false);
-//                    pipRenderer.setEnableHardwareScaler(false);
+                    // pipRenderer GONE 처리
                     pipRenderer.setVisibility(View.GONE);
                     // 이미지 공유 하는 서피스뷰를 최상단으로 올린다
                     surfaceView.setVisibility(View.VISIBLE);
@@ -708,9 +720,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     // 이미지 공유 하는 서피스뷰를 내린다
                     surfaceView.setVisibility(View.GONE);
                     surfaceView.setZOrderMediaOverlay(false);
-                    // pipRenderer true 처리
-//                    pipRenderer.setZOrderMediaOverlay(true);
-//                    pipRenderer.setEnableHardwareScaler(true);
+                    // pipRenderer VISIBLE 처리
                     pipRenderer.setVisibility(View.VISIBLE);
 
                     // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
@@ -718,6 +728,101 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 }
             }
         };
+
+        /** 선 두께 조절 커스텀 시크바 */
+        slider_thickness = new IndicatorSeekBar.Builder(
+                getBaseContext())
+                .setThumbDrawable(R.drawable.pencil_1)
+                .setSeekBarType(IndicatorSeekBarType.CONTINUOUS_TEXTS_ENDS)
+                .setIndicatorTextColor(Color.parseColor("#2b2b2b"))
+                .setMax(THICKNESS_MAX)
+                .setMin(THICKNESS_MIN)
+                .setLeftEndText("선 두께 조절")
+                .setRightEndText("")
+                .setProgress(THICKNESS_MIN)
+                .setBackgroundTrackSize(2)
+                .setProgressTrackSize(5)
+                .setBackgroundTrackColor(Color.parseColor("#fffff9"))
+                .setProgressTrackColor(Color.parseColor("#388E3C"))
+                .setTextColor(Color.parseColor("#ffffff"))
+                .showIndicator(true)
+                .setIndicatorType(IndicatorType.CIRCULAR_BUBBLE)
+                .setIndicatorColor(Color.parseColor("#fffff9"))
+                .build();
+        // 선 두께 시크바를 감싸고 있는 'LinearLayout'에 뷰 더하기
+        stroke_seek_bar_root.addView(slider_thickness);
+
+        // 선 두께 시크바 리스너
+        slider_thickness.setOnSeekChangeListener(new IndicatorSeekBar.OnSeekBarChangeListener() {
+
+            /**---------------------------------------------------------------------------
+             콜백메소드 ==> setOnSeekChangeListener -- 펜 두께, 펜 투명도 설정 시크바 리스너
+             ---------------------------------------------------------------------------*/
+            @Override
+            public void onProgressChanged(IndicatorSeekBar seekBar, int progress, float progressFloat, boolean fromUserTouch) {
+//                stroke = THICKNESS_MIN + (progress * THICKNESS_STEP);
+                stroke = progress;
+                Log.d(TAG, "stroke: " + stroke);
+            }
+
+            @Override
+            public void onSectionChanged(IndicatorSeekBar seekBar, int thumbPosOnTick, String tickBelowText, boolean fromUserTouch) {}
+
+            @Override
+            public void onStartTrackingTouch(IndicatorSeekBar seekBar, int thumbPosOnTick) {}
+
+            @Override
+            public void onStopTrackingTouch(IndicatorSeekBar seekBar) {}
+        });
+
+        /** 선 투명도 조절 커스텀 시크바 */
+        slider_alpha = new IndicatorSeekBar.Builder(
+                getBaseContext())
+                .setThumbDrawable(R.drawable.pencil_1)
+                .setSeekBarType(IndicatorSeekBarType.CONTINUOUS_TEXTS_ENDS)
+                .setIndicatorTextColor(Color.parseColor("#ffffff"))
+                .setMax(ALPHA_MAX)
+                .setMin(ALPHA_MIN)
+                .setLeftEndText("선 투명도 조절")
+                .setRightEndText("")
+                .setProgress(ALPHA_MAX)
+                .setBackgroundTrackSize(2)
+                .setProgressTrackSize(5)
+                .setBackgroundTrackColor(Color.parseColor("#fffff9"))
+                .setProgressTrackColor(Color.parseColor("#388E3C"))
+                .setTextColor(Color.parseColor("#ffffff"))
+                .showIndicator(true)
+                .setIndicatorType(IndicatorType.CIRCULAR_BUBBLE)
+                .setIndicatorColor(Color.BLACK)
+                .build();
+        // 선 투명도 시크바를 감싸고 있는 'LinearLayout'에 뷰 더하기
+        alpha_seek_bar_root.addView(slider_alpha);
+
+        // 선 투명도 시크바 리스너
+        slider_alpha.setOnSeekChangeListener(new IndicatorSeekBar.OnSeekBarChangeListener() {
+
+            /**---------------------------------------------------------------------------
+             콜백메소드 ==> setOnSeekChangeListener -- 펜 두께, 펜 투명도 설정 시크바 리스너
+             ---------------------------------------------------------------------------*/
+            @Override
+            public void onProgressChanged(IndicatorSeekBar seekBar, int progress, float progressFloat, boolean fromUserTouch) {
+                alpha = progress;
+                Log.d(TAG, "alpha: " + alpha);
+
+                set_pencil_alpha(currentPencil, alpha);
+            }
+
+            @Override
+            public void onSectionChanged(IndicatorSeekBar seekBar, int thumbPosOnTick, String tickBelowText, boolean fromUserTouch) {}
+
+            @Override
+            public void onStartTrackingTouch(IndicatorSeekBar seekBar, int thumbPosOnTick) {}
+
+            @Override
+            public void onStopTrackingTouch(IndicatorSeekBar seekBar) {}
+        });
+
+
     }
 
 
@@ -792,13 +897,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 이미지 쉐어 모드 -- 그리기 선 모두 지우기
+     클릭이벤트 ==> 이미지 쉐어 모드 -- 그리기 선 모두 지우기: 현재 안씀
      ---------------------------------------------------------------------------*/
-    @OnClick({R.id.remove_all})
-    public void remove_all() {
-        Log.d(TAG, "그리기 선 모두 지우기 클릭");
-        wipeCanvas();
-    }
+//    @OnClick({R.id.remove_all})
+//    public void remove_all() {
+//        Log.d(TAG, "그리기 선 모두 지우기 클릭");
+//        wipeCanvas();
+//    }
 
 
     /**---------------------------------------------------------------------------
@@ -811,7 +916,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 //            Logger.d("enable_drag_ON");
             on_moving = true;
             enable_drag = true;
-            enable_drag_btn.setText("이동 on");
+//            enable_drag_btn.setText("이동 on");
             call_draw_handler.sendEmptyMessage(4);
             // 현재 realm Result 의 마지막 인덱스를 변수에 저장한다
             if(results_main.size() > 0) {
@@ -823,36 +928,46 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 //            Logger.d("enable_drag_OFF");
             on_moving = false;
             enable_drag = false;
-            enable_drag_btn.setText("이동 off");
+//            enable_drag_btn.setText("이동 off");
         }
     }
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 이미지 쉐어 모드 -- 드로잉 관련 메뉴 팝업
-     // todo: 현재는 테스트 용으로 이미지 쉐어 모드 종료로 용도로 사용
+     클릭이벤트 ==> 이미지 쉐어 모드 -- 드로잉 관련 메뉴 팝업 open/close
      ---------------------------------------------------------------------------*/
-    @OnClick(R.id.drawing_menu)
-    public void drawing_menu() {
-        // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
-        myapp.setShare_image_file_name_arr_str("");
+    @OnClick({R.id.open_drawing_tool, R.id.close_drawing_tool})
+    public void drawing_menu(View view) {
+
+        // 드로잉 메뉴 OPEN
+        if(view.getId() == R.id.open_drawing_tool) {
+            open_drawing_tool.setVisibility(View.GONE);
+            close_drawing_tool.setVisibility(View.VISIBLE);
+
+            drawing_layout.setVisibility(View.VISIBLE);
+            drawing_tool_is_open = true;
+
+        }
+        // 드로잉 메뉴 CLOSE
+        else if(view.getId() == R.id.close_drawing_tool) {
+            open_drawing_tool.setVisibility(View.VISIBLE);
+            close_drawing_tool.setVisibility(View.GONE);
+
+            drawing_layout.setVisibility(View.GONE);
+            drawing_tool_is_open = false;
+        }
 
 
-        // * to: Call_F
-        // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
-        // 해당 비디오 전송 모드로 복구하기 위한 로직
-        Call_F.visibility_control_handler.sendEmptyMessage(3);
 
 
-//        // Call_F 의 뷰들을 초기화 위한 핸들러 메세지 전달
-//        if(image_share_REL.getVisibility() == View.VISIBLE
-//                && Call_F.visibility_control_handler != null) {
-//            Call_F.visibility_control_handler.sendEmptyMessage(1);
-//        }
+        // todo: 테스트 용으로 이미지 쉐어 모드 종료로 용도로 사용, 현재 드로잉메뉴 open/close 테스트로 인해 주석 처리
+//        // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
+//        myapp.setShare_image_file_name_arr_str("");
 //
-//        /** 테스트용 코드 */
-//        // 이미지 공유 레이아웃(서피스뷰 포함) GONE.
-//        image_share_REL.setVisibility(View.GONE);
+//        // * to: Call_F
+//        // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
+//        // 해당 비디오 전송 모드로 복구하기 위한 로직
+//        Call_F.visibility_control_handler.sendEmptyMessage(3);
     }
 
 
@@ -1858,11 +1973,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
         // 임시 - 컬러 이름과 인트값을 담을 해쉬맵 선언
         nameToColorMap = new HashMap<>();
-//        colorIdToName= new HashMap<>();
+        colorIdToName= new HashMap<>();
 
         /** 임의 값임, 나중에 다른 방법으로 변경 */
         // 컬러맵 생성
         generateColorMap();
+        // 색연필 버튼들, 클릭 리스너 달기
+        bindButtons();
 
         // 리사이클러뷰 어댑터에 넘겨줄 어레이리스트
         share_img_file_arr = new ArrayList<>();
@@ -1881,6 +1998,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             // 공유 문서들, 리사이클러뷰 어댑터로 넘기는, 클래스 내부 메소드 호출
             activate_share_image_RCV();
         }
+
+        // 드로잉 도구의 선 두께, 선 투명도, 선 색(블랙) 으로
+        set_drawing_tool_seekbar_color(currentColor);
     }
 
 
@@ -2171,15 +2291,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     }
                 }
             });
-    }
-
-
-    /**---------------------------------------------------------------------------
-     콜백메소드 ==> onClick
-     ---------------------------------------------------------------------------*/
-    @Override
-    public void onClick(View v) {
-
     }
 
 
@@ -2658,8 +2769,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
              현재 보고 있는 이미지의 부분에 맞는 Y 값을 더해줌 (temp_save_top_y) */
             double pointY = (y - viewLocation[1] + temp_save_top_y) * ratio;
 
-            // 화면 이동중 모드가 아니고, 손가락 하나도 터치 했을 때
-            if(!on_moving && event.getPointerCount() == 1) {
+            // 화면 이동중 모드가 아니고, 드로잉 도구 툴도 닫혀있는 상태에서, 손가락 하나로 터치 했을 때
+            if(!on_moving && !drawing_tool_is_open && event.getPointerCount() == 1) {
 
                 /** 화면에 최초 터치 했을 때 */
                 if (action == MotionEvent.ACTION_DOWN) {
@@ -2740,8 +2851,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 return true;
             }
 
-            // 드래그 모드일 때
-            if(on_moving) {
+            // 드로잉 도구가 닫혀있고, 드래그 모드일 때
+            if(on_moving && !drawing_tool_is_open) {
                 // 현재 백그라운드로 깔려 있는 이미지의 height가 서피스뷰의 height 보다 작다면 드래그 하지 않음
                 if(scaled.getHeight() <= surfaceView_height) {
                     return false;
@@ -2855,29 +2966,142 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      메소드 ==> drawing 할 때 고를 수 있는 색을 String 값과 매칭 시키는 메소드
      ---------------------------------------------------------------------------*/
     private void generateColorMap() {
-//        nameToColorMap.put("Charcoal", 0xff1c283f);
-//        nameToColorMap.put("Elephant", 0xff9a9ba5);
-//        nameToColorMap.put("Dove", 0xffebebf2);
-//        nameToColorMap.put("Ultramarine", 0xff39477f);
-        nameToColorMap.put("Indigo", 0xff59569e);
-//        nameToColorMap.put("GrapeJelly", 0xff9a50a5);
-        nameToColorMap.put("Mulberry", 0xffd34ca3);
-//        nameToColorMap.put("Flamingo", 0xfffe5192);
-//        nameToColorMap.put("SexySalmon", 0xfff77c88);
-//        nameToColorMap.put("Peach", 0xfffc9f95);
-//        nameToColorMap.put("Melon", 0xfffcc397);
+        nameToColorMap.put("black", 0xff050708);
+        nameToColorMap.put("white", 0xffffffff);
+        nameToColorMap.put("elephant", 0xff9a9ca5);
+        nameToColorMap.put("blue", 0xff488fcc);
+        nameToColorMap.put("indigo", 0xff5957a0);
+        nameToColorMap.put("grape_jelly", 0xff9a52a0);
+        nameToColorMap.put("green", 0xff4ab050);
+        nameToColorMap.put("teal", 0xff0b4e41);
+        nameToColorMap.put("orange", 0xfff8981d);
+        nameToColorMap.put("yellow", 0xfffaed39);
+        nameToColorMap.put("mulberry", 0xffcf4f9d);
+        nameToColorMap.put("sexy_salmon", 0xfff37b88);
 
-//        colorIdToName.put(R.id.charcoal, "Charcoal");
-//        colorIdToName.put(R.id.elephant, "Elephant");
-//        colorIdToName.put(R.id.dove, "Dove");
-//        colorIdToName.put(R.id.ultramarine, "Ultramarine");
-//        colorIdToName.put(R.id.indigo, "Indigo");
-//        colorIdToName.put(R.id.grape_jelly, "GrapeJelly");
-//        colorIdToName.put(R.id.mulberry, "Mulberry");
-//        colorIdToName.put(R.id.flamingo, "Flamingo");
-//        colorIdToName.put(R.id.sexy_salmon, "SexySalmon");
-//        colorIdToName.put(R.id.peach, "Peach");
-//        colorIdToName.put(R.id.melon, "Melon");
+        colorIdToName.put(R.id.black, "black");
+        colorIdToName.put(R.id.white, "white");
+        colorIdToName.put(R.id.elephant, "elephant");
+        colorIdToName.put(R.id.blue, "blue");
+        colorIdToName.put(R.id.indigo, "indigo");
+        colorIdToName.put(R.id.grape_jelly, "grape_jelly");
+        colorIdToName.put(R.id.green, "green");
+        colorIdToName.put(R.id.teal, "teal");
+        colorIdToName.put(R.id.orange, "orange");
+        colorIdToName.put(R.id.yellow, "yellow");
+        colorIdToName.put(R.id.mulberry, "mulberry");
+        colorIdToName.put(R.id.sexy_salmon, "sexy_salmon");
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 색연필 버튼들, 클릭 리스너 달기
+     ---------------------------------------------------------------------------*/
+    public void bindButtons() {
+        for(int id: myapp.color_pen_buttonIds) {
+            View view = findViewById(id);
+            view.setOnClickListener(this);
+        }
+
+        // 디폴트 색: 검정색으로 설정하고, 검은색 펜 '선택' 처리
+        currentPencil = findViewById(R.id.black);
+        currentPencil.setSelected(true);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> onClick -- 드로잉 색 선택
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onClick(View v) {
+        String colorName = colorIdToName.get(v.getId());
+        if (colorName == null) {
+            return;
+        }
+        currentColor = colorName;
+        if (v instanceof PencilView) {
+            currentPencil.setSelected(false);
+            currentPencil.invalidate();
+            PencilView pencil = (PencilView)v;
+            pencil.setSelected(true);
+            pencil.invalidate();
+            // alpha 값 1.0f로 복원해놓고, 새로운 PencilView를 선택
+            currentPencil.setAlpha(1.0f);
+            currentPencil = pencil;
+            // 현재 alpha 값, 새로운 pencilView에도 적용
+            set_pencil_alpha(currentPencil, alpha);
+        }
+
+        // 드로잉 도구의 시크바 색깔 변경하기
+        set_drawing_tool_seekbar_color(colorName);
+    }
+
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 드로잉 컬러 변경에 따른, 시크바 색깔 및 투명도 변경
+     ---------------------------------------------------------------------------*/
+    public void set_drawing_tool_seekbar_color(String colorName) {
+
+        boolean change_IndicatorTextColor = false;
+        if(colorName.equals("yellow") || colorName.equals("white")) {
+            change_IndicatorTextColor = true;
+        }
+
+        // 적용시킬 컬러 10진수 인트 값 가져오기
+        int changed_color = nameToColorMap.get(colorName);
+        Log.d(TAG, "colorName: " + colorName);
+        Log.d(TAG, "changed_color_int: " + changed_color);
+        Log.d(TAG, "String.valueOf(nameToColorMap.get(colorName)): " + String.valueOf(nameToColorMap.get(colorName)));
+
+        String IndicatorColor = set_drawing_tool_seekbar_alpha(changed_color, alpha);
+
+        // 선 두께 조절 시크바 색상 변경
+        slider_thickness.getBuilder()
+                .setProgressTrackColor(changed_color)
+                .apply();
+
+        // 선 투명도 조절 시크바 색상 변경
+        slider_alpha.getBuilder()
+                .setProgressTrackColor(changed_color)
+//                .setIndicatorColor(Color.parseColor("#" + IndicatorColor))
+                .setIndicatorColor(changed_color)
+                .setIndicatorTextColor(change_IndicatorTextColor ? Color.parseColor("#544a44") : Color.parseColor("#ffffff"))
+                .apply();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 시크바 투명도 alpha 값 반환 메소드
+                매개변수 1. 컬러
+                매개변수 2. 현재 alpha int 값 (10~255 사이)
+     ---------------------------------------------------------------------------*/
+    public String set_drawing_tool_seekbar_alpha(int changed_color, int changed_alpha) {
+        // 알파값에 따른 hex 값 구하기
+        String hex = Integer.toHexString(changed_alpha).toUpperCase();
+        if(hex.length() == 1) {
+            hex = "0" + hex;
+        }
+        Log.d(TAG, "hex: " + hex);
+
+        // 알파값을 제외한 현재 컬러 값 구하기
+        String except_hex = Integer.toHexString(changed_color);
+        except_hex = except_hex.substring(2, 8);
+        String IndicatorColor = hex + except_hex;
+        Log.d(TAG, "except_hex: " + except_hex);
+        Log.d(TAG, "IndicatorColor: " + IndicatorColor);
+
+        return IndicatorColor;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 선 투명도 커스텀 시크바가 움직임에 따라 해당 색깔 펜의 뷰 투명도를 조절
+     ---------------------------------------------------------------------------*/
+    public void set_pencil_alpha(PencilView currentPencil, int changed_alpha) {
+        float final_alpha = changed_alpha / 255.0f;
+        Log.d(TAG, "final_alpha: " + final_alpha);
+        currentPencil.setAlpha(final_alpha);
     }
 
 
@@ -2932,12 +3156,20 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     }
 
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> Hex --> 10진수 변환 -- 사용안함
+     ---------------------------------------------------------------------------*/
+    private String getHexToDec(String hex) {
+        long v = Long.parseLong(hex, 16);
+        return String.valueOf(v);
+    }
 
 
-
-
-
-
-
-
+    /**---------------------------------------------------------------------------
+     메소드 ==> 10진수 --> Hex 변환 -- 사용안함
+     ---------------------------------------------------------------------------*/
+    private String getDecToHex(String dec){
+        Long intDec = Long.parseLong(dec);
+        return Long.toHexString(intDec).toUpperCase();
+    }
 }
