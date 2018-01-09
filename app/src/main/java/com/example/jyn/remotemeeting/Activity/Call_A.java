@@ -33,12 +33,12 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Chronometer;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -50,6 +50,7 @@ import com.example.jyn.remotemeeting.Adapter.RCV_share_image_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Preview_share_img_file;
 import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
+import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_end_D;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
@@ -106,6 +107,7 @@ import java.util.Set;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnTouch;
 import butterknife.Unbinder;
 import de.hdodenhof.circleimageview.CircleImageView;
 import io.realm.ErrorCode;
@@ -202,7 +204,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     private Hud_F hud_f;
 //    private CpuMonitor cpuMonitor;
 
+    // 영상회의 종료 intent 값
     final int REQUEST_OUT = 1000;
+    // 이미지 공유 모드 종료 intent 값
+    final int REQUEST_END_IMG_SHARE_MODE = 2000;
     public final static int REQUEST_GET_LOCAL_FILE = 1001;
     public static Handler hangup_confirm;
 
@@ -222,13 +227,20 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public Unbinder unbinder;
     @BindView(R.id.recyclerView_share_image)public RecyclerView recyclerView_share_image;
     @BindView(R.id.drawing_layout)          public RelativeLayout drawing_layout;
+    @BindView(R.id.drawing_layout_1)        public RelativeLayout drawing_layout_1;
     @BindView(R.id.surface_view)            public SurfaceView surfaceView;
     // 펜 두께, 투명도 조절하는 시크바를 감싸고 있는 루트뷰
     @BindView(R.id.stroke_seek_bar_root)    public LinearLayout stroke_seek_bar_root;
     @BindView(R.id.alpha_seek_bar_root)     public LinearLayout alpha_seek_bar_root;
+    @BindView(R.id.pencil_layout)           public LinearLayout pencil_layout;
+
+    @BindView(R.id.stroke_alpha_bar_LIN)    public LinearLayout stroke_alpha_bar_LIN;
     @BindView(R.id.open_drawing_tool)       public ImageView open_drawing_tool;
     @BindView(R.id.close_drawing_tool)      public ImageView close_drawing_tool;
-
+    @BindView(R.id.undo)                    public ImageView undo;
+    @BindView(R.id.save_Image)              public ImageView save_Image;
+    @BindView(R.id.stroke_alpha_bar_LIN_back_alpha)
+    public View stroke_alpha_bar_LIN_back_alpha;
 
 
     // Realm and Drawing 관련 변수 ==============
@@ -272,9 +284,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     // 선을 그릴 때 사용자에게 보여줄 비트맵을 그릴 캔버스
     Canvas canvas_main;
     // drag가 가능한 상태인지 확인하는 변수
-    boolean enable_drag;
+    boolean enable_drag = true;
     // 현재 drag 중인지 확인하는 변수
-    boolean on_moving;
+    boolean on_moving = true;
     // 현재 서피스뷰가 배경으로 있는 문서(비트맵)의 최상단점 Y값(0)을 기준으로 밑으로 얼마만큼의 Y만큼
     // 위치해 있는지, 그 Int 값을 임시로 저장하기 위한 변수
     int temp_save_top_y;
@@ -320,8 +332,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     IndicatorSeekBar slider_thickness;
     // 선 투명도 조절 커스텀 시크바
     IndicatorSeekBar slider_alpha;
-    // 드로잉 메뉴 오픈중임을 확인하는 변수
+    // 드로잉 도구 오픈중임을 확인하는 변수
     boolean drawing_tool_is_open;
+    // 드로잉 도구 1, 2를 차례대로 오픈하기 위해, 현재 도구들 오픈 상태를 확인하는 변수
+    // 0: 드로잉 도구 1,2가 모두 닫혀 있음
+    // 1: 드로잉 도구 1 - 'drawing_layout_1' 이 오픈되어 있음
+    // 2: 드로잉 도구 2 - 'drawing_layout' 이 오픈되어 있음
+    int opened_drawing_tool = 0;
+    // 드로잉 도구 view, open 될 때 적용되는 애니메이션
+    Animation emerge_drawing_tool_ani;
+
 
     // 리사이클러 관련 변수 ==============
     // =================================
@@ -582,11 +602,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // TODO: == webRTC 구동을 끄기위한 주석 ==
         // TODO: 개발을 위해 임시적으로 주석처리
         // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
-//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            startScreenCapture();
-//        } else {
-//            startCall();
-//        }
+        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startScreenCapture();
+        } else {
+            startCall();
+        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기
@@ -631,6 +651,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             }
         };
 
+        /**---------------------------------------------------------------------------
+         핸들러 ==> webRTC 관련 로직 핸들러
+         ---------------------------------------------------------------------------*/
         webrtc_message_handler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -684,6 +707,18 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         else if(answer.equals("no")) {
                             myapp.logAndToast("상대방이 파일 공유 요청을 거절하였습니다");
                         }
+                    }
+
+                    // 상대방이 이미지 공유 모드를 종료했음을 전달 받았을 때,
+                    else if(order.equals("relay_end_image_file_share")) {
+                        // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
+                        myapp.setShare_image_file_name_arr_str("");
+
+                        // * to: Call_F
+                        // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
+                        // 해당 비디오 전송 모드로 복구하기 위한 로직
+                        Call_F.visibility_control_handler.sendEmptyMessage(3);
+                        myapp.logAndToast("상대방이 이미지 공유 모드를 종료하였습니다.");
                     }
                 }
                 // * from Call_F
@@ -822,7 +857,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             public void onStopTrackingTouch(IndicatorSeekBar seekBar) {}
         });
 
+        /** 애니메이션 load */
+        emerge_drawing_tool_ani = AnimationUtils.loadAnimation(this, R.anim.drawing_tool_emerge);
 
+        // 애니메이션 리스너 등록
+        emerge_drawing_tool_ani.setAnimationListener(drawing_tool_open_ani_Ltsn);
     }
 
 
@@ -910,8 +949,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      클릭이벤트 ==> 이미지 쉐어 모드 -- 이동/그리기 모드 전환 버튼
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.enable_drag_btn})
-    public void enable_drag() {
+    public void enable_drag(View view) {
         Log.d(TAG, "이동/그리기 모드 전환 버튼 클릭");
+
+        view.setAlpha(enable_drag ? 0.3f : 1.0f);
+
         if(!enable_drag) {
 //            Logger.d("enable_drag_ON");
             on_moving = true;
@@ -934,40 +976,62 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 이미지 쉐어 모드 -- 드로잉 관련 메뉴 팝업 open/close
+     클릭이벤트 ==> 이미지 쉐어 모드 -- 드로잉 관련 도구 팝업 open/close
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.open_drawing_tool, R.id.close_drawing_tool})
     public void drawing_menu(View view) {
 
-        // 드로잉 메뉴 OPEN
+        //// 드로잉 도구 OPEN
+        // 드로잉 도구 1, 2를 차례대로 오픈하고, 그 다음에 드로잉 도구를 close 한다
         if(view.getId() == R.id.open_drawing_tool) {
-            open_drawing_tool.setVisibility(View.GONE);
-            close_drawing_tool.setVisibility(View.VISIBLE);
+            // 0: 드로잉 도구 1,2가 모두 닫혀 있음
+            // 1: 드로잉 도구 1 - 'drawing_layout_1' 이 오픈되어 있음
+            // 2: 드로잉 도구 2 - 'drawing_layout' 이 오픈되어 있음
+            if(opened_drawing_tool == 0) {
+                // 드로잉 도구 1 VISIBLE 처리
+                drawing_layout_1.setVisibility(View.VISIBLE);
+                // 현재 드로잉 도구 오픈 상태 변경
+                opened_drawing_tool = 1;
+            }
+            else if(opened_drawing_tool == 1) {
+                // 드로잉 도구 on/off 버튼 바꾸기
+                open_drawing_tool.setVisibility(View.GONE);
+                close_drawing_tool.setVisibility(View.VISIBLE);
 
-            drawing_layout.setVisibility(View.VISIBLE);
-            drawing_tool_is_open = true;
+                // 드로잉 도구 2 VISIBLE 처리
+                drawing_layout.setVisibility(View.VISIBLE);
+                drawing_tool_is_open = true;
+
+                // 선 두께, 투명도 커스텀 시크바 및 색연필 뷰 애니메이션 적용
+                stroke_alpha_bar_LIN_back_alpha.clearAnimation();
+                stroke_alpha_bar_LIN_back_alpha.startAnimation(emerge_drawing_tool_ani);
+
+                stroke_alpha_bar_LIN.clearAnimation();
+                stroke_alpha_bar_LIN.startAnimation(emerge_drawing_tool_ani);
+
+                pencil_layout.clearAnimation();
+                pencil_layout.startAnimation(emerge_drawing_tool_ani);
+
+                // 현재 드로잉 도구 오픈 상태 변경
+                opened_drawing_tool = 2;
+            }
+
 
         }
-        // 드로잉 메뉴 CLOSE
+        // 드로잉 도구 CLOSE
         else if(view.getId() == R.id.close_drawing_tool) {
+            // 드로잉 도구 on/off 버튼 바꾸기
             open_drawing_tool.setVisibility(View.VISIBLE);
             close_drawing_tool.setVisibility(View.GONE);
 
+            // 드로잉 도구 1, 2 GONE 처리
+            drawing_layout_1.setVisibility(View.GONE);
             drawing_layout.setVisibility(View.GONE);
             drawing_tool_is_open = false;
+
+            // 현재 드로잉 도구 오픈 상태 변경
+            opened_drawing_tool = 0;
         }
-
-
-
-
-        // todo: 테스트 용으로 이미지 쉐어 모드 종료로 용도로 사용, 현재 드로잉메뉴 open/close 테스트로 인해 주석 처리
-//        // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
-//        myapp.setShare_image_file_name_arr_str("");
-//
-//        // * to: Call_F
-//        // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
-//        // 해당 비디오 전송 모드로 복구하기 위한 로직
-//        Call_F.visibility_control_handler.sendEmptyMessage(3);
     }
 
 
@@ -1008,6 +1072,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 // 만약 서버에 DrawPath 개수가 0개라면 DrawPoint도 모두 삭제한다
                 if(results_main.size() == 0) {
                     temp_realm.where(DrawPoint.class).findAll().deleteAllFromRealm();
+
+                    initializing_when_share_image_changed();
                 }
                 realm.commitTransaction();
                 break;
@@ -1023,6 +1089,25 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public void save_Image() {
         Log.d(TAG, "뷰에 보여지는 상태 그대로, 이미지 파일 저장 버튼 클릭");
         call_draw_handler.sendEmptyMessage(3);
+    }
+
+
+
+    /**---------------------------------------------------------------------------
+     OnTouch 리스너 ==> 해당 이미지를 누를 때, view alpha 값 변경 효과
+     ---------------------------------------------------------------------------*/
+    @OnTouch({R.id.undo, R.id.save_Image})
+    public boolean undo_and_save_image_btn_onTouch_listener(View v, MotionEvent e) {
+        int motion = e.getAction();
+        if(e.getPointerCount() == 1) {
+            if(motion == MotionEvent.ACTION_DOWN) {
+                v.setAlpha(0.5f);
+            }
+            else if(motion == MotionEvent.ACTION_UP) {
+                v.setAlpha(1.0f);
+            }
+        }
+        return false;
     }
 
 
@@ -1094,17 +1179,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 // 전송상태가 on면 off로 처리하는 로직
                 // (전송상태가 off면 바로 이미지 공유 모드를 진행하도록 함)
                 Call_F.visibility_control_handler.sendEmptyMessage(2);
-
-//                // Call_F 의 뷰들을 GONE 처리하기 위한 핸들러 메세지 전달
-//                if(Call_F.visibility_control_handler != null) {
-//                    Call_F.visibility_control_handler.sendEmptyMessage(0);
-//                }
-//
-//                /**
-//                 * 문서 공유모드 진행을 위한 내부 메소드 호출
-//                    ==> realm 서버 접속 및 드로잉 준비
-//                 */
-//                initializing_for_image_share_mode();
             }
             // 거절
             else if(resultCode == RESULT_CANCELED) {
@@ -1115,6 +1189,26 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             }
 
             myapp.send_to_server(data_for_answer);
+        }
+        /** 이미지 공유 모드 종료 */
+        else if(requestCode == REQUEST_END_IMG_SHARE_MODE && resultCode == RESULT_OK) {
+            // 어플리케이션 객체에 있는 공유할 문서 str 값 초기화
+            myapp.setShare_image_file_name_arr_str("");
+
+            // * to: Call_F
+            // 이미지 공유 모드로 전환하기 직전의 비디오 전송 모드를 확인해서
+            // 해당 비디오 전송 모드로 복구하기 위한 로직
+            Call_F.visibility_control_handler.sendEmptyMessage(3);
+
+
+            // netty를 통해서 상대방에게 파일 공유모드 종료 알려서, 상대방도 파일 공유모드 종료되게 하기
+            Data_for_netty end_img_share_mode_data = new Data_for_netty();
+            end_img_share_mode_data.setNetty_type("webrtc");
+            end_img_share_mode_data.setSubType("end_image_file_share");
+            end_img_share_mode_data.setSender_user_no(myapp.getUser_no());
+            end_img_share_mode_data.setTarget_user_no(myapp.getMeeting_subject_user_no());
+
+            myapp.send_to_server(end_img_share_mode_data);
         }
 
         // webRTC 스크린 캡쳐 퍼미션 확인
@@ -1959,8 +2053,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      ---------------------------------------------------------------------------*/
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(Call_A.this, Out_confirm_D.class);
-        startActivityForResult(intent, REQUEST_OUT);
+        // 이미지 공유 모드인 경우
+        if(image_share_REL.getVisibility() == View.VISIBLE) {
+            Intent intent = new Intent(Call_A.this, Confirm_img_share_mode_end_D.class);
+            startActivityForResult(intent, REQUEST_END_IMG_SHARE_MODE);
+        }
+        // 이미지 공유 모드가 아닌 경우
+        else if(image_share_REL.getVisibility() == View.GONE) {
+            Intent intent = new Intent(Call_A.this, Out_confirm_D.class);
+            startActivityForResult(intent, REQUEST_OUT);
+        }
     }
 
 
@@ -2001,6 +2103,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
         // 드로잉 도구의 선 두께, 선 투명도, 선 색(블랙) 으로
         set_drawing_tool_seekbar_color(currentColor);
+        Log.d(TAG, "currentColor_initializing_for_image_share_mode(): " + currentColor);
     }
 
 
@@ -2774,6 +2877,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
                 /** 화면에 최초 터치 했을 때 */
                 if (action == MotionEvent.ACTION_DOWN) {
+
                     // realm 트랜잭션 준비
                     realm.beginTransaction();
 
@@ -2860,6 +2964,14 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
                 // 처음 클릭했을 때 좌표 구하기
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+
+                    // 상대방 드래그 상태: off
+                    // 내 드래그 상태: on
+                    // 위 경우에 상대방에 드로잉을 하고, 내가 드래그를해서 서피스 뷰를 움직이면
+                    // 내가 드래그 상태 on하기 직전의 드로잉까지만 서피스뷰에 보이는 문제 발생
+                    // 따라서 내가 드래그 하려고 Action_down 하는 순간에 drag할 때 적용하는 캔버스를 갱신해줌
+                    call_draw_handler.sendEmptyMessage(4);
+
                     saveX = event.getX();
                     saveY = event.getY();
                     return true;
@@ -2924,7 +3036,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                문서 이미지(비트맵)을 세로로 스크롤효과를 내는 메소드
 
      # action_up일 때 이 메소드를 구현하는 이유
-      : 드래그 하는 손가락에 대응하는 dragBitmap을 충분히 빨리 생성하지 못해서,
+      : action_move 중, 드래그 하는 손가락에 대응하는 dragBitmap을 충분히 빨리 생성하지 못해서,
         이동한 y값에 따라 드래그가 완전하게 이루어지지 않는 경우가 발생했음
      ---------------------------------------------------------------------------*/
     private void save_last_top_y() {
@@ -3003,9 +3115,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             view.setOnClickListener(this);
         }
 
-        // 디폴트 색: 검정색으로 설정하고, 검은색 펜 '선택' 처리
-        currentPencil = findViewById(R.id.black);
-        currentPencil.setSelected(true);
+        // 어댑터가 한번이라도 생성되었으면, 서피스뷰가 살아 있는 것이므로
+        // 어댑터가 생성되지 않았을 때(null일때), 측 최초 1회에에만 Pen을 selected 처리한다
+        if(rcv_share_image_adapter == null) {
+            // 디폴트 색: 검정색으로 설정하고, 검은색 펜 '선택' 처리
+            currentPencil = findViewById(R.id.black);
+            currentPencil.setSelected(true);
+        }
     }
 
 
@@ -3172,4 +3288,25 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         Long intDec = Long.parseLong(dec);
         return Long.toHexString(intDec).toUpperCase();
     }
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> drawing_tool_open 애니메이션 리스너
+     ---------------------------------------------------------------------------*/
+    Animation.AnimationListener drawing_tool_open_ani_Ltsn = new Animation.AnimationListener() {
+
+        // 드로잉 툴이 open 되는 도중에, 드로잉 툴 close 버튼이 작동하지 않도록 하기 위한 로직
+        @Override
+        public void onAnimationStart(Animation animation) {
+            close_drawing_tool.setClickable(false);
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            close_drawing_tool.setClickable(true);
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {}
+    };
 }

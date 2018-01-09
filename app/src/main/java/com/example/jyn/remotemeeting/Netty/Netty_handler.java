@@ -244,6 +244,15 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
                     to_Call_A("relay_answer_image_file_share", data);
                 }
                 break;
+            // 상대방이 이미지 공유 모드를 종료했음을 전달 받았을 때,
+            case "relay_end_image_file_share":
+                if(data.getNetty_type().equals("webrtc")) {
+                    Logger.d("relay_end_image_file_share, 받음~~~");
+
+                    // Call_A 로 전달받은 데이터 그대로 전달
+                    to_Call_A("relay_end_image_file_share", data);
+                }
+                break;
         }
     }
 

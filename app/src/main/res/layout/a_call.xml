@@ -191,7 +191,7 @@
             android:layout_height="match_parent"
             />
 
-        <!-- 드로잉 도구 레이아웃 -->
+        <!-- 드로잉 도구 레이아웃 2 -->
         <RelativeLayout
             android:visibility="gone"
             tools:visibility="visible"
@@ -200,53 +200,14 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             >
-
-            <!--뒤에 검은색 약간 불투명 검은색 까는 뷰-->
             <View
+                android:id="@+id/stroke_alpha_bar_LIN_back_alpha"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#000000"
+                android:layout_alignBaseline="@+id/stroke_alpha_bar_LIN"
+                android:layout_alignTop="@+id/stroke_alpha_bar_LIN"
                 android:alpha="0.7"/>
-            <!--빈공간 채우는 뷰: 현재 안씀-->
-            <!--<View-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:layout_above="@+id/btn_view"-->
-                <!--/>-->
-            <!--버튼 모여있는 뷰-->
-            <LinearLayout
-                android:id="@+id/btn_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:layout_above="@+id/stroke_alpha_bar_LIN"
-                >
-                <!--<Button-->
-                    <!--android:id="@+id/save_Image"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="save_Image"/>-->
-                <!--<Button-->
-                    <!--android:id="@+id/undo"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="undo"-->
-                    <!--/>-->
-                <!--<Button-->
-                    <!--android:visibility="gone"-->
-                    <!--android:id="@+id/remove_all"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="remove_all"-->
-                    <!--/>-->
-                <!--<Button-->
-                    <!--android:id="@+id/enable_drag_btn"-->
-                    <!--android:layout_width="wrap_content"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:text="이동 off"-->
-                    <!--/>-->
-            </LinearLayout>
-
 
             <!-- 펜 두께 / 펜 투명도 조절 시크바 레이아웃 -->
             <LinearLayout
@@ -380,7 +341,6 @@
         </RelativeLayout>
 
 
-
         <!--드로잉 도구 open-->
         <ImageView
             android:visibility="visible"
@@ -410,38 +370,83 @@
             android:layout_alignParentEnd="true"
             />
 
-        <ImageView
-            android:id="@+id/enable_drag_btn"
+        <!--드로잉 도구 레이아웃 1 -->
+        <RelativeLayout
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:id="@+id/drawing_layout_1"
             android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:padding="7dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
-            android:src="@drawable/scroll"
             android:layout_alignParentEnd="true"
-            />
-        <ImageView
-            android:id="@+id/undo"
-            android:layout_below="@+id/enable_drag_btn"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:padding="7dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="5dp"
-            android:src="@drawable/undo"
-            android:layout_alignParentEnd="true"
-            />
-        <ImageView
-            android:id="@+id/save_Image"
-            android:layout_below="@+id/undo"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:padding="7dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="5dp"
-            android:src="@drawable/save_image"
-            android:layout_alignParentEnd="true"
-            />
+            >
+            <!--드래그 토글 버튼-->
+            <ImageView
+                android:id="@+id/enable_drag_btn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:padding="7dp"
+                android:src="@drawable/scroll"
+                android:layout_alignParentEnd="true"
+                android:alpha="1"
+                />
+            <!--undo 토글 버튼-->
+            <ImageView
+                android:id="@+id/undo"
+                android:layout_below="@+id/enable_drag_btn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:padding="7dp"
+                android:src="@drawable/undo"
+                android:layout_alignParentEnd="true"
+                />
+            <!--이미지로 다운로드 버튼-->
+            <ImageView
+                android:id="@+id/save_Image"
+                android:layout_below="@+id/undo"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:padding="7dp"
+                android:src="@drawable/save_image"
+                android:layout_alignParentEnd="true"
+                />
+        </RelativeLayout>
+        <!--&lt;!&ndash;드래그 토글 버튼&ndash;&gt;-->
+        <!--<ImageView-->
+            <!--android:id="@+id/enable_drag_btn"-->
+            <!--android:layout_width="60dp"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:padding="7dp"-->
+            <!--android:layout_marginTop="5dp"-->
+            <!--android:layout_marginEnd="5dp"-->
+            <!--android:src="@drawable/scroll"-->
+            <!--android:layout_alignParentEnd="true"-->
+            <!--android:alpha="1"-->
+            <!--/>-->
+        <!--&lt;!&ndash;undo 토글 버튼&ndash;&gt;-->
+        <!--<ImageView-->
+            <!--android:id="@+id/undo"-->
+            <!--android:layout_below="@+id/enable_drag_btn"-->
+            <!--android:layout_width="60dp"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:padding="7dp"-->
+            <!--android:layout_marginEnd="5dp"-->
+            <!--android:src="@drawable/undo"-->
+            <!--android:layout_alignParentEnd="true"-->
+            <!--/>-->
+        <!--&lt;!&ndash;이미지로 다운로드 버튼&ndash;&gt;-->
+        <!--<ImageView-->
+            <!--android:id="@+id/save_Image"-->
+            <!--android:layout_below="@+id/undo"-->
+            <!--android:layout_width="60dp"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:padding="7dp"-->
+            <!--android:layout_marginEnd="5dp"-->
+            <!--android:src="@drawable/save_image"-->
+            <!--android:layout_alignParentEnd="true"-->
+            <!--/>-->
+
 
     </RelativeLayout>
 
