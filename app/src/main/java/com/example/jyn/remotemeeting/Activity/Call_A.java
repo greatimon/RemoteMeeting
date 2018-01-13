@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -22,6 +24,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
@@ -36,6 +40,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Chronometer;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -53,6 +58,10 @@ import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
 import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_end_D;
 import com.example.jyn.remotemeeting.Dialog.Out_confirm_D;
 import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.FaceTracking_3D_modeling.Awd_model_handling;
+import com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview;
+import com.example.jyn.remotemeeting.FaceTracking_3D_modeling.GraphicFaceTrackerFactory;
+import com.example.jyn.remotemeeting.FaceTracking_3D_modeling.GraphicOverlay;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
 import com.example.jyn.remotemeeting.Fragment.Hud_F;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -72,6 +81,12 @@ import com.example.jyn.remotemeeting.WebRTC.AppRTCClient;
 import com.example.jyn.remotemeeting.WebRTC.DirectRTCClient;
 import com.example.jyn.remotemeeting.WebRTC.PeerConnectionClient;
 import com.example.jyn.remotemeeting.WebRTC.WebSocketRTCClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.images.Size;
+import com.google.android.gms.vision.CameraSource;
+import com.google.android.gms.vision.MultiProcessor;
+import com.google.android.gms.vision.face.FaceDetector;
 import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
 import com.squareup.otto.Subscribe;
@@ -174,7 +189,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     private AppRTCAudioManager audioManager = null;
     private EglBase rootEglBase;
     private SurfaceViewRenderer pipRenderer;
-    private SurfaceViewRenderer fullscreenRenderer;
+//    private SurfaceViewRenderer fullscreenRenderer;
+    public static SurfaceViewRenderer fullscreenRenderer;
     private VideoFileRenderer videoFileRenderer;
     private final List<VideoRenderer.Callbacks> remoteRenderers =
             new ArrayList<VideoRenderer.Callbacks>();
@@ -239,8 +255,12 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     @BindView(R.id.close_drawing_tool)      public ImageView close_drawing_tool;
     @BindView(R.id.undo)                    public ImageView undo;
     @BindView(R.id.save_Image)              public ImageView save_Image;
+    @BindView(R.id.video_off_backup_backColor)
+    public View video_off_backup_backColor;
     @BindView(R.id.stroke_alpha_bar_LIN_back_alpha)
     public View stroke_alpha_bar_LIN_back_alpha;
+    // 3D 모델 올라가는 뷰
+    @BindView(R.id.awd_model_view)          public FrameLayout awd_model_view;
 
 
     // Realm and Drawing 관련 변수 ==============
@@ -355,6 +375,23 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public static boolean got_reset_order_from_rcv_adapter;
 
 
+    // FaceTracking 관련 변수 ==============
+    // ====================================
+    private CameraSource cameraSource = null;
+
+    public static CameraSourcePreview cameraSourcePreview;
+    private GraphicOverlay graphicOverlay;
+
+    private static final int RC_HANDLE_GMS = 9001;
+    // permission request codes need to be < 256
+    private static final int RC_HANDLE_CAMERA_PERM = 2;
+    private boolean startRequested;
+
+    // 3D modeling 관련 변수 ==============
+    // ===================================
+    public Awd_model_handling awd_model_handling;
+
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -397,6 +434,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         back_img_full = findViewById(R.id.back_img_full);
         profile_img_full = findViewById(R.id.profile_img_full);
         image_share_REL = findViewById(R.id.image_share_REL);
+        cameraSourcePreview =findViewById(R.id.cameraSourcePreview);
+        graphicOverlay = findViewById(R.id.faceOverlay);
 
         call_f = new Call_F();
         hud_f = new Hud_F();
@@ -871,6 +910,19 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     @Override
     protected void onResume() {
         super.onResume();
+//        // faceTracking 관련 로직
+//        startCameraSource();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     생명주기 ==> onPause
+     ---------------------------------------------------------------------------*/
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        // faceTracking 관련 로직
+//        cameraSourcePreview.stop();
     }
 
     /**
@@ -1343,6 +1395,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             realm.close();
             realm = null;
         }
+        // faceTracking 관련 로직
+        if (cameraSource != null) {
+            cameraSource.release();
+        }
 
         super.onDestroy();
     }
@@ -1636,6 +1692,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     private VideoCapturer createVideoCapturer() {
         VideoCapturer videoCapturer = null;
         String videoFileAsCamera = getIntent().getStringExtra(Static.EXTRA_VIDEO_FILE_AS_CAMERA);
+        Log.d(TAG, "=======================================");
+        Log.d(TAG, "videoFileAsCamera: " + videoFileAsCamera);
+        Log.d(TAG, "=======================================");
         if (videoFileAsCamera != null) {
             try {
                 videoCapturer = new FileVideoCapturer(videoFileAsCamera);
@@ -1903,16 +1962,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if(from.equals("me")) {
             // 루프백 모드일 때 - 나 혼자 대기중일 때
             if(loopback_mode) {
+                // TODO: 페이스 트랙킹 테스트 코드 -- 밑에 블럭 주석처리함, 나중에 풀기
                 // 비디오 모드가 off 일때, 백업뷰 VISIBLE
                 if(!video_status) {
                     video_off_backup_REL_full.setVisibility(View.VISIBLE);
                     // 프로필 이미지
-//                    Glide
-//                        .with(this)
-//                        .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
-//                        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-//                        .bitmapTransform(new CropCircleTransformation(this))
-//                        .into(profile_img_full);
                     Glide
                         .with(this)
                         .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + myapp.getUser_img_filename())
@@ -1929,16 +1983,35 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         });
 
                     // 백 이미지
-                    int random = new Random().nextInt(2);
+//                    int random = new Random().nextInt(2);
                     Glide
                         .with(this)
 //                        .load(myapp.video_off_back_img[random])
                         .load(R.drawable.video_off_back_5)
                         .into(back_img_full);
+
+                    // TODO: 페이스 트랙킹 테스트 코드
+                    /** FaceTracking initializing */
+//                    fullscreenRenderer.setVisibility(View.GONE);
+//                    fullscreenRenderer.setEnableHardwareScaler(false /* enabled */);
+//                    fullscreenRenderer.setAlpha(0);
+//                    cameraSourcePreview.setVisibility(View.VISIBLE);
+//                    awd_model_view.setVisibility(View.VISIBLE);
+//                    initializing_for_faceTracking();
                 }
                 // 비디오 모드가 on 일때, 백업뷰 GONE
                 else if(video_status) {
+                    // TODO: 페이스 트랙킹 테스트 코드 -- 밑에 줄 주석처리함, 나중에 풀기
                     video_off_backup_REL_full.setVisibility(View.GONE);
+
+                    // TODO: 페이스 트랙킹 테스트 코드
+                    /** FaceTracking initializing */
+//                    // faceTracking 관련 로직
+//                    cameraSourcePreview.stop();
+//                    cameraSourcePreview.release();
+//                    cameraSourcePreview.setVisibility(View.GONE);
+//                    awd_model_view.setVisibility(View.GONE);
+
                 }
             }
             // 루프백 모드가 아닐 때 - 상대방이 영상회의에 들어와 있을 때
@@ -1969,7 +2042,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         });
 
                     // 백 이미지
-                    int random = new Random().nextInt(2);
+//                    int random = new Random().nextInt(2);
                     Glide
                         .with(Call_A.this)
                         .load(R.drawable.video_off_back_5)
@@ -3309,4 +3382,164 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         @Override
         public void onAnimationRepeat(Animation animation) {}
     };
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> FaceTracking 하여 mask를 쓰기 위한 로직 시작점
+     ---------------------------------------------------------------------------*/
+    private void initializing_for_faceTracking() {
+//        fullscreenRenderer.setVisibility(View.INVISIBLE);
+//        fullscreenRenderer.setAlpha(0);
+//        cameraSourcePreview.setVisibility(View.VISIBLE);
+//        cameraSourcePreview.setVisibility(View.VISIBLE);
+//        graphicOverlay.setVisibility(View.VISIBLE);
+
+        /** AWD 3D modeling */
+//        awd_model_handling = new Awd_model_handling();
+//        final FragmentTransaction transaction = getFragmentManager().beginTransaction();
+//
+//        transaction.add(R.id.awd_model_view, awd_model_handling);
+//        transaction.commit();
+
+        /** face tracking 시작 - google mobile vision */
+        createCameraSource();
+    }
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> FaceTracking 하여 mask를 쓰기 위한 로직 시작점
+     ---------------------------------------------------------------------------*/
+    private void createCameraSource() {
+        Context context = getApplicationContext();
+        FaceDetector detector = new FaceDetector.Builder(context)
+                .setTrackingEnabled(true)
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                .setMode(FaceDetector.ACCURATE_MODE)
+                .build();
+
+        detector.setProcessor(
+                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory(graphicOverlay))
+                        .build());
+
+        if (!detector.isOperational()) {
+            // Note: The first time that an app using face API is installed on a device, GMS will
+            // download a native library to the device in order to do detection.  Usually this
+            // completes before the app is run for the first time.  But if that download has not yet
+            // completed, then the above call will not detect any faces.
+            //
+            // isOperational() can be used to check if the required native library is currently
+            // available.  The detector will automatically become operational once the library
+            // download completes on device.
+            Log.w(TAG, "Face detector dependencies are not yet available.");
+        }
+
+        cameraSource = new CameraSource.Builder(context, detector)
+                .setAutoFocusEnabled(true)
+                .setRequestedPreviewSize(640, 480)
+                .setFacing(CameraSource.CAMERA_FACING_FRONT)
+                .setRequestedFps(30.0f)
+                .build();
+
+        // faceTracking 관련 로직
+        startCameraSource();
+    }
+
+
+    /**
+     * Starts or restarts the camera source, if it exists.  If the camera source doesn't exist yet
+     * (e.g., because onResume was called before the camera source was created), this will be called
+     * again when the camera source is created.
+     *
+     * 카메라 소스가있는 경우 시작하거나 다시 시작합니다.
+     * 카메라 소스가 아직 생성되지 않은 경우
+     * (예 : 카메라 소스를 만들기 전에 onResume이 호출 되었기 때문에) 카메라 소스를 만들 때 다시 호출됩니다.
+     */
+    private void startCameraSource() {
+        // check that the device has play services available.
+        // 기기에 사용 가능한 구글 플레이 서비스가 있는지 확인하십시오.
+        int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
+                getApplicationContext());
+        if (code != ConnectionResult.SUCCESS) {
+            Dialog dlg =
+                    GoogleApiAvailability.getInstance().getErrorDialog(this, code, RC_HANDLE_GMS);
+            dlg.show();
+        }
+
+        if (cameraSource != null) {
+            try {
+                /** 원래 코드 */
+                cameraSourcePreview.start(cameraSource, graphicOverlay);
+            } catch (IOException e) {
+                Log.e(TAG, "Unable to start camera source.", e);
+                myapp.logAndToast("Unable to start camera source: " + e);
+                cameraSource.release();
+                cameraSource = null;
+            }
+        }
+    }
+//
+//    // step 1.
+//    public void start() throws IOException {
+//        if (cameraSource == null) {
+//            stop();
+//        }
+//        else if (cameraSource != null) {
+//            startRequested = true;
+//            startIfReady();
+//        }
+//    }
+//
+//    // step 2.
+//    @SuppressLint("MissingPermission")
+//    private void startIfReady() throws IOException {
+//        if (startRequested) {
+////            cameraSource.start(fullscreenRenderer.getHolder());
+//            cameraSource.start();
+//            if (graphicOverlay != null) {
+//                // 원래 코드
+//                Size size = cameraSource.getPreviewSize();
+//                int min = Math.min(size.getWidth(), size.getHeight());
+//                int max = Math.max(size.getWidth(), size.getHeight());
+//                // 시도 코드
+////                int min = Math.min(fullscreenRenderer.getWidth(), fullscreenRenderer.getHeight());
+////                int max = Math.max(fullscreenRenderer.getWidth(), fullscreenRenderer.getHeight());
+//
+//                if (isPortraitMode()) {
+//                    // Swap width and height sizes when in portrait, since it will be rotated by
+//                    // 90 degrees
+//                    graphicOverlay.setCameraInfo(min, max, cameraSource.getCameraFacing());
+//                    Log.d(TAG, "mCameraSource.getCameraFacing(): " + cameraSource.getCameraFacing());
+//                } else {
+//                    graphicOverlay.setCameraInfo(max, min, cameraSource.getCameraFacing());
+//                }
+//                graphicOverlay.clear();
+//            }
+//            startRequested = false;
+//        }
+//    }
+//
+//    public void stop() {
+//        if (cameraSource != null) {
+//            cameraSource.stop();
+//        }
+//    }
+//
+//    private boolean isPortraitMode() {
+//        int orientation = getBaseContext().getResources().getConfiguration().orientation;
+//        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            /** 원래 코드 */
+//            return false;
+//            /** try 코드 */
+////            return true;
+//        }
+//        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            /** 원래 코드 */
+//            return true;
+//            /** try 코드 */
+////            return false;
+//        }
+//
+//        Log.d(TAG, "isPortraitMode returning false by default");
+//        return false;
+//    }
 }

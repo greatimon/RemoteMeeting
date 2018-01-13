@@ -31,6 +31,11 @@
         android:theme="@style/AppTheme"
         tools:ignore="ExtraText,InnerclassSeparator">
 
+        // 구글 비전 API 사용관련 meta-data 설정
+        <meta-data
+            android:name="com.google.android.gms.vision.DEPENDENCIES"
+            android:value="face" />
+
         // 메인 로그인 전
         <activity
             android:name=".Activity.Main_before_login_A"

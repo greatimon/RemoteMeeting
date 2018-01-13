@@ -122,14 +122,18 @@ dependencies {
     compile 'com.orhanobut:logger:2.1.1'
 
     /** realm 서버 - 화면 드로잉 */
-    // 최신버전인 4.3.1 로 설정하면, 에러가 남
-    // compile 'io.realm:realm-gradle-plugin:4.1.1'
-//    compile 'io.realm:realm-gradle-plugin:4.1.1'
     compile 'io.realm:realm-android-library-object-server:4.3.1'
-    // ==> 프로젝트 레벨의 build.gradle 의 dependencies 로 보냄
+    // classpath 'io.realm:realm-gradle-plugin:4.3.1'
+    // ==> 프로젝트 레벨의 build.gradle 의 dependencies 에 있음
 
     /** 커스텀 시크바 */
     compile 'com.github.warkiz.widget:indicatorseekbar:1.2.4'
+
+    /** google vision API */
+    compile 'com.google.android.gms:play-services-vision:11.8.0'
+
+    /** rajawali 3D */
+    compile 'org.rajawali3d:rajawali:1.1.970'
 
 }
 

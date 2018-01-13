@@ -814,6 +814,8 @@ public class PeerConnectionClient {
                 // 내 카메라 on/off - 로컬 카메라는 항상 보여줄 것임 (그래서 주석 처리)
                 if (localVideoTrack != null) {
                     localVideoTrack.setEnabled(renderVideo);
+                    // todo: try 코드
+//                    localVideoTrack.dispose();
                 }
 //                // 상대방 카메라 on/off
 //                if (remoteVideoTrack != null) {

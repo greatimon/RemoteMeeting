@@ -151,6 +151,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     // Call_A 로 부터, 뷰 조절을 하라는 메세지를 전달받을 핸들러
     public static Handler visibility_control_handler;
 
+    // faceTracking 테스트용 변수
+    boolean faceTracking_enable = true;
+
 
     /**---------------------------------------------------------------------------
      콜백메소드 ==> 포토뷰 탭, 콜백
@@ -566,7 +569,24 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
 
         /** 비디오 on/off 토글 버튼으로 이 메소드가 호출되었을 때 */
         else  {
+//            // faceTracking 관련 로직
+//            if(faceTracking_enable) {
+//                Call_A.fullscreenRenderer.setVisibility(View.GONE);
+//                Call_A.cameraSourcePreview.setVisibility(View.VISIBLE);
+//            }
+//            else if(!faceTracking_enable) {
+//                Call_A.cameraSourcePreview.stop();
+//                Call_A.cameraSourcePreview.setVisibility(View.GONE);
+//                Call_A.fullscreenRenderer.setVisibility(View.VISIBLE);
+//            }
+
+            /** 원래 코드 */
             boolean enabled = callEvents.onToggleVideo();
+            // TODO: 페이스 트랙킹 테스트 코드
+//            boolean enabled = !faceTracking_enable;
+//            Log.d(TAG, "enabledenabledenabledenabledenabledenabledenabledenabled: " + enabled);
+            faceTracking_enable = enabled;
+
             Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
 
             button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);

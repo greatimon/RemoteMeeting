@@ -16,7 +16,7 @@
     <!--비디오 전송을 껐을 때 나타나는 백업 뷰: for fullscreen-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="gone"
+        tools:visibility="visible"
         android:id="@+id/video_off_backup_REL_full"
         android:background="#e8ecff"
         android:layout_height="match_parent"
@@ -32,6 +32,7 @@
             android:scaleType="centerCrop"
             />
         <View
+            android:id="@+id/video_off_backup_backColor"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#33000000"
@@ -45,6 +46,31 @@
             android:scaleType="centerCrop"
             />
     </RelativeLayout>
+
+    <!--=========================================================-->
+    <!--FaceTracking 뷰-->
+    <com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/cameraSourcePreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+        <com.example.jyn.remotemeeting.FaceTracking_3D_modeling.GraphicOverlay
+            android:id="@+id/faceOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview>
+
+    <!--=========================================================-->
+    <!--3D 모델 올라가는 뷰-->
+    <FrameLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/awd_model_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <!--pip 서피스뷰-->
     <org.webrtc.SurfaceViewRenderer
@@ -149,7 +175,7 @@
     <!--이미지 공유 레이아웃: 서피스뷰 포함-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/image_share_REL"
         android:background="#FFF"
         android:layout_width="match_parent"
@@ -449,5 +475,7 @@
 
 
     </RelativeLayout>
+
+
 
 </RelativeLayout>
