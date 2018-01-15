@@ -51,7 +51,7 @@
     <!--FaceTracking 뷰-->
     <com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/cameraSourcePreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -67,7 +67,7 @@
     <!--3D 모델 올라가는 뷰-->
     <FrameLayout
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/awd_model_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
@@ -175,7 +175,7 @@
     <!--이미지 공유 레이아웃: 서피스뷰 포함-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="gone"
+        tools:visibility="visible"
         android:id="@+id/image_share_REL"
         android:background="#FFF"
         android:layout_width="match_parent"

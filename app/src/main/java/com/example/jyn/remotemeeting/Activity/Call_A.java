@@ -3219,6 +3219,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             currentPencil = pencil;
             // 현재 alpha 값, 새로운 pencilView에도 적용
             set_pencil_alpha(currentPencil, alpha);
+            Log.d(TAG, "아이언_ v instanceof PencilViewe 들어옴");
+            Log.d(TAG, "colorName: " + colorName);
         }
 
         // 드로잉 도구의 시크바 색깔 변경하기
@@ -3257,6 +3259,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 .setIndicatorColor(changed_color)
                 .setIndicatorTextColor(change_IndicatorTextColor ? Color.parseColor("#544a44") : Color.parseColor("#ffffff"))
                 .apply();
+
+        if(myapp.getUser_no().equals("14")) {
+            slider_thickness.setVisibility(View.GONE);
+            slider_thickness.setVisibility(View.VISIBLE);
+            slider_alpha.setVisibility(View.GONE);
+            slider_alpha.setVisibility(View.VISIBLE);
+        }
+
+        Log.d(TAG, "아이언_ v set_drawing_tool_seekbar_color 들어옴");
+        Log.d(TAG, "colorName: " + colorName);
     }
 
 
@@ -3477,69 +3489,4 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             }
         }
     }
-//
-//    // step 1.
-//    public void start() throws IOException {
-//        if (cameraSource == null) {
-//            stop();
-//        }
-//        else if (cameraSource != null) {
-//            startRequested = true;
-//            startIfReady();
-//        }
-//    }
-//
-//    // step 2.
-//    @SuppressLint("MissingPermission")
-//    private void startIfReady() throws IOException {
-//        if (startRequested) {
-////            cameraSource.start(fullscreenRenderer.getHolder());
-//            cameraSource.start();
-//            if (graphicOverlay != null) {
-//                // 원래 코드
-//                Size size = cameraSource.getPreviewSize();
-//                int min = Math.min(size.getWidth(), size.getHeight());
-//                int max = Math.max(size.getWidth(), size.getHeight());
-//                // 시도 코드
-////                int min = Math.min(fullscreenRenderer.getWidth(), fullscreenRenderer.getHeight());
-////                int max = Math.max(fullscreenRenderer.getWidth(), fullscreenRenderer.getHeight());
-//
-//                if (isPortraitMode()) {
-//                    // Swap width and height sizes when in portrait, since it will be rotated by
-//                    // 90 degrees
-//                    graphicOverlay.setCameraInfo(min, max, cameraSource.getCameraFacing());
-//                    Log.d(TAG, "mCameraSource.getCameraFacing(): " + cameraSource.getCameraFacing());
-//                } else {
-//                    graphicOverlay.setCameraInfo(max, min, cameraSource.getCameraFacing());
-//                }
-//                graphicOverlay.clear();
-//            }
-//            startRequested = false;
-//        }
-//    }
-//
-//    public void stop() {
-//        if (cameraSource != null) {
-//            cameraSource.stop();
-//        }
-//    }
-//
-//    private boolean isPortraitMode() {
-//        int orientation = getBaseContext().getResources().getConfiguration().orientation;
-//        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            /** 원래 코드 */
-//            return false;
-//            /** try 코드 */
-////            return true;
-//        }
-//        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-//            /** 원래 코드 */
-//            return true;
-//            /** try 코드 */
-////            return false;
-//        }
-//
-//        Log.d(TAG, "isPortraitMode returning false by default");
-//        return false;
-//    }
 }
