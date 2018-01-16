@@ -24,7 +24,7 @@ public abstract class Awd_model_fragment extends Fragment implements IDisplay, O
 
 	public String TAG = Awd_model_fragment.class.getSimpleName();
 
-	protected FrameLayout      mLayout;
+	protected FrameLayout mLayout;
 	protected ISurface mRajawaliSurface;
 	protected ISurfaceRenderer mRenderer;
 

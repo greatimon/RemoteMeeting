@@ -2,16 +2,13 @@ package com.example.jyn.remotemeeting.FaceTracking_3D_modeling;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.R;
 
 import org.rajawali3d.Object3D;
@@ -19,11 +16,8 @@ import org.rajawali3d.lights.DirectionalLight;
 import org.rajawali3d.loader.LoaderAWD;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
-import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.CubeMapTexture;
 import org.rajawali3d.math.vector.Vector3;
-
-import java.util.ArrayList;
 
 public class Awd_model_handling extends Awd_model_fragment {
 
@@ -34,8 +28,6 @@ public class Awd_model_handling extends Awd_model_fragment {
 
     static public Handler rotate_handler;
 
-    float length_between_eyes_X;
-    float face_width;
     public static double scale = 1.0d;
 
     @SuppressLint("HandlerLeak")
@@ -49,18 +41,28 @@ public class Awd_model_handling extends Awd_model_fragment {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
+                // 내 3D object 조절값을 전달받았을 때
                 if(msg.what == 0) {
                     // Message 객체로부터 'EulerY, EulerZ' 변수 담기
                     float EulerY = msg.getData().getFloat("EulerY");
                     float EulerZ = msg.getData().getFloat("EulerZ");
-                    length_between_eyes_X = msg.getData().getFloat("length_between_eyes_X");
-                    face_width = msg.getData().getFloat("face_width");
 
 //                    Log.d(TAG, "====================== AccelerometerFragment_ get handleMessage ======================");
 //                    Log.d(TAG, "EulerY: " + EulerY);
 //                    Log.d(TAG, "EulerZ: " + EulerZ);
 
 //                    ((AccelerometerRenderer) mRenderer).rotate(EulerY, EulerZ);
+                    ((On_face_tracking_Renderer) mRenderer).set_on_faceTrackingValues(
+                            EulerZ,
+                            (EulerY*1.35f),
+                            0);
+                }
+                // 상대방의 3D object 조절값을 전달받았을 때
+                else if(msg.what == 1) {
+                    // Message 객체로부터 'EulerY, EulerZ' 변수 담기
+                    float EulerY = msg.getData().getFloat("EulerY");
+                    float EulerZ = msg.getData().getFloat("EulerZ");
+
                     ((On_face_tracking_Renderer) mRenderer).set_on_faceTrackingValues(
                             EulerZ,
                             (EulerY*1.35f),
@@ -103,13 +105,19 @@ public class Awd_model_handling extends Awd_model_fragment {
                 DirectionalLight light = new DirectionalLight();
                 light.setLookAt(1, -45, 1);
                 light.enableLookAt();
-                light.setPower(1.5f);
+                light.setPower(2f);
                 getCurrentScene().addLight(light);
 
                 light = new DirectionalLight();
-                light.setLookAt(-45, 1, -45);
+                light.setLookAt(-90, 1, -90);
                 light.enableLookAt();
-                light.setPower(1.5f);
+                light.setPower(2f);
+                getCurrentScene().addLight(light);
+
+                light = new DirectionalLight();
+                light.setLookAt(1, -90, -90);
+                light.enableLookAt();
+                light.setPower(2f);
                 getCurrentScene().addLight(light);
 
                 final LoaderAWD parser = new LoaderAWD(mContext.getResources(), mTextureManager, R.raw.awd_suzanne);
@@ -118,53 +126,46 @@ public class Awd_model_handling extends Awd_model_fragment {
                 mMonkey = parser.getParsedObject();
                 getCurrentScene().addChild(mMonkey);
 
-//                getCurrentCamera().setZ(4.5d); /** 줌 레벨 */
+                getCurrentCamera().setZ(3.7d); /** 줌 레벨 */
 
-                int[] resourceIds = new int[]{R.drawable.posx, R.drawable.negx,
-                    R.drawable.posy, R.drawable.negy, R.drawable.posz,
-                    R.drawable.negz};
+                int[] resourceIds = new int[] {R.drawable.posx, R.drawable.negx,
+                        R.drawable.posy, R.drawable.negy, R.drawable.posz,
+                        R.drawable.negz};
 
-                final int[] resourceIds_1 = new int[] {
+                final int[] resurceIds_1 = new int[] {
                         R.drawable.posx2, R.drawable.negx2,
                         R.drawable.posy2, R.drawable.negy2, R.drawable.posz2, R.drawable.negz2
                 };
 
-                final Bitmap[] resourceIds_1_bitmap = new Bitmap[6];
+                Material material = new Material();
+                material.enableLighting(true);
+                material.setDiffuseMethod(new DiffuseMethod.Lambert());
+//                material.setColor(0x990000);
 
-                for(int i = 0; i< resourceIds_1.length; i++) {
-                    final int finalI = i;
+                // 기기에 따라 3D 오프젝트의 색을 달리하기 위한 int[] 구별 변수
+                int[] adjust_this_resource = new int[6];
 
-                    // OOM을 막기 위해서 리소스를 글라이드로 적절한 비트맵으로 변환
-                    Glide
-                        .with(getActivity())
-                        .load(resourceIds[i])
-                        .asBitmap()
-                        .into(new SimpleTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                                resourceIds_1_bitmap[finalI] = resource;
+                //// 현재 베가 아이언2이 얼굴인식이 제대로 작동하지 않는 관계로 구분하지 않기로 함, 일단.
+//                // 내 개발의 경우, 베가아이언2가 여기에 해당
+//                if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+//                    adjust_this_resource = resurceIds_1;
+//                }
+//                // 내 개발의 경우, 스카이 아임백이 여기에 해당
+//                else if(Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+//                    adjust_this_resource = resourceIds;
+//                }
+                adjust_this_resource = resourceIds;
 
-                                // 마지막일 때
-                                if(finalI == resourceIds_1.length - 1) {
-                                    Material material = new Material();
-                                    material.enableLighting(true);
-                                    material.setDiffuseMethod(new DiffuseMethod.Lambert());
+                CubeMapTexture envMap = new CubeMapTexture("environmentMap",
+                        adjust_this_resource);
+                envMap.isEnvironmentTexture(true);
+                material.addTexture(envMap);
+                material.setColorInfluence(0);
+                mMonkey.setMaterial(material);
+                /////////////////////////////////////////////////////////////////////////////
+                mMonkey.setTransparent(true);
+                getCurrentScene().setBackgroundColor(Color.parseColor("#fffff5"));
 
-                                    try {
-                                        CubeMapTexture envMap = new CubeMapTexture("environmentMap",
-                                                resourceIds_1_bitmap);
-                                        envMap.isEnvironmentTexture(true);
-                                        material.addTexture(envMap);
-                                        material.setColorInfluence(0);
-                                        mMonkey.setMaterial(material);
-                                    } catch (ATexture.TextureException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                }
-                            }
-                        });
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -176,7 +177,7 @@ public class Awd_model_handling extends Awd_model_fragment {
 //            mMonkey.setRotation(face_trackingValues.x, face_trackingValues.y + 180, face_trackingValues.z);
             // y, z움직임 조정하는 로직
             mMonkey.setRotation(face_trackingValues.x, face_trackingValues.y, face_trackingValues.z);
-            Log.d(TAG, "onRender_ x: " + face_trackingValues.x + ", y: " + face_trackingValues.y + ", z:" + face_trackingValues.z);
+//            Log.d(TAG, "onRender_ x: " + face_trackingValues.x + ", y: " + face_trackingValues.y + ", z:" + face_trackingValues.z);
 
             // 스케일 조정하는 로직
 //            double this_Z = face_width/125.0d;

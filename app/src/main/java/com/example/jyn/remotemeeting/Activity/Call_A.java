@@ -9,7 +9,6 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -24,8 +23,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SimpleItemAnimator;
@@ -83,7 +80,6 @@ import com.example.jyn.remotemeeting.WebRTC.PeerConnectionClient;
 import com.example.jyn.remotemeeting.WebRTC.WebSocketRTCClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.face.FaceDetector;
@@ -188,7 +184,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     private AppRTCClient.SignalingParameters signalingParameters;
     private AppRTCAudioManager audioManager = null;
     private EglBase rootEglBase;
-    private SurfaceViewRenderer pipRenderer;
+    public static SurfaceViewRenderer pipRenderer;
 //    private SurfaceViewRenderer fullscreenRenderer;
     public static SurfaceViewRenderer fullscreenRenderer;
     private VideoFileRenderer videoFileRenderer;
@@ -259,8 +255,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public View video_off_backup_backColor;
     @BindView(R.id.stroke_alpha_bar_LIN_back_alpha)
     public View stroke_alpha_bar_LIN_back_alpha;
-    // 3D 모델 올라가는 뷰
+    // full 창: 3D 모델 올라가는 뷰
     @BindView(R.id.awd_model_view)          public FrameLayout awd_model_view;
+    // pip 창: 얼굴인식 + 3D 오브젝트 관련 뷰
+    @BindView(R.id.face_3D_backup_REL_pip)  public RelativeLayout face_3D_backup_REL_pip;
+    @BindView(R.id.back_img_full_for_3D_pip)public ImageView back_img_full_for_3D_pip;
+    @BindView(R.id.awd_model_view_pip)      public FrameLayout awd_model_view_pip;
+    @BindView(R.id.border_view_pip)         public View border_view_pip;
 
 
     // Realm and Drawing 관련 변수 ==============
@@ -381,6 +382,16 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
     public static CameraSourcePreview cameraSourcePreview;
     private GraphicOverlay graphicOverlay;
+    public static CameraSourcePreview cameraSourcePreview_pip;
+    private GraphicOverlay graphicOverlay_pip;
+    // 3d 모델 올라갈 때, 뒤에 백그라운드 이미지
+    public ImageView back_img_full_for_3D;
+    // 3d 모델 올라갈 때, frameLayout의 테두리의 모서리를 둥글게 만들기 위한 xml을 적용시킬 뷰
+    public View border_view;
+    // 얼굴 감지 하는 디텍터
+    FaceDetector detector;
+    // 현재 얼굴인식 + 3D mode 중인지 아닌지 판별하는 변수
+    public static boolean is_3D_mode;
 
     private static final int RC_HANDLE_GMS = 9001;
     // permission request codes need to be < 256
@@ -395,7 +406,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
-    @SuppressLint("HandlerLeak")
+    @SuppressLint({"HandlerLeak", "CutPasteId"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -436,6 +447,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         image_share_REL = findViewById(R.id.image_share_REL);
         cameraSourcePreview =findViewById(R.id.cameraSourcePreview);
         graphicOverlay = findViewById(R.id.faceOverlay);
+        cameraSourcePreview_pip =findViewById(R.id.cameraSourcePreview_pip);
+        graphicOverlay_pip = findViewById(R.id.faceOverlay_pip);
+        back_img_full_for_3D = findViewById(R.id.back_img_full_for_3D);
+        border_view = findViewById(R.id.border_view);
 
         call_f = new Call_F();
         hud_f = new Hud_F();
@@ -758,6 +773,54 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         // 해당 비디오 전송 모드로 복구하기 위한 로직
                         Call_F.visibility_control_handler.sendEmptyMessage(3);
                         myapp.logAndToast("상대방이 이미지 공유 모드를 종료하였습니다.");
+                    }
+
+                    // 상대방이 '얼굴인식 + 3D모드' 상태 변경했음을 전달 받았을 때,
+                    else if(order.equals("relay_sending_my_3d_mode_status")) {
+                        String[] temp = received_data.getExtra().split(Static.SPLIT);
+                        Log.d(TAG, "temp[0]: " + temp[0]);
+                        Log.d(TAG, "temp[1]: " + temp[1]);
+                        Log.d(TAG, "temp[2]: " + temp[2]);
+
+                        // 상대방이 '얼굴인식 + 3D모드'를 'On' 했을 때
+                        if(temp[0].equals("true")) {
+                            // 관련 View Visibility VISIBLE 로 설정하기_ 'true' 값이 들어오는 최초 1회만
+                            if(awd_model_view.getVisibility() == View.GONE) {
+                                awd_model_view.setVisibility(View.VISIBLE);
+                                back_img_full_for_3D.setVisibility(View.VISIBLE);
+                                border_view.setVisibility(View.VISIBLE);
+                                initializing_for_faceTracking_and_3D_modeling(true, false);
+                            }
+
+                            // 상대방의 얼굴 틸트값을 전달받을 핸들러가 생성이 됐을 때, 틸트 값을 전달한다
+                            if(Awd_model_handling.rotate_handler != null) {
+                                // Message 객체에 넣을 bundle 객체 생성
+                                Bundle bundle = new Bundle();
+                                // bundle 객체에 'EulerY, EulerZ' 변수 담기
+                                bundle.putFloat("EulerY", Float.parseFloat(temp[1]));
+                                bundle.putFloat("EulerZ", Float.parseFloat(temp[2]));
+
+                                // 핸들러로 전달할 Message 객체 생성
+                                Message rotate_msg = Awd_model_handling.rotate_handler.obtainMessage();
+                                // bundle 객체 넣기
+                                rotate_msg.setData(bundle);
+                                // 핸들러에서 Message 객체 구분을 위한 'what' 값 설정
+                                rotate_msg.what = 1;
+
+                                // 핸들러로 Message 객체 전달
+                                Awd_model_handling.rotate_handler.sendMessage(rotate_msg);
+                            }
+                        }
+                        // 상대방이 '얼굴인식 + 3D모드'를 'Off' 했을 때
+                        else if(temp[0].equals("false")) {
+                            // 관련 View Visibility GONE 으로 설정하기_ 'false' 값이 들어오는 최초 1회만
+                            if(awd_model_view.getVisibility() == View.VISIBLE) {
+                                awd_model_view.setVisibility(View.GONE);
+                                back_img_full_for_3D.setVisibility(View.GONE);
+                                border_view.setVisibility(View.GONE);
+                            }
+                        }
+
                     }
                 }
                 // * from Call_F
@@ -1399,6 +1462,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (cameraSource != null) {
             cameraSource.release();
         }
+        if(cameraSourcePreview != null) {
+            cameraSourcePreview = null;
+        }
+        if(pipRenderer != null) {
+            pipRenderer = null;
+        }
+        is_3D_mode = false;
 
         super.onDestroy();
     }
@@ -1899,6 +1969,103 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     /**
      * ---------------------------------------------------------------------------
      * otto ==> Call_F로 부터 message 수신
+     *          : 얼굴인식 + 3D 오브젝트 모드 on/off 상태 전달 받음
+     *          : (내가 모드 전환버튼 클릭했을 때)
+     * ---------------------------------------------------------------------------
+     */
+    @Subscribe
+    public void getMessage(Event.Call_F__Call_A_face_recognition event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+
+        Log.d(TAG, "pipRenderer.isClickable(): " + pipRenderer.isClickable());
+        Log.d(TAG, "p얼굴인식 + 3D 오브젝트 모드: " + event.getMessage());
+        when_3d_object_mode_on_off(event.getMessage(), !pipRenderer.isClickable(), "me");
+    }
+
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 얼굴인식 + 3D 오브젝트 모드가 on/off 일 때, 모드에 맞는 기능 구현
+     ---------------------------------------------------------------------------*/
+    private void when_3d_object_mode_on_off(
+            boolean is_3d_object_mode_on, boolean loopback_mode, String from) {
+
+        Log.d(TAG, "when_3d_object_mode_on_off_ is_3d_object_mode_on: " + is_3d_object_mode_on);
+        Log.d(TAG, "when_3d_object_mode_on_off_ loopback_mode: " + loopback_mode);
+        Log.d(TAG, "when_3d_object_mode_on_off_ from: " + from);
+
+        /** 얼굴인식 + 3D 오브젝트 모드 변경 주체가 나일 때 */
+        if(from.equals("me")) {
+            // 루프백 모드일 때 - 나 혼자 대기중일 때
+            if (loopback_mode) {
+                // 얼굴인식 + 3D 오브젝트 모드 on
+                if(is_3d_object_mode_on) {
+                    cameraSourcePreview.setVisibility(View.VISIBLE);
+                    awd_model_view.setVisibility(View.VISIBLE);
+                    back_img_full_for_3D.setVisibility(View.VISIBLE);
+                    border_view.setVisibility(View.VISIBLE);
+                    initializing_for_faceTracking_and_3D_modeling(true, true);
+                }
+                // 얼굴인식 + 3D 오브젝트 모드 off
+                else if(!is_3d_object_mode_on) {
+                    cameraSourcePreview.setVisibility(View.GONE);
+                    awd_model_view.setVisibility(View.GONE);
+                    back_img_full_for_3D.setVisibility(View.GONE);
+                    border_view.setVisibility(View.GONE);
+
+                    // 얼굴 감지 중지
+//                    detector.release();
+                }
+            }
+            // 루프백 모드가 아닐 때 - 상대방이 영상회의에 들어와 있을 때
+            else if(!loopback_mode) {
+                // 얼굴인식 + 3D 오브젝트 모드 on
+                if(is_3d_object_mode_on) {
+                    face_3D_backup_REL_pip.setVisibility(View.VISIBLE);
+                    initializing_for_faceTracking_and_3D_modeling(false, true);
+                    is_3D_mode = true;
+
+                }
+                // 얼굴인식 + 3D 오브젝트 모드 off
+                else if(!is_3d_object_mode_on) {
+                    face_3D_backup_REL_pip.setVisibility(View.GONE);
+                    is_3D_mode = false;
+
+                    // 얼굴 감지 중지
+//                    detector.release();
+
+                    /** 상대방에게 나의 얼굴인식 'off' 상태를 전달하는 메소드 호출 */
+                    myapp.send_my_3d_mode_status_to_subject(false, 0, 0);
+                }
+            }
+        }
+//        /** 얼굴인식 + 3D 오브젝트 모드 변경 주체가 '상대' 일때 */
+//        else if(!from.equals("me")) {
+//            // 얼굴인식 + 3D 오브젝트 모드 on
+//            if(is_3d_object_mode_on) {
+//                cameraSourcePreview.setVisibility(View.VISIBLE);
+//                awd_model_view.setVisibility(View.VISIBLE);
+//                back_img_full_for_3D.setVisibility(View.VISIBLE);
+//                border_view.setVisibility(View.VISIBLE);
+//                initializing_for_faceTracking_and_3D_modeling(true);
+//            }
+//            // 얼굴인식 + 3D 오브젝트 모드 off
+//            else if(!is_3d_object_mode_on) {
+//                cameraSourcePreview.setVisibility(View.GONE);
+//                awd_model_view.setVisibility(View.GONE);
+//                back_img_full_for_3D.setVisibility(View.GONE);
+//                border_view.setVisibility(View.GONE);
+//
+//                // 얼굴 감지 중지
+//                detector.release();
+//            }
+//        }
+    }
+
+
+    /**
+     * ---------------------------------------------------------------------------
+     * otto ==> Call_F로 부터 message 수신
      *          : 파일 공유 모드 버튼 클릭되었으니,
      *           '상대방에게 파일공유모드 요청을 보내' 라는 이벤트 메시지를 전달받음
      * ---------------------------------------------------------------------------
@@ -1962,7 +2129,6 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if(from.equals("me")) {
             // 루프백 모드일 때 - 나 혼자 대기중일 때
             if(loopback_mode) {
-                // TODO: 페이스 트랙킹 테스트 코드 -- 밑에 블럭 주석처리함, 나중에 풀기
                 // 비디오 모드가 off 일때, 백업뷰 VISIBLE
                 if(!video_status) {
                     video_off_backup_REL_full.setVisibility(View.VISIBLE);
@@ -1989,29 +2155,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 //                        .load(myapp.video_off_back_img[random])
                         .load(R.drawable.video_off_back_5)
                         .into(back_img_full);
-
-                    // TODO: 페이스 트랙킹 테스트 코드
-                    /** FaceTracking initializing */
-//                    fullscreenRenderer.setVisibility(View.GONE);
-//                    fullscreenRenderer.setEnableHardwareScaler(false /* enabled */);
-//                    fullscreenRenderer.setAlpha(0);
-//                    cameraSourcePreview.setVisibility(View.VISIBLE);
-//                    awd_model_view.setVisibility(View.VISIBLE);
-//                    initializing_for_faceTracking();
                 }
                 // 비디오 모드가 on 일때, 백업뷰 GONE
                 else if(video_status) {
-                    // TODO: 페이스 트랙킹 테스트 코드 -- 밑에 줄 주석처리함, 나중에 풀기
                     video_off_backup_REL_full.setVisibility(View.GONE);
-
-                    // TODO: 페이스 트랙킹 테스트 코드
-                    /** FaceTracking initializing */
-//                    // faceTracking 관련 로직
-//                    cameraSourcePreview.stop();
-//                    cameraSourcePreview.release();
-//                    cameraSourcePreview.setVisibility(View.GONE);
-//                    awd_model_view.setVisibility(View.GONE);
-
                 }
             }
             // 루프백 모드가 아닐 때 - 상대방이 영상회의에 들어와 있을 때
@@ -3260,7 +3407,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 .setIndicatorTextColor(change_IndicatorTextColor ? Color.parseColor("#544a44") : Color.parseColor("#ffffff"))
                 .apply();
 
-        if(myapp.getUser_no().equals("14")) {
+        // 킷캣일 때(내 개발의 경우, 베가 아이언2)는 시크바 색이 변하지 않는 경우가 발생
+        // 근데, 해당 시크바들의 visibility를 GONE -> VISIBLE 로 하면 제대로 표시되는 걸 발견하여
+        // 그대로 코드 로직 진행
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
             slider_thickness.setVisibility(View.GONE);
             slider_thickness.setVisibility(View.VISIBLE);
             slider_alpha.setVisibility(View.GONE);
@@ -3398,40 +3548,70 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
     /**---------------------------------------------------------------------------
      메소드 ==> FaceTracking 하여 mask를 쓰기 위한 로직 시작점
+        1) to_full_screen: true
+            mask를 전체화면에 보여주는 로직
+        2) to_full_screen: false
+            mask를 작은 pip 화면에 보여주는 로직
      ---------------------------------------------------------------------------*/
-    private void initializing_for_faceTracking() {
-//        fullscreenRenderer.setVisibility(View.INVISIBLE);
-//        fullscreenRenderer.setAlpha(0);
-//        cameraSourcePreview.setVisibility(View.VISIBLE);
-//        cameraSourcePreview.setVisibility(View.VISIBLE);
-//        graphicOverlay.setVisibility(View.VISIBLE);
+    private void initializing_for_faceTracking_and_3D_modeling(boolean to_full_screen, boolean from_me) {
+
+        Log.d(TAG, "initializing_for_faceTracking_ to_full_screen: " + to_full_screen);
+
+        ImageView this_back_img = null;
+        int containerViewID = 0;
+
+        if(to_full_screen) {
+            this_back_img = back_img_full_for_3D;
+            containerViewID = R.id.awd_model_view;
+        }
+        else if(!to_full_screen) {
+            this_back_img = back_img_full_for_3D_pip;
+            containerViewID = R.id.awd_model_view_pip;
+        }
 
         /** AWD 3D modeling */
-//        awd_model_handling = new Awd_model_handling();
-//        final FragmentTransaction transaction = getFragmentManager().beginTransaction();
-//
-//        transaction.add(R.id.awd_model_view, awd_model_handling);
-//        transaction.commit();
+        Glide
+            .with(this)
+            .load(R.drawable.video_off_back_5)
+            .into(this_back_img);
 
-        /** face tracking 시작 - google mobile vision */
-        createCameraSource();
+        awd_model_handling = new Awd_model_handling();
+        final FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+        transaction.add(containerViewID, awd_model_handling);
+        transaction.commit();
+
+        if(from_me == true) {
+            /** face tracking 시작 - google mobile vision */
+            createCameraSource(to_full_screen);
+        }
     }
 
     /**---------------------------------------------------------------------------
      메소드 ==> FaceTracking 하여 mask를 쓰기 위한 로직 시작점
      ---------------------------------------------------------------------------*/
-    private void createCameraSource() {
-        Context context = getApplicationContext();
-        FaceDetector detector = new FaceDetector.Builder(context)
-                .setTrackingEnabled(true)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
-                .setMode(FaceDetector.ACCURATE_MODE)
-                .build();
+    private void createCameraSource(boolean to_full_screen) {
 
+        Log.d(TAG, "createCameraSource_ to_full_screen: " + to_full_screen);
+
+        Context context = getApplicationContext();
+//        if(!detector.isOperational()) {
+            detector = new FaceDetector.Builder(context)
+                    .setTrackingEnabled(true)
+                    .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                    .setLandmarkType(FaceDetector.ALL_LANDMARKS)
+                    .setMode(FaceDetector.ACCURATE_MODE)
+                    .build();
+//        }
+        // 원래 코드
+//        detector.setProcessor(
+//                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory(graphicOverlay))
+//                        .build());
+        // 시도 코드
         detector.setProcessor(
-                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory(graphicOverlay))
+                new MultiProcessor.Builder<>(new GraphicFaceTrackerFactory())
                         .build());
+
 
         if (!detector.isOperational()) {
             // Note: The first time that an app using face API is installed on a device, GMS will
@@ -3453,7 +3633,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                 .build();
 
         // faceTracking 관련 로직
-        startCameraSource();
+        startCameraSource(to_full_screen);
     }
 
 
@@ -3466,7 +3646,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      * 카메라 소스가 아직 생성되지 않은 경우
      * (예 : 카메라 소스를 만들기 전에 onResume이 호출 되었기 때문에) 카메라 소스를 만들 때 다시 호출됩니다.
      */
-    private void startCameraSource() {
+    private void startCameraSource(boolean to_full_screen) {
+
+        Log.d(TAG, "startCameraSource_ to_full_screen: " + to_full_screen);
+
         // check that the device has play services available.
         // 기기에 사용 가능한 구글 플레이 서비스가 있는지 확인하십시오.
         int code = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
@@ -3480,7 +3663,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (cameraSource != null) {
             try {
                 /** 원래 코드 */
-                cameraSourcePreview.start(cameraSource, graphicOverlay);
+                if(to_full_screen) {
+                    cameraSourcePreview.start(cameraSource, graphicOverlay);
+                }
+                else if(!to_full_screen) {
+                    cameraSourcePreview_pip.start(cameraSource, graphicOverlay_pip);
+                }
+
             } catch (IOException e) {
                 Log.e(TAG, "Unable to start camera source.", e);
                 myapp.logAndToast("Unable to start camera source: " + e);

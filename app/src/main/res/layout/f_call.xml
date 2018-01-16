@@ -352,7 +352,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="10dp">
+
                 <ImageView
+                    android:id="@+id/button_call_face_rec"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
@@ -360,7 +362,8 @@
                     android:paddingLeft="13dp"
                     android:paddingRight="7dp"
                     android:paddingTop="10dp"
-                    android:src="@drawable/meeting_log" />
+                    android:alpha="0.3"
+                    android:src="@drawable/face_3d" />
                 <ImageView
                     android:id="@+id/button_call_switch_camera"
                     android:layout_width="0dp"
@@ -377,12 +380,13 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <TextView
+                    android:id="@+id/text_call_face_rec"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:paddingLeft="2dp"
                     android:gravity="center|top"
-                    android:text="회의 메모"
+                    android:text="얼굴 인식"
                     android:textColor="#cdd1d0"
                     android:textSize="11dp"
                     />

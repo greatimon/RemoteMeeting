@@ -10,6 +10,8 @@ import com.example.jyn.remotemeeting.Activity.Chat_A;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.Etc.Static;
+import com.example.jyn.remotemeeting.FaceTracking_3D_modeling.Awd_model_handling;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -251,6 +253,15 @@ public class Netty_handler extends ChannelInboundHandlerAdapter {
 
                     // Call_A 로 전달받은 데이터 그대로 전달
                     to_Call_A("relay_end_image_file_share", data);
+                }
+                break;
+            // 상대방이 '얼굴인식 + 3D모드' 상태 변경했음을 전달 받았을 때,
+            case "relay_sending_my_3d_mode_status":
+                if(data.getNetty_type().equals("webrtc")) {
+                    Logger.d("relay_sending_my_3d_mode_status, 받음~~~");
+
+                    // Call_A 로 전달받은 데이터 그대로 전달
+                    to_Call_A("relay_sending_my_3d_mode_status", data);
                 }
                 break;
         }

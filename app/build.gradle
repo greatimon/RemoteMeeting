@@ -47,6 +47,11 @@ android {
 //            buildConfigField "String", "OBJECT_SERVER_IP", "\"${host}\""
         }
     }
+
+    dexOptions {
+        jumboMode = true
+        javaMaxHeapSize "4g"
+    }
 }
 
 dependencies {

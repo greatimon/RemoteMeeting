@@ -1675,4 +1675,33 @@ public class Myapp extends Application {
         }
         return null;
     }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> netty를 통해, 회의하고 있는 상대방에게 나의 얼굴인식+3d 모드 on/off 상태를 알림
+     ---------------------------------------------------------------------------*/
+    public void send_my_3d_mode_status_to_subject(boolean is_3d_object_mode_on,
+                                                  float eulerY,
+                                                  float eulerZ) {
+        Data_for_netty data = new Data_for_netty();
+        data.setNetty_type("webrtc");
+        data.setSubType("sending_my_3d_mode_status");
+        data.setSender_user_no(getUser_no());
+        data.setTarget_user_no(getMeeting_subject_user_no());
+        // Data_for_netty 객체의 'extra' 변수에
+        // index 0. '얼굴인식 + 3D모드' 상태
+        // index 1. 구글 비전 API의 getEulerY 값
+        // index 2. 구글 비전 API의 getEulerZ 값
+        // ~ 를 담아 보낸다
+        String send_this_string =
+                String.valueOf(is_3d_object_mode_on) + Static.SPLIT +
+                        String.valueOf(eulerY) + Static.SPLIT +
+                        String.valueOf(eulerZ);
+
+        Log.d(TAG, "eulerY: " + eulerY);
+        Log.d(TAG, "eulerZ: " + eulerZ);
+
+        data.setExtra(send_this_string);
+        send_to_server(data);
+    }
 }

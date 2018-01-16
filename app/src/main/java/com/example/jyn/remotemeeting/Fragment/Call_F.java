@@ -16,6 +16,7 @@ import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -57,6 +58,7 @@ import java.util.Iterator;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnTouch;
 import butterknife.Unbinder;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import uk.co.senab.photoview.PhotoView;
@@ -120,6 +122,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @BindView(R.id.preview)                 public ImageView preview;
     @BindView(R.id.button_call_toggle_video)public ImageView button_call_toggle_video;
     @BindView(R.id.button_call_toggle_mic)  public ImageView button_call_toggle_mic;
+    @BindView(R.id.button_call_face_rec)    public ImageView button_call_face_rec;
     @BindView(R.id.video_on_show)           public ImageView video_on_show;
     @BindView(R.id.video_off_show)          public ImageView video_off_show;
     @BindView(R.id.profile_img)             public ImageView subject_profile_img;
@@ -130,6 +133,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @BindView(R.id.page_status)             public TextView page_status;
     @BindView(R.id.text_call_toggle_video)  public TextView text_call_toggle_video;
     @BindView(R.id.text_call_toggle_mic)    public TextView text_call_toggle_mic;
+    @BindView(R.id.text_call_face_rec)      public TextView text_call_face_rec;
     @BindView(R.id.nickName)                public TextView subject_nickName;
 
     public static CircularProgressBar circularProgressBar;
@@ -152,7 +156,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     public static Handler visibility_control_handler;
 
     // faceTracking 테스트용 변수
-    boolean faceTracking_enable = true;
+    boolean faceTracking_enable = false;
 
 
     /**---------------------------------------------------------------------------
@@ -457,6 +461,30 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
 
 
     /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 얼굴인식 + 3d object 모드 On/off
+     ---------------------------------------------------------------------------*/
+    @OnClick({R.id.button_call_face_rec, R.id.text_call_face_rec})
+    public void face_recognition_on_off(View v) {
+        // 얼굴인식 + 3d object 모드를 on/off 할때 비디오 모드도 같이 on/off 하기 위해서 해당 메소드 호출
+        video_on_off(button_call_face_rec);
+
+        faceTracking_enable = !faceTracking_enable;
+        Log.d(TAG, "face_recognition_enabled: " + faceTracking_enable);
+
+        if(faceTracking_enable == false) {
+            button_call_face_rec.setAlpha(0.3f);
+        }
+        else if(faceTracking_enable == true) {
+            button_call_face_rec.setAlpha(1.0f);
+        }
+        // 얼굴인식 모드 on/off 메세지 전달
+        Event.Call_F__Call_A_face_recognition call_f__call_a_face_recognition
+                = new Event.Call_F__Call_A_face_recognition(faceTracking_enable);
+        BusProvider.getBus().post(call_f__call_a_face_recognition);
+    }
+
+
+    /**---------------------------------------------------------------------------
      클릭이벤트 ==> 파일 공유하기 아이콘 클릭
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.go_share})
@@ -569,24 +597,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
 
         /** 비디오 on/off 토글 버튼으로 이 메소드가 호출되었을 때 */
         else  {
-//            // faceTracking 관련 로직
-//            if(faceTracking_enable) {
-//                Call_A.fullscreenRenderer.setVisibility(View.GONE);
-//                Call_A.cameraSourcePreview.setVisibility(View.VISIBLE);
-//            }
-//            else if(!faceTracking_enable) {
-//                Call_A.cameraSourcePreview.stop();
-//                Call_A.cameraSourcePreview.setVisibility(View.GONE);
-//                Call_A.fullscreenRenderer.setVisibility(View.VISIBLE);
-//            }
-
-            /** 원래 코드 */
             boolean enabled = callEvents.onToggleVideo();
-            // TODO: 페이스 트랙킹 테스트 코드
-//            boolean enabled = !faceTracking_enable;
-//            Log.d(TAG, "enabledenabledenabledenabledenabledenabledenabledenabled: " + enabled);
-            faceTracking_enable = enabled;
-
             Log.d(TAG, "toggleVideoButton_enabled: " + enabled);
 
             button_call_toggle_video.setAlpha(enabled ? 1.0f : 0.3f);

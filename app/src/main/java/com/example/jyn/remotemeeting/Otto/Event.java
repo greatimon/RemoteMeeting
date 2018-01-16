@@ -145,6 +145,22 @@ public class Event {
         }
     }
 
+    /** 이벤트
+     *    Call_F --> Call_A
+     *    : 영상회의 중 얼굴인식 모드 on/off 메세지 전달
+     * */
+    public static class Call_F__Call_A_face_recognition {
+        private boolean message;
+
+        public Call_F__Call_A_face_recognition(boolean message) {
+            this.message = message;
+        }
+
+        public boolean getMessage() {
+            return message;
+        }
+    }
+
 
     /** 이벤트
      *    Main_after_login_A --> Profile_F

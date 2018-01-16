@@ -18,6 +18,7 @@ package com.example.jyn.remotemeeting.FaceTracking_3D_modeling;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -89,6 +90,7 @@ public class CameraSourcePreview extends ViewGroup {
             mCameraSource = null;
         }
     }
+
 
     @SuppressLint("MissingPermission")
     private void startIfReady() throws IOException {

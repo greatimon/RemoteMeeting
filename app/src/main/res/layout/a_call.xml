@@ -16,7 +16,7 @@
     <!--비디오 전송을 껐을 때 나타나는 백업 뷰: for fullscreen-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/video_off_backup_REL_full"
         android:background="#e8ecff"
         android:layout_height="match_parent"
@@ -63,14 +63,39 @@
 
     </com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview>
 
-    <!--=========================================================-->
+    <!--3D 모델 올릴 때 배경화면-->
+    <ImageView
+        android:visibility="gone"
+        tools:visibility="gone"
+        android:id="@+id/back_img_full_for_3D"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:src="@drawable/video_off_back_5"
+        android:scaleType="centerCrop"
+        />
+
     <!--3D 모델 올라가는 뷰-->
     <FrameLayout
         android:visibility="gone"
         tools:visibility="gone"
         android:id="@+id/awd_model_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_centerInParent="true"
+        />
+
+    <!-- frameLayout 테두리 둥글게 만들기 위한 back xml 넣는 뷰 -->
+    <View
+        android:visibility="gone"
+        tools:visibility="gone"
+        android:id="@+id/border_view"
+        android:layout_width="185dp"
+        android:layout_height="185dp"
+        android:background="@drawable/shape_3d_model_border"
+        android:layout_centerInParent="true"/>
+
+    <!--=========================================================-->
+
 
     <!--pip 서피스뷰-->
     <org.webrtc.SurfaceViewRenderer
@@ -117,6 +142,57 @@
             android:layout_centerInParent="true"
             android:scaleType="centerCrop"
             />
+    </RelativeLayout>
+
+
+    <!--상대방이 들어와있는 상황에서, 내가 얼굴인식+3d 모드로 들어갔을 때,
+        상대방에게 표시되는 내 상태뷰: for pip-->
+    <RelativeLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/face_3D_backup_REL_pip"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_height="100dp"
+        android:layout_width="177dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        >
+        <!--FaceTracking 뷰-->
+        <com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview
+            android:id="@+id/cameraSourcePreview_pip"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+            <com.example.jyn.remotemeeting.FaceTracking_3D_modeling.GraphicOverlay
+                android:id="@+id/faceOverlay_pip"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </com.example.jyn.remotemeeting.FaceTracking_3D_modeling.CameraSourcePreview>
+
+        <!--3D 모델 올릴 때 배경화면-->
+        <ImageView
+            android:id="@+id/back_img_full_for_3D_pip"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:src="@drawable/video_off_back_5"
+            android:scaleType="centerCrop"
+            />
+        <!--3D 모델 올라가는 뷰-->
+        <FrameLayout
+            android:id="@+id/awd_model_view_pip"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_centerInParent="true"
+            />
+        <!-- frameLayout 테두리 둥글게 만들기 위한 back xml 넣는 뷰 -->
+        <View
+            android:id="@+id/border_view_pip"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:background="@drawable/shape_3d_model_border_pip"
+            android:layout_centerInParent="true"/>
     </RelativeLayout>
 
 
@@ -175,7 +251,7 @@
     <!--이미지 공유 레이아웃: 서피스뷰 포함-->
     <RelativeLayout
         android:visibility="gone"
-        tools:visibility="visible"
+        tools:visibility="gone"
         android:id="@+id/image_share_REL"
         android:background="#FFF"
         android:layout_width="match_parent"
