@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "263032945619",
+    "firebase_url": "https://remotemeeting-192307.firebaseio.com",
+    "project_id": "remotemeeting-192307",
+    "storage_bucket": "remotemeeting-192307.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263032945619:android:fd6958c3c1998675",
+        "android_client_info": {
+          "package_name": "com.example.jyn.remotemeeting"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "263032945619-np2u9kklcj4hkqulljm3ervsc9ca69ci.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "263032945619-qb952gc5lpgbmch4idc55kl40lapeh3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.jyn.remotemeeting",
+            "certificate_hash": "f96c30d3ecf28cdd2f6419c7d7526a646f07884d"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDm_5ajPa1cpBVr-AFGaHwtvVhvXUBUdBs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "263032945619-np2u9kklcj4hkqulljm3ervsc9ca69ci.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

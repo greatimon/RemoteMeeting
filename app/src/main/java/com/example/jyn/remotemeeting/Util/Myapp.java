@@ -154,6 +154,7 @@ public class Myapp extends Application {
     /** 참여중인 회의 정보 */
     public String meeting_no = "";
     public String real_meeting_title = "";
+    public String transform_meeting_title = "";
     public String meeting_creator_user_no = "";
     public String meeting_subject_user_no = "";
     public String meeting_authority_user_no = "";
@@ -253,6 +254,13 @@ public class Myapp extends Application {
     public void setReal_meeting_title(String real_meeting_title) {
         this.real_meeting_title = real_meeting_title;
     }
+    public String getTransform_meeting_title() {
+        return transform_meeting_title;
+    }
+    public void setTransform_meeting_title(String transform_meeting_title) {
+        this.transform_meeting_title = transform_meeting_title;
+    }
+
     public String getMeeting_creator_user_no() {
         return meeting_creator_user_no;
     }

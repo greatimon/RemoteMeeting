@@ -50,6 +50,7 @@ public class Enter_room_D extends Activity {
     String creator_nickName;
     String creator_img_fileName;
     String real_meeting_title;
+    String transform_meeting_title;
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -86,6 +87,7 @@ public class Enter_room_D extends Activity {
         creator_nickName = intent.getStringExtra("creator_nickName");
         creator_img_fileName = intent.getStringExtra("creator_img_fileName");
         real_meeting_title = intent.getStringExtra("real_meeting_title");
+        transform_meeting_title = intent.getStringExtra("transform_meeting_title");
 
         // 회의 제목, 닉네임, 이메일 셋팅
         title.setText(real_meeting_title);
@@ -115,6 +117,7 @@ public class Enter_room_D extends Activity {
     public void go_meeting() {
         Intent intent = new Intent();
         intent.putExtra("real_meeting_title", real_meeting_title);
+        intent.putExtra("transform_meeting_title", transform_meeting_title);
         intent.putExtra("creator_user_no", creator_user_no);
         setResult(RESULT_OK, intent);
         finish();

@@ -21,10 +21,11 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.GET_TASKS"/>
 
+    <!--android:icon="@mipmap/ic_launcher"-->
     <application
         android:allowBackup="true"
         android:name=".Util.Myapp"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/launcher_icon"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -72,9 +73,17 @@
             tools:ignore="InnerclassSeparator">
         </activity>
 
-        // 메인_로그인 후
+        // 구글 API 회원가입 추가 정보 받기 - 닉네임
         <activity
             android:name=".Activity.Main_after_login_A"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="InnerclassSeparator">
+        </activity>
+
+        // 메인_로그인 후
+        <activity
+            android:name=".Activity.Additional_info_for_google_api_join_A"
             android:screenOrientation="portrait"
             android:exported="false"
             tools:ignore="InnerclassSeparator">

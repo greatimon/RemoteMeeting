@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,10 @@ import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.github.kimkevin.cachepot.CachePot;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
@@ -53,6 +58,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -225,6 +231,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
                                         String meeting_no = jsonObject_1.getString("meeting_no");
                                         String real_meeting_title = jsonObject_1.getString("real_meeting_title");
+                                        String transform_meeting_title = jsonObject_1.getString("transform_meeting_title");
                                         String meeting_creator_user_no = jsonObject_1.getString("meeting_creator_user_no");
                                         String creator_user_no = jsonObject_1.getString("user_no");
                                         String creator_email = jsonObject_1.getString("user_email");
@@ -234,6 +241,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         // 어플리케이션 객체에 회의 정보 저장해놓기
                                         myapp.setMeeting_no(meeting_no);
                                         myapp.setReal_meeting_title(real_meeting_title);
+                                        myapp.setTransform_meeting_title(transform_meeting_title);
                                         myapp.setMeeting_creator_user_no(meeting_creator_user_no);
                                         myapp.setMeeting_subject_user_no(creator_user_no);
                                         myapp.setMeeting_authority_user_no(meeting_creator_user_no);
@@ -247,6 +255,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         intent.putExtra("creator_nickName", creator_nickName);
                                         intent.putExtra("creator_img_fileName", creator_img_fileName);
                                         intent.putExtra("real_meeting_title", real_meeting_title);
+                                        intent.putExtra("transform_meeting_title", transform_meeting_title);
                                         startActivityForResult(intent, REQUEST_ENTER_ROOM);
                                     }
 
@@ -445,7 +454,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
 
     /**---------------------------------------------------------------------------
-     네비게이션 드로어 ==> 메뉴 아이템 인플레이트 - 메뉴생성 최초에만 호출되는 콜백메소드
+     메뉴 아이템 인플레이트 ==>  메뉴 생성 최초에만 호출되는 콜백메소드
     invalidateOptionsMenu() 호출시 콜백되는 메소드
      ---------------------------------------------------------------------------*/
     @Override
@@ -456,6 +465,11 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             getMenuInflater().inflate(R.menu.search_menu, menu);
             return true;
         }
+        else if(current_viewPager_pos == 4) {
+            Log.d(TAG, "logout_menu_ inflated");
+            getMenuInflater().inflate(R.menu.logout_menu, menu);
+            return true;
+        }
         else {
             return true;
         }
@@ -463,7 +477,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
 
     /**---------------------------------------------------------------------------
-     네비게이션 드로어 ==> 메뉴 아이템 인플레이트 -
+     메뉴 아이템 인플레이트 ==> 메뉴 아이템 인플레이트 -
      invalidateOptionsMenu() 호출시 콜백되는 메소드
      ---------------------------------------------------------------------------*/
     @Override
@@ -485,6 +499,21 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         if(id == R.id.action_search) {
              Intent intent = new Intent(this, Search_partner.class);
              startActivityForResult(intent, REQUEST_SEARCH_PARTNER);
+        }
+        // 로그아웃 아이콘 클릭했을 때
+        else if(id == R.id.action_logout) {
+
+            // 구글 로그인 정보, 'false'로 쉐어드에 저장 -- 자동로그인을 막기 위해서.
+            SharedPreferences Auto_login = getSharedPreferences("Auto_login", MODE_PRIVATE);
+            SharedPreferences.Editor Auto_login_edit = Auto_login.edit();
+            Auto_login_edit.putBoolean("google", false).apply();
+
+            Intent intent = new Intent(this, Main_before_login_A.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra("logout", "logout");
+            startActivity(intent);
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -1058,19 +1087,26 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         else if(requestCode==REQUEST_CREATE_ROOM && resultCode==RESULT_OK) {
             final String subject_user_no = data.getStringExtra("subject_user_no");
             final String input_title = data.getStringExtra("input_title");
-            final String convert_str = data.getStringExtra("convert_str");
+            // 원래 코드 - 사용자가 기입한 그대로를 방제목으로 디비에 저장했었음
+//            final String convert_str = data.getStringExtra("convert_str");
+            // try 코드 - 사용자가 기입한 제목 뒤에 랜덤 숫자를 붙여서 webrtc의 방 제목 규칙에 걸리지 않게 함
+            // 따라서 짧은 방제목이나, 중복되는 방제목을 사용자가 입력해도 무리 없이 webRTC 연결이 가능하도록!
+            String convert_str = data.getStringExtra("convert_str");
+            int random = new Random().nextInt(99999999);
+            convert_str = convert_str + String.valueOf(random);
             Log.d(TAG, "subject_user_no: " + subject_user_no);
             Log.d(TAG, "input_title: " + input_title);
             Log.d(TAG, "convert_str: " + convert_str);
 
             // 0.2초 뒤에 실행 - onResume 실행될 시간 벌어주기
             /** 서버 통신 -- 방 생성 정보 전달 + 영상통화 시작 */
+            final String finalConvert_str = convert_str;
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
                     RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
                     Call<ResponseBody> call_result = rs.create_meeting_room(
                             Static.CREATE_MEETING_ROOM,
-                            input_title, convert_str, myapp.getUser_no(), subject_user_no);
+                            input_title, finalConvert_str, myapp.getUser_no(), subject_user_no);
                     call_result.enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -1103,7 +1139,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                     /**
                                      * 통화 연결
                                      * */
-                                    connectToRoom(convert_str, false, false, false, 0);
+                                    connectToRoom(finalConvert_str, false, false, false, 0);
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -1122,16 +1158,18 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 회의 입장한다고 했을 때
         else if(requestCode==REQUEST_ENTER_ROOM && resultCode==RESULT_OK) {
             String real_meeting_title = data.getStringExtra("real_meeting_title");
+            String transform_meeting_title = data.getStringExtra("transform_meeting_title");
             String creator_user_no = data.getStringExtra("creator_user_no");
             Log.d(TAG, "real_meeting_title: " + real_meeting_title);
+            Log.d(TAG, "transform_meeting_title: " + transform_meeting_title);
             Log.d(TAG, "creator_user_no: " + creator_user_no);
 
-            String convert = Hangul.convert(real_meeting_title);
+//            String convert = Hangul.convert(real_meeting_title);
 
             /**
              * 통화 연결
              * */
-            connectToRoom(convert, false, false, false, 0);
+            connectToRoom(transform_meeting_title, false, false, false, 0);
         }
 
         // 회의하고 돌아왔을 때

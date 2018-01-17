@@ -140,7 +140,12 @@ dependencies {
     /** rajawali 3D */
     compile 'org.rajawali3d:rajawali:1.1.970'
 
+    /** 구글 로그인 */
+    compile 'com.google.firebase:firebase-auth:11.8.0'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
 }
+
+apply plugin: 'com.google.gms.google-services'
 
 realm {
     syncEnabled = true
