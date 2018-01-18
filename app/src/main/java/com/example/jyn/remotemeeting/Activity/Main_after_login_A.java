@@ -18,6 +18,8 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +30,7 @@ import com.example.jyn.remotemeeting.DataClass.Chat_room;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Add_chat_room_subject_users_D;
+import com.example.jyn.remotemeeting.Dialog.Confirm_logout_D;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -85,6 +88,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     public static int REQUEST_ENTER_ROOM = 9862;
     public static int REQUEST_CHAT_ROOM = 8548;
     public static int REQUEST_ADD_CHAT_ROOM_SUBJECT = 9844;
+    public static int CONFIRM_LOGOUT = 6667;
     private SharedPreferences sharedPref;
     String JSON_TAG = "am_i_invited";
     Myapp myapp;
@@ -502,18 +506,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         }
         // 로그아웃 아이콘 클릭했을 때
         else if(id == R.id.action_logout) {
-
-            // 구글 로그인 정보, 'false'로 쉐어드에 저장 -- 자동로그인을 막기 위해서.
-            SharedPreferences Auto_login = getSharedPreferences("Auto_login", MODE_PRIVATE);
-            SharedPreferences.Editor Auto_login_edit = Auto_login.edit();
-            Auto_login_edit.putBoolean("google", false).apply();
-
-            Intent intent = new Intent(this, Main_before_login_A.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.putExtra("logout", "logout");
-            startActivity(intent);
-            finish();
+            // 로그아웃을 진행할 건지 확인하는 다이얼로그 띄우기
+            Intent intent = new Intent(this, Confirm_logout_D.class);
+            startActivityForResult(intent, CONFIRM_LOGOUT);
         }
 
         return super.onOptionsItemSelected(item);
@@ -1217,6 +1212,20 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+        // 로그아웃 한다고 '예' 눌렀을 때
+        else if(requestCode == CONFIRM_LOGOUT && resultCode == RESULT_OK) {
+            // 구글 로그인 정보, 'false'로 쉐어드에 저장 -- 자동로그인을 막기 위해서.
+            SharedPreferences Auto_login = getSharedPreferences("Auto_login", MODE_PRIVATE);
+            SharedPreferences.Editor Auto_login_edit = Auto_login.edit();
+            Auto_login_edit.putBoolean("google", false).apply();
+
+            Intent intent = new Intent(this, Main_before_login_A.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra("logout", "logout");
+            startActivity(intent);
+            finish();
         }
 
     }

@@ -438,7 +438,6 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                         Chat_F.recyclerView.getLayoutManager().scrollToPosition(0);
                     }
 
-                    /** try code - start */
                     // 그룹채팅방일 경우,
                     if(new_chat_room.getUser_arr().size() > 2) {
 
@@ -466,7 +465,6 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                         // 핸들러로 Message 객체 전달
                         Chat_F.handler.sendMessage(msg);
                     }
-                    /** try code - end */
 
                     // 서버로부터 가져온 chat_room 객체를 arrayList에 추가하기
                     rooms.add(0, new_chat_room);

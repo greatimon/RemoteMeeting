@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -231,8 +232,8 @@ public class Main_before_login_A extends AppCompatActivity
             로그인되어 있는 상태면, 자동 로그인 진행하기*/
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if(currentUser != null) {
-            String email = currentUser.getEmail();
-            String pw = currentUser.getUid();
+            final String email = currentUser.getEmail();
+            final String pw = currentUser.getUid();
             Log.d(TAG, "initialize_for_google_login()_ email:" + email);
             Log.d(TAG, "initialize_for_google_login()_ pw:" + pw);
 
@@ -243,8 +244,14 @@ public class Main_before_login_A extends AppCompatActivity
 
             // 자동 로그인 모드가 'true'일 때만 로그인 시도
             if(auto_login_mode) {
-                // 서버 통신 -- ID, PW를 서버에 전송하여, 로그인 시도하는 내부 메소드 호출
-                login(email, pw, "auto");
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 서버 통신 -- ID, PW를 서버에 전송하여, 로그인 시도하는 내부 메소드 호출
+                        login(email, pw, "auto");
+                    }
+                }, 1000);
             }
         }
     }

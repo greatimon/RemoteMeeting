@@ -131,6 +131,15 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
+        // 로그아웃 확인
+        <activity
+            android:name=".Dialog.Confirm_logout_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // 이미지 선택 방법 선택하기
         <activity
             android:name=".Dialog.Choose_method_for_select_img_D"

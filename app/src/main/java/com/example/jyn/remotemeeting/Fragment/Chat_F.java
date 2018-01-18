@@ -45,6 +45,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import butterknife.ButterKnife;
@@ -540,10 +542,31 @@ public class Chat_F extends Fragment {
             Log.d(TAG, "================================================rooms.size(): " + rooms.size());
             no_result.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+
+            // TODO: 가장 최근에 받은 메세지 기준으로 SORTING
+            /** 마지막 채팅 로그의 msg_no를 기준으로, 가장 최근에 받은 메세지가 최상단에 올 수 있도록,
+             *  Chat_room arrayList sort 하기 */
+            Collections.sort(rooms, new Comparator<Chat_room>() {
+                @Override
+                public int compare(Chat_room o1, Chat_room o2) {
+                    Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
+                    Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
+                    if(o1.getLast_log().getMsg_no() < o2.getLast_log().getMsg_no()) {
+                        return 1;
+                    }
+                    else if(o1.getLast_log().getMsg_no() > o2.getLast_log().getMsg_no()) {
+                        return -1;
+                    }
+                    else {
+                        return 0;
+                    }
+                }
+            });
         }
 
         // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
         if(rcv_chat_Roomlist_adapter == null) {
+
             // 생성자 인수
             // 1. 액티비티
             // 2. 인플레이팅 되는 레이아웃
