@@ -13,13 +13,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,12 +30,12 @@ import com.example.jyn.remotemeeting.Dialog.Add_chat_room_subject_users_D;
 import com.example.jyn.remotemeeting.Dialog.Confirm_logout_D;
 import com.example.jyn.remotemeeting.Dialog.Create_room_D;
 import com.example.jyn.remotemeeting.Dialog.Enter_room_D;
+import com.example.jyn.remotemeeting.Dialog.Meeting_result_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.BackPressCloseHandler;
-import com.example.jyn.remotemeeting.Util.Hangul;
 import com.example.jyn.remotemeeting.Util.IsNetwork;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
@@ -46,10 +43,6 @@ import com.example.jyn.remotemeeting.Util.ServiceGenerator;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 import com.github.kimkevin.cachepot.CachePot;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
@@ -88,6 +81,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     public static int REQUEST_ENTER_ROOM = 9862;
     public static int REQUEST_CHAT_ROOM = 8548;
     public static int REQUEST_ADD_CHAT_ROOM_SUBJECT = 9844;
+    public static int REQUEST_SAVE_MEETING_RESULT = 5656;
     public static int CONFIRM_LOGOUT = 6667;
     private SharedPreferences sharedPref;
     String JSON_TAG = "am_i_invited";
@@ -1169,8 +1163,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
         // 회의하고 돌아왔을 때
         else if(requestCode==CONNECTION_REQUEST) {
-//            // 메소드 호출
-//            got_out_from_meeting();
+            // 회의 결과를 보여주는 다이얼로그 액티비티 호출
+            Intent intent = new Intent(this, Meeting_result_D.class);
+            startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
         }
 
         // 플로팅 버튼으로, 채팅방을 만들 때

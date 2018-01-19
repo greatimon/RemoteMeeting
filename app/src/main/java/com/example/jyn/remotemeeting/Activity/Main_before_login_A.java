@@ -153,6 +153,16 @@ public class Main_before_login_A extends AppCompatActivity
                 + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-"
                 + Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
 
+        /** 디바이스 화면사이즈 가져오기 */
+        DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        Log.d("device", "width: " + width);
+        Log.d("device", "height: " + height);
+//        if(width > 1080) {
+//            width = 1080;
+//        }
+
         // 구글 로그인을 준비하기 위해, 구글API Client와 파이어베이스 인증 객체를 준비하고,
         // 해당 유저가 이미 파이어베이스에 로그인이 되어 있는 상태인지 확인해서
         // 로그인되어 있는 상태면 자동 로그인 진행하는 메소드 호출

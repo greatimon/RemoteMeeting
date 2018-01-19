@@ -37,6 +37,15 @@ public interface RetrofitService {
     );
 
 
+    /** 내 프로젝트 리스트 가져오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_project_list (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no
+    );
+
+
     /** 내 파트너 리스트 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")

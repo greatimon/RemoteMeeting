@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
@@ -86,6 +87,7 @@ public class Myapp extends Application {
     String JSON_TAG_PARTNER_LIST = "partner_list";
     String JSON_TAG_SEARCH_LIST = "search_list";
     String JSON_TAG_SHARE_FILE_LIST = "share_file_list";
+    String JSON_TAG_PROJECT_LIST= "project_list";
     private static Myapp appInstance;
     Toast logToast;
     ProgressDialog progressDialog;
@@ -180,6 +182,34 @@ public class Myapp extends Application {
 
     // 영상통화 중, 이미지 공유 모드를 진행하기 전의 비디오 전송모드가 어떤 모드였는지 저장하기 위한 변수
     boolean video_state_was;
+
+    // 폴더 색깔을 나타내는 String 값에 따른, drawable 리소스_ 해쉬맵
+    public ConcurrentHashMap<String, Integer> folder_color_hash;
+
+    // 폴더 색깔 String 배열
+    public String[] folder_color_str = {
+            "amber", "blue", "blue_grey", "brown", "deep_orange", "deep_purple", "green", "grey",
+            "indigo", "light_green", "orange", "pink", "purple", "red", "teal"
+    };
+
+    // 폴더 리소스 int 배열
+    public int[] folder_color_resource = {
+            R.drawable.amber,
+            R.drawable.blue,
+            R.drawable.blue_grey,
+            R.drawable.brown,
+            R.drawable.deep_orange,
+            R.drawable.deep_purple,
+            R.drawable.green,
+            R.drawable.grey,
+            R.drawable.indigo,
+            R.drawable.light_green,
+            R.drawable.orange,
+            R.drawable.pink,
+            R.drawable.purple,
+            R.drawable.red,
+            R.drawable.teal
+    };
 
     /** GET, SET */
     public String getUser_no() {
@@ -350,6 +380,14 @@ public class Myapp extends Application {
         this.video_state_was = video_state_was;
     }
 
+    public ConcurrentHashMap<String, Integer> getFolder_color_hash() {
+        return folder_color_hash;
+    }
+
+    public void setFolder_color_hash(ConcurrentHashMap<String, Integer> folder_color_hash) {
+        this.folder_color_hash = folder_color_hash;
+    }
+
     /** 생명주기 - onCreate */
     @Override
     public void onCreate() {
@@ -359,6 +397,13 @@ public class Myapp extends Application {
         Collections.synchronizedMap(checked_files);
         files_for_upload = new HashMap<>();
         temp_my_chat_log_hash = new ConcurrentHashMap<>();
+        // 폴더 컬러 색 String 값에 따른 맞는 리소스 int id 값을 설정하기 위한 해쉬맵 선언
+        folder_color_hash = new ConcurrentHashMap<>();
+
+        // 폴더 컬러 관련 해쉬맵 put 하기
+        for(int i=0; i<folder_color_str.length; i++) {
+            folder_color_hash.put(folder_color_str[i], folder_color_resource[i]);
+        }
 
         Realm.init(this);
     }
@@ -596,6 +641,107 @@ public class Myapp extends Application {
             }.execute().get();
         }
         catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 내 프로젝트 리스트 가져와서 리턴하기
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public ArrayList<Project> get_project_list() {
+
+        ArrayList<Project> project_arr = new ArrayList<>();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final ArrayList<Project> finalProject_arr = project_arr;
+
+            return new AsyncTask<Void, Void, ArrayList<Project>>() {
+                @Override
+                protected ArrayList<Project> doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.get_project_list(
+                            Static.GET_PROJECT_LIST,
+                            user_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+                        Log.d(TAG, "프로젝트 리스트 서버 리턴 결과: " + result);
+
+                        try {
+                            if(result.equals("fail")) {
+                                logAndToast("예외발생: " + result);
+                                finalProject_arr.clear();
+                            }
+                            else if(result.equals("no_result")) {
+                                finalProject_arr.clear();
+                            }
+                            else {
+                                // 길이가 긴 JSONString 출력하기
+                                print_long_Json_logcat(result, TAG);
+                                // jsonString --> jsonObject
+                                JSONObject jsonObject = new JSONObject(result);
+                                // jsonObject -->jsonArray
+                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_PROJECT_LIST);
+                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+                                // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+                                Gson gson = new Gson();
+
+                                // jsonArray에서 jsonObject를 가지고 와서, parsing 하기
+                                if(jsonArray.length() == 1) {
+                                    // 프로젝트 지정이 안되어 있는 회의 개수
+                                    int unspecified_project_count = jsonArray.getJSONObject(0).getInt("unspecified_project_count");
+
+                                    //// 프로젝트 정보 parsing 해서 해쉬맵에 넣기
+                                    // 'specified_project_data' JSONString을 JSONObect로 파싱
+                                    JSONArray jsonArray_for_project = new JSONArray(jsonArray.getJSONObject(0).getString("specified_project_data"));
+
+                                    // gson 이용해서 project 객체로 변환해서, 그 project 객체 안에서, project_no 값을 가져와서,
+                                    // project_no 값을 키 값으로 하고, project 객체를 밸류 값으로 하는 해쉬맵을, 리턴할 해쉬맵 객체에 add 한다
+                                    for(int k=0; k<jsonArray_for_project.length(); k++) {
+                                        Project project = gson.fromJson(jsonArray_for_project.get(k).toString(), Project.class);
+                                        finalProject_arr.add(project);
+
+                                        // 서버로부터 받은 데이터가 잘 파싱되어 있는지 확인하기 위한 Log
+                                        Log.d(TAG, "project.getProject_no(): " + project.getProject_no());
+//                                        Log.d(TAG, "project.getProject_name(): " + project.getProject_name());
+//                                        Log.d(TAG, "project.getProject_color(): " + project.getProject_color());
+//                                        Log.d(TAG, "project.getProject_director_user_no(): " + project.getProject_director_user_no());
+//                                        Log.d(TAG, "project.getProject_status(): " + project.getProject_status());
+//                                        Log.d(TAG, "project.getProject_start_dt(): " + project.getProject_start_dt());
+//                                        Log.d(TAG, "project.getProject_end_dt(): " + project.getProject_end_dt());
+//                                        Log.d(TAG, "project.getProject_pw(): " + project.getProject_pw());
+//                                        Log.d(TAG, "project.getMeeting_count(): " + project.getMeeting_count());
+                                    }
+
+                                    // 프로젝트 지정이 안되어 있는 회의 개수를 담는 가상의 '프로젝트' 폴더가 있다고 가정하고
+                                    // 해당 '프로젝트' 폴더를 만들어서 해쉬맵에 put 한다
+                                    // 프로젝트 지정이 없는 회의개수를 담는 가상의 '프로젝트'의 project_no = 0;
+                                    Project virtual_project = new Project();
+                                    virtual_project.setMeeting_count(unspecified_project_count);
+                                    virtual_project.setProject_no(0);
+                                    finalProject_arr.add(0, virtual_project);
+                                }
+                                Log.d(TAG, "finalProject_arr.size(): " + finalProject_arr.size());
+                            }
+                        }
+                        catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        return finalProject_arr;
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }
+        catch(Exception e) {
             e.printStackTrace();
         }
         return null;

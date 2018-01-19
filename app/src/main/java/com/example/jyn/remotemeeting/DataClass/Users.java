@@ -2,6 +2,8 @@ package com.example.jyn.remotemeeting.DataClass;
 
 /**
  * Created by JYN on 2017-12-01.
+ *
+ * 유저의 정보를 담는, 데이터 클래스
  */
 
 public class Users {

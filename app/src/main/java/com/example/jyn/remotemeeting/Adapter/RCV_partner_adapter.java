@@ -39,7 +39,8 @@ public class RCV_partner_adapter extends RecyclerView.Adapter<RCV_partner_adapte
 
 
     /** RecyclerAdapter 생성자 */
-    public RCV_partner_adapter(Context context, int itemLayout, ArrayList<Users> users, final String request) {
+    public RCV_partner_adapter(
+            Context context, int itemLayout, ArrayList<Users> users, final String request) {
         Log.d(TAG, "ViewHolder_ RCV_partner_adapter: 생성");
         this.context = context;
         this.itemLayout = itemLayout;

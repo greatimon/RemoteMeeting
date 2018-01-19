@@ -122,6 +122,14 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
+        // 영상회의 종료 후, 팝업되는 '회의 결과 창'
+        <activity
+            android:name=".Dialog.Meeting_result_D"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // 파트너 끊기 확인
         <activity
             android:name=".Dialog.Confirm_subtract_partner_D"

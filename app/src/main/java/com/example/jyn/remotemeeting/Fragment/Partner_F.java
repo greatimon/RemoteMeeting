@@ -89,9 +89,9 @@ public class Partner_F extends Fragment {
         // otto 등록
         BusProvider.getBus().register(this);
 
-        // 뷰찾기 - static 으로 놔야 해서 버터나이프로 안됨
-        no_result = layout.findViewById(R.id.no_result);
+        // 뷰찾기
         search_partner = layout.findViewById(R.id.search_partner);
+        no_result = layout.findViewById(R.id.no_result);
 
         // 새로고침 아이콘 색깔 변경
         layout.setColorSchemeColors(Color.parseColor("#4CAF50"), Color.parseColor("#43A047"));
@@ -145,7 +145,8 @@ public class Partner_F extends Fragment {
                 // 2. 인플레이팅 되는 레이아웃
                 // 3. arrayList users
                 // 4. extra 변수
-                rcv_partner_adapter = new RCV_partner_adapter(getActivity(), R.layout.i_mypartner, usersArrayList, "partner");
+                rcv_partner_adapter = new RCV_partner_adapter(
+                        getActivity(), R.layout.i_mypartner, usersArrayList, "partner");
                 recyclerView.setAdapter(rcv_partner_adapter);
                 rcv_partner_adapter.notifyDataSetChanged();
             }

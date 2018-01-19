@@ -3,8 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingTop="13dp"
+    android:paddingStart="25dp"
+    android:paddingBottom="3dp"
     android:id="@+id/swipe_layout"
-    tools:context="com.example.jyn.remotemeeting.Fragment.Project_F">
+    tools:context="com.example.jyn.remotemeeting.Fragment.Project_F"
+    tools:ignore="RtlSymmetry">
 
     <!--<ListView-->
         <!--android:id="@+id/listView"-->
@@ -15,10 +19,39 @@
         <!--android:footerDividersEnabled="true">-->
     <!--</ListView>-->
 
-    <TextView
+    <!--<TextView-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:gravity="center"-->
+        <!--android:text="Project"-->
+        <!--android:textSize="50dp"/>-->
+
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Project"
-        android:textSize="50dp"/>
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            tools:visibility="visible"
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:ignore="RtlSymmetry">
+        </android.support.v7.widget.RecyclerView>
+
+        <RelativeLayout
+            android:id="@+id/no_result"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <TextView
+                tools:visibility="visible"
+                android:id="@+id/comment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="프로젝트 / 영상회의 이력이 없습니다."
+                android:textSize="17dp"
+                android:textColor="#2d2d2d"/>
+        </RelativeLayout>
+    </RelativeLayout>
+
 </android.support.v4.widget.SwipeRefreshLayout>

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    android:id="@+id/container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="25dp"
+    android:layout_marginEnd="25dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+
+    <!-- 폴더 이미지 -->
+    <ImageView
+        android:id="@+id/project_folder_img"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="H, 1.23:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:scaleType="fitStart"
+        tools:src="@drawable/pink" />
+
+    <!-- 프로젝트 이름 -->
+    <TextView
+        android:id="@+id/project_name_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="120dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.62"
+        android:maxLines="2"
+        android:ellipsize="end"
+        tools:text="영상 회의 서비스 만들기"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textSize="13dp"
+        android:textStyle="bold"
+        tools:ignore="HardcodedText" />
+
+
+
+    <!-- 프로젝트 시작 날짜, 영상회의 개수, 프로젝트 상태, 잠금 상태를 포함하는 레이아웃-->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="H, 1.23:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:orientation="vertical"
+        >
+
+        <!--프로젝트 시작 날짜-->
+        <LinearLayout
+            android:id="@+id/created_date_LIN"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.13"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            tools:ignore="Suspicious0dp">
+            <TextView
+                android:id="@+id/created_date_txt"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                tools:text="17.1.19"
+                android:textStyle="bold"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textSize="9dp"
+                tools:ignore="HardcodedText,NestedWeights" />
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+        </LinearLayout>
+
+        <!-- margin 뷰 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.05"/>
+
+        <!-- 영상회의 개수 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.15"
+            android:orientation="horizontal"
+            android:gravity="center"
+            tools:ignore="Suspicious0dp">
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                tools:ignore="NestedWeights" />
+            <TextView
+                android:id="@+id/meeting_nums"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:maxLines="1"
+                tools:text="회의 개수: 5"
+                android:textStyle="bold"
+                android:textAlignment="textEnd"
+                android:textColor="#FFFFFF"
+                android:textSize="10dp"
+                android:background="@drawable/shape_meeting_nums"
+                tools:ignore="HardcodedText,NestedWeights" />
+
+        </LinearLayout>
+
+        <!--마진 뷰: 중간-->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.39"
+            />
+
+        <!-- 프로젝트 상태, 잠금 상태 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.27"
+            android:orientation="horizontal"
+            android:gravity="center"
+            tools:ignore="Suspicious0dp">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.13"
+                tools:ignore="NestedWeights" />
+
+            <TextView
+                android:visibility="invisible"
+                android:id="@+id/project_state_txt"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_marginEnd="25dp"
+                android:paddingStart="7dp"
+                android:paddingEnd="7dp"
+                android:maxLines="1"
+                tools:text="진행중"
+                android:textStyle="bold"
+                android:textAlignment="textEnd"
+                android:textColor="#FFFFFF"
+                android:textSize="9dp"
+                android:gravity="center"
+                tools:background="@drawable/shape_project_in_progress"
+                tools:ignore="HardcodedText,NestedWeights,RtlCompat,SpUsage" />
+            <ImageView
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:id="@+id/lock_img"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_weight="0.5"
+                android:layout_gravity="center"
+                android:scaleType="fitEnd"
+                android:paddingEnd="15dp"
+                android:src="@drawable/locker"
+                />
+            <View
+                android:id="@+id/when_project_not_being_locked"
+                android:visibility="gone"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

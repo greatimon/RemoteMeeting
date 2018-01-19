@@ -16,6 +16,7 @@ public class Static {
     public static String EMAIL_JOIN = "email_join.php";
     public static String EMAIL_LOGIN = "email_login.php";
     public static String GET_PARTNER_LIST = "get_partner_list.php";
+    public static String GET_PROJECT_LIST = "get_project_list.php";
     public static String SEARCH_PARTNERS = "search_partners.php";
     public static String BREAK_PARTNER = "break_partner.php";
     public static String BECOME_A_PARTNER = "become_a_partner.php";

@@ -396,8 +396,8 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                         Collections.sort(rooms, new Comparator<Chat_room>() {
                             @Override
                             public int compare(Chat_room o1, Chat_room o2) {
-                                Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
-                                Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
+//                                Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
+//                                Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
                                 if(o1.getLast_log().getMsg_no() < o2.getLast_log().getMsg_no()) {
                                     return 1;
                                 }

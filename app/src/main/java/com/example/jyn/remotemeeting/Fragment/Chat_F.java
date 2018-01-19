@@ -58,6 +58,8 @@ import retrofit2.Response;
 
 /**
  * Created by JYN on 2017-11-10.
+ *
+ * 채팅방 리스트를 보여주는 프래그먼트, 메인화면 뷰페이저 중 하나
  */
 
 public class Chat_F extends Fragment {
@@ -83,7 +85,7 @@ public class Chat_F extends Fragment {
     // 서버로 부터 채팅방 리스트 받아서 담아놓을 변수
     public ArrayList<Chat_room> rooms;
 
-    // 서버로 부터 채팅방 리스트중, 그룹채팅방의 개수
+    // 서버로 부터 받은 채팅방 리스트중, 그룹채팅방의 개수
     public int group_chat_count = 0;
 
     // 그룹채팅방 대표 이미지 변환 처리완료 횟수를 저장할 변수
@@ -549,8 +551,8 @@ public class Chat_F extends Fragment {
             Collections.sort(rooms, new Comparator<Chat_room>() {
                 @Override
                 public int compare(Chat_room o1, Chat_room o2) {
-                    Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
-                    Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
+//                    Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
+//                    Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
                     if(o1.getLast_log().getMsg_no() < o2.getLast_log().getMsg_no()) {
                         return 1;
                     }
