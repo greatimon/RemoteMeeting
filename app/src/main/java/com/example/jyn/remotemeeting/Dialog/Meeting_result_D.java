@@ -38,6 +38,7 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import okhttp3.ResponseBody;
@@ -367,6 +368,15 @@ public class Meeting_result_D extends Activity {
         } catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 필기작성한 메모지나 종이를 스캐너 처럼 스캔하는 이벤트
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.handwriting_to_document_LIN)
+    private void handwriting_to_document() {
+
     }
 
 

@@ -162,9 +162,13 @@ public class RCV_project_adapter extends RecyclerView.Adapter<RCV_project_adapte
         }
 
         // 프로젝트 지정이 되지 않은 회의 개수를 담고 있는 가상의 프로젝트인 경우,
-        // 프로젝트 진행 상황은 보여주지 않는다
         if(project_no == 0) {
+            // 프로젝트 진행 상황은 보여주지 않는다
             holder.project_state_txt.setVisibility(View.GONE);
+            // 프로젝트 title, 폰트를 크게 한다
+            holder.project_name_txt.setTextSize(15);
+            // 프로젝트 title, 줄간격을 좀 넓힌다
+            holder.project_name_txt.setLineSpacing(0, 1.2f);
         }
     }
 
