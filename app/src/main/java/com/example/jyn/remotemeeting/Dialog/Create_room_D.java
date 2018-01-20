@@ -108,10 +108,15 @@ public class Create_room_D extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.go_meeting)
     public void go_meeting() {
-        String input_title = (title.getText().toString()).replace(" ", ""); // 공백제거
-        String convert_str = Hangul.convert(input_title);   // 영문으로 변환(이모티콘, 특수문자 안됨)
+        // TODO: 영문으로 변환 전의 회의 제목 공백 제거 안하기로 함
+//        String input_title = (title.getText().toString()).replace(" ", ""); // 공백제거
+//        String convert_str = Hangul.convert(input_title);   // 영문으로 변환(이모티콘, 특수문자 안됨)
+        String input_title = title.getText().toString();
+        // 영문으로 변환(이모티콘, 특수문자 안됨) + 공백 제거
+        String convert_str = Hangul.convert(input_title.replace(" ", ""));
         Log.d(TAG, "convert: " + convert_str);
 
+        // 회의 제목 길이 검사를 myapp/어플리케이션 객체에 있는 nickName 길이 검사 메소드로 진행함
         if(!myapp.nickName_check(convert_str)) {
             myapp.logAndToast("회의 제목은 2자 이상\n20자 이하로 작성해주세요");
             return;

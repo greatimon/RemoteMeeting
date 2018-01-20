@@ -1,9 +1,6 @@
 package com.example.jyn.remotemeeting.DataClass;
 
-import android.app.Application;
 import android.util.Log;
-
-import com.example.jyn.remotemeeting.Util.File_search;
 
 /**
  * Created by JYN on 2017-11-17.

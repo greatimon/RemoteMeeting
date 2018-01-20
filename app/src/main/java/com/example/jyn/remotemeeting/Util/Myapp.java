@@ -696,12 +696,11 @@ public class Myapp extends Application {
                                     // 프로젝트 지정이 안되어 있는 회의 개수
                                     int unspecified_project_count = jsonArray.getJSONObject(0).getInt("unspecified_project_count");
 
-                                    //// 프로젝트 정보 parsing 해서 해쉬맵에 넣기
+                                    //// 프로젝트 정보 parsing 해서 어레이에 넣기
                                     // 'specified_project_data' JSONString을 JSONObect로 파싱
                                     JSONArray jsonArray_for_project = new JSONArray(jsonArray.getJSONObject(0).getString("specified_project_data"));
 
                                     // gson 이용해서 project 객체로 변환해서, 그 project 객체 안에서, project_no 값을 가져와서,
-                                    // project_no 값을 키 값으로 하고, project 객체를 밸류 값으로 하는 해쉬맵을, 리턴할 해쉬맵 객체에 add 한다
                                     for(int k=0; k<jsonArray_for_project.length(); k++) {
                                         Project project = gson.fromJson(jsonArray_for_project.get(k).toString(), Project.class);
                                         finalProject_arr.add(project);
@@ -719,7 +718,7 @@ public class Myapp extends Application {
                                     }
 
                                     // 프로젝트 지정이 안되어 있는 회의 개수를 담는 가상의 '프로젝트' 폴더가 있다고 가정하고
-                                    // 해당 '프로젝트' 폴더를 만들어서 해쉬맵에 put 한다
+                                    // 해당 '프로젝트' 폴더를 만들어서 어레이에 add 한다
                                     // 프로젝트 지정이 없는 회의개수를 담는 가상의 '프로젝트'의 project_no = 0;
                                     Project virtual_project = new Project();
                                     virtual_project.setMeeting_count(unspecified_project_count);
@@ -880,6 +879,50 @@ public class Myapp extends Application {
             e.printStackTrace();
         }
 
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 종료된 영상회의의 정보를 서버로부터 받아온다
+        사용 클래스 1) Meeting_result_D
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public String get_ended_meeting_result(final String ended_meeting_no) {
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            return new AsyncTask<Void, Void, String>() {
+                @Override
+                protected String doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.get_ended_meeting_result(
+                                Static.GET_ENDED_MEETING_RESULT,
+                                getUser_no(),
+                                getMeeting_subject_user_no(),
+                                ended_meeting_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+
+                        if(result.equals("fail")) {
+                            logAndToast("예외발생: " + result);
+                        }
+                        else {
+                            // 길이가 긴 JSONString 출력하기
+                            print_long_Json_logcat(result, TAG);
+                            return result;
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

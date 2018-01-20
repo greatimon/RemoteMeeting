@@ -46,6 +46,17 @@ public interface RetrofitService {
     );
 
 
+    /** 종료된 영상회의 정보 받아오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_ended_meeting_result (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "subject_user_no", encoded=true) String subject_user_no,
+            @Field(value = "meeting_no", encoded=true) String meeting_no
+    );
+
+
     /** 내 파트너 리스트 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")
@@ -225,6 +236,15 @@ public interface RetrofitService {
             @Path("url") String url,
             @Field(value = "user_no", encoded=true) String user_no,
             @Field(value = "closed_meeting_room_no", encoded=true) String closed_meeting_room_no
+    );
+
+
+    /** 회의 종료 시각 받아오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_meeting_end_time (
+            @Path("url") String url,
+            @Field(value = "meeting_no", encoded=true) String meeting_no
     );
 
 
