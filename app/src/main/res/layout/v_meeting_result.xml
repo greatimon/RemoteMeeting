@@ -350,13 +350,23 @@
                         android:textAlignment="textStart"
                         tools:ignore="HardcodedText,RtlCompat,SpUsage" />
 
-                    <android.support.v7.widget.RecyclerView
-                        android:visibility="gone"
-                        tools:visibility="gone"
-                        android:id="@+id/handwriting_to_document_rcv"
+                    <!--<android.support.v7.widget.RecyclerView-->
+                        <!--android:visibility="gone"-->
+                        <!--tools:visibility="gone"-->
+                        <!--android:id="@+id/handwriting_to_document_rcv"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="wrap_content">-->
+                    <!--</android.support.v7.widget.RecyclerView>-->
+                    <ImageView
+                        android:id="@+id/scanned_img"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                    </android.support.v7.widget.RecyclerView>
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:paddingEnd="10dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        tools:src="@drawable/back_4"
+                        />
 
                 </LinearLayout>
 

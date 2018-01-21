@@ -2,6 +2,7 @@ package com.example.jyn.remotemeeting.Dialog;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
@@ -61,6 +62,7 @@ public class Meeting_result_D extends Activity {
 
     private static final String TAG = "all_"+Meeting_result_D.class.getSimpleName();
     private String JSON_TAG_ENDED_MEETING_RESULT = "ended_meeting_result";
+    private static final int REQUEST_IMAGE_SCAN_TO_DOCUMENT = 9999;
     Myapp myapp;
     String ended_meeting_no;
 
@@ -81,8 +83,9 @@ public class Meeting_result_D extends Activity {
     @BindView(R.id.project_name_txt)                    TextView project_name_txt;
     @BindView(R.id.meeting_subject_user_profile_img)    ImageView meeting_subject_user_profile_img;
     @BindView(R.id.project_folder_img)                  ImageView project_folder_img;
+    @BindView(R.id.scanned_img)                         ImageView scanned_img;
     @BindView(R.id.memo_edit)                           EditText memo_edit;
-    @BindView(R.id.handwriting_to_document_rcv)         RecyclerView handwriting_to_document_rcv;
+//    @BindView(R.id.handwriting_to_document_rcv)         RecyclerView handwriting_to_document_rcv;
     @BindView(R.id.upload_images_rcv)                   RecyclerView upload_images_rcv;
     @BindView(R.id.drawing_images_rcv)                  RecyclerView drawing_images_rcv;
 
@@ -372,13 +375,37 @@ public class Meeting_result_D extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 필기작성한 메모지나 종이를 스캐너 처럼 스캔하는 이벤트
+     클릭이벤트 ==> 필기작성한 메모지나 종이를 스캐너 처럼 스캔하는 액티비티 열기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.handwriting_to_document_LIN)
-    private void handwriting_to_document() {
-
+    public void handwriting_to_document() {
+        Intent intent = new Intent(this, Image_scan_to_document_D.class);
+        startActivityForResult(intent, REQUEST_IMAGE_SCAN_TO_DOCUMENT);
     }
 
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> onActivityResult
+     ---------------------------------------------------------------------------*/
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // 문서 스캔을 완료 하고 돌아왔을 때
+        if(requestCode == REQUEST_IMAGE_SCAN_TO_DOCUMENT && resultCode == RESULT_OK) {
+            // intent 값으로 저장한 비트맵 파일의 절대 경로를 받아온다.
+//            String canonicalPath = data.getStringExtra("canonicalPath");
+            if(myapp.getScanned_bitmap() != null) {
+                // 받아온 절대 경로값으로 뷰에 셋팅한다
+//                Glide
+//                    .with(this)
+//                    .load(myapp.getScanned_bitmap())
+//                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+////                    .bitmapTransform(new CropCircleTransformation(context))
+//                    .into(scanned_img);
+            }
+        }
+    }
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onDestroy

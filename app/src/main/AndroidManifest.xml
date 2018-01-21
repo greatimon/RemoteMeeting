@@ -130,6 +130,14 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
+        // Scan Image to document
+        <activity
+            android:name=".Dialog.Image_scan_to_document_D"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
         // 파트너 끊기 확인
         <activity
             android:name=".Dialog.Confirm_subtract_partner_D"

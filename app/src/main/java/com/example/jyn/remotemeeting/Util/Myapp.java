@@ -33,6 +33,7 @@ import com.example.jyn.remotemeeting.R;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.orhanobut.logger.FormatStrategy;
+import com.orhanobut.logger.Logger;
 import com.orhanobut.logger.PrettyFormatStrategy;
 import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.rendering.PDFRenderer;
@@ -211,6 +212,9 @@ public class Myapp extends Application {
             R.drawable.teal
     };
 
+    // 임시 비트맵 저장: 스캔한 문서 비트맵
+    public Bitmap scanned_bitmap;
+
     /** GET, SET */
     public String getUser_no() {
         return user_no;
@@ -386,6 +390,13 @@ public class Myapp extends Application {
 
     public void setFolder_color_hash(ConcurrentHashMap<String, Integer> folder_color_hash) {
         this.folder_color_hash = folder_color_hash;
+    }
+    public Bitmap getScanned_bitmap() {
+        return scanned_bitmap;
+    }
+
+    public void setScanned_bitmap(Bitmap scanned_bitmap) {
+        this.scanned_bitmap = scanned_bitmap;
     }
 
     /** 생명주기 - onCreate */
@@ -1851,7 +1862,7 @@ public class Myapp extends Application {
         String folder_name = "/"+folder+"/";
         String file_name = name+".png";
         String string_path = ex_storage+folder_name;
-//        Logger.d("string_path + file_name: " + string_path + file_name);
+        Logger.d("string_path + file_name: " + string_path + file_name);
 
         File file_path;
         try{
