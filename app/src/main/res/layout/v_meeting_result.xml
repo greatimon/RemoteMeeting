@@ -331,16 +331,19 @@
                 android:layout_below="@+id/meeting_memo_LIN"
                 android:orientation="horizontal">
                 <ImageView
+                    android:id="@+id/handwriting_to_document_icon"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:layout_marginEnd="15dp"
                     android:src="@drawable/image_to_document" />
                 <LinearLayout
+                    android:id="@+id/handwriting_to_document_LIN_for_add_img"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     >
                     <TextView
+                        android:id="@+id/handwriting_to_document_txt"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"
                         android:gravity="center"
@@ -358,15 +361,16 @@
                         <!--android:layout_height="wrap_content">-->
                     <!--</android.support.v7.widget.RecyclerView>-->
                     <ImageView
+                        android:visibility="gone"
+                        tools:visibility="visible"
                         android:id="@+id/scanned_img"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:paddingEnd="10dp"
-                        android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         tools:src="@drawable/back_4"
-                        />
+                        tools:ignore="RtlSymmetry" />
 
                 </LinearLayout>
 
@@ -405,7 +409,10 @@
                     <android.support.v7.widget.RecyclerView
                         android:id="@+id/upload_images_rcv"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:paddingEnd="10dp"
+                        >
                     </android.support.v7.widget.RecyclerView>
                 </LinearLayout>
 

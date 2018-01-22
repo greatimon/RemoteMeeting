@@ -85,12 +85,13 @@ public class Image_scan_to_document_D extends Activity {
 
         if (requestCode == REQUEST_SCAN_CODE && resultCode == Activity.RESULT_OK) {
             Uri uri = data.getExtras().getParcelable(ScanConstants.SCANNED_RESULT);
-            Bitmap bitmap = null;
-            try {
+//            Bitmap bitmap = null;
+            Log.d(TAG, "onActivityResult_uri: " + uri);
+//            try {
 
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                getContentResolver().delete(uri, null, null);
-                myapp.setScanned_bitmap(bitmap);
+//                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+//                getContentResolver().delete(uri, null, null);
+//                myapp.setScanned_bitmap(bitmap);
 
                 // 원래코드
 //                scanned_img.setImageBitmap(bitmap);
@@ -111,12 +112,16 @@ public class Image_scan_to_document_D extends Activity {
 //                // TODO: 다음에 불러올 수 있도록 처리해야겠다
 //                /** 파일로 저장 완료 됐으면 해당 절대 경로를 intent 값으로 반환하면서 액티비티 종료하기 */
                 Intent intent = new Intent();
+
+                intent.putExtra(ScanConstants.SCANNED_RESULT, uri);
+                setResult(Activity.RESULT_OK, intent);
+
                 setResult(RESULT_OK, intent);
                 finish();
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 

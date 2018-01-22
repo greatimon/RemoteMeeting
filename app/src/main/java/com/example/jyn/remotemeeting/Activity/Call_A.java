@@ -656,11 +656,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // TODO: == webRTC 구동을 끄기위한 주석 ==
         // TODO: 개발을 위해 임시적으로 주석처리
         // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
-        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            startScreenCapture();
-        } else {
-            startCall();
-        }
+//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            startScreenCapture();
+//        } else {
+//            startCall();
+//        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기
@@ -1488,10 +1488,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     if (retrofit_result.equals("success")) {
                         // 내 회의 정보 정보 변경
                         myapp.setPresent_meeting_in_ornot("");
-                        myapp.setMeeting_no("");
+//                        myapp.setMeeting_no("");
                         myapp.setReal_meeting_title("");
                         myapp.setMeeting_creator_user_no("");
-                        myapp.setMeeting_subject_user_no("");
+//                        myapp.setMeeting_subject_user_no("");
                         myapp.setMeeting_authority_user_no("");
                         myapp.setProject_no("");
                         myapp.setMeeting_status("");

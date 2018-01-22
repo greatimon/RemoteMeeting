@@ -1164,15 +1164,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 회의하고 돌아왔을 때
         else if(requestCode==CONNECTION_REQUEST) {
             // 회의 결과를 보여주는 다이얼로그 액티비티 호출
-//            new Handler().postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
-//                    startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
-//                }
-//            }, 500);
-            Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
-            startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
+                    startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
+                }
+            }, 500);
+//            Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
+//            startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
         }
 
         // 플로팅 버튼으로, 채팅방을 만들 때

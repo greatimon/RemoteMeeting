@@ -213,7 +213,7 @@ public class Myapp extends Application {
     };
 
     // 임시 비트맵 저장: 스캔한 문서 비트맵
-    public Bitmap scanned_bitmap;
+//    public Bitmap scanned_bitmap;
 
     /** GET, SET */
     public String getUser_no() {
@@ -391,13 +391,13 @@ public class Myapp extends Application {
     public void setFolder_color_hash(ConcurrentHashMap<String, Integer> folder_color_hash) {
         this.folder_color_hash = folder_color_hash;
     }
-    public Bitmap getScanned_bitmap() {
-        return scanned_bitmap;
-    }
-
-    public void setScanned_bitmap(Bitmap scanned_bitmap) {
-        this.scanned_bitmap = scanned_bitmap;
-    }
+//    public Bitmap getScanned_bitmap() {
+//        return scanned_bitmap;
+//    }
+//
+//    public void setScanned_bitmap(Bitmap scanned_bitmap) {
+//        this.scanned_bitmap = scanned_bitmap;
+//    }
 
     /** 생명주기 - onCreate */
     @Override
@@ -583,7 +583,7 @@ public class Myapp extends Application {
      메소드 ==> 서버 통신 -- 해당 회의번호로 업로드 된 파일 리스트 가져와서 리턴하기
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
-    public ArrayList<File_info> get_uploaded_file_list(Context context) {
+    public ArrayList<File_info> get_uploaded_file_list(Context context, final String this_meeting_no) {
         ArrayList<File_info> files = new ArrayList<>();
         final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
 
@@ -609,7 +609,7 @@ public class Myapp extends Application {
                     try {
                         Call<ResponseBody> call_result = rs.get_share_file_list(
                                 Static.GET_SHARE_FILE_LIST,
-                                meeting_no);
+                                this_meeting_no);
                         Response<ResponseBody> list = call_result.execute();
                         String result = list.body().string();
 
@@ -899,7 +899,8 @@ public class Myapp extends Application {
         사용 클래스 1) Meeting_result_D
      ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
-    public String get_ended_meeting_result(final String ended_meeting_no) {
+    public String get_ended_meeting_result(
+            final String ended_meeting_no, final String ended_subject_user_no) {
         final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
 
         // 동기 호출
@@ -911,7 +912,7 @@ public class Myapp extends Application {
                         Call<ResponseBody> call_result = rs.get_ended_meeting_result(
                                 Static.GET_ENDED_MEETING_RESULT,
                                 getUser_no(),
-                                getMeeting_subject_user_no(),
+                                ended_subject_user_no,
                                 ended_meeting_no);
                         Response<ResponseBody> list = call_result.execute();
                         String result = list.body().string();

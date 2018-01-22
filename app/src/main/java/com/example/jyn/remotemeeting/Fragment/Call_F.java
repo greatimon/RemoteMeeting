@@ -1180,7 +1180,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         /** 공유 파일 어댑터가 필요할 때 */
         else if(target.equals("project")) {
             // 서버로부터 공유 파일리스트 받기
-            ArrayList<File_info> files = myapp.get_uploaded_file_list(getActivity());
+            ArrayList<File_info> files = myapp.get_uploaded_file_list(getActivity(), myapp.getMeeting_no());
             Log.d(TAG, "어댑터에 넘길 project_files.isEmpty(): " + files.isEmpty());
             if(!files.isEmpty()) {
                 Log.d(TAG, "어댑터에 넘길 project_files 개수: " + files.size());
