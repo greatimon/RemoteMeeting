@@ -19,6 +19,7 @@ import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -83,7 +84,12 @@ public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_p
 
                     // 해당 프로젝트에 지정된 영상회의 목록 보는 액티비티 열기
                     Intent intent = new Intent(context, Project_meeting_result_list_A.class);
-                    intent.putExtra("project_no", project_arr.get(pos).getProject_no());
+
+                    // Gson을 이용해서 클릭한 Project 객체를 jsonString으로 변환하여 intent에 넣기
+                    Gson gson = new Gson();
+                    String jsonString = gson.toJson(project_arr.get(pos));
+                    intent.putExtra("project_str", jsonString);
+
                     ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_PROJECT_MEETING_RESULT_LIST);
                 }
             });

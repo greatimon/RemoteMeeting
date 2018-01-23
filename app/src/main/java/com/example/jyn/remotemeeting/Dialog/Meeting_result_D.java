@@ -825,7 +825,7 @@ public class Meeting_result_D extends Activity {
 
             // '내부 메소드로'부터 가져온 int value 값으로,
             // '액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러를 변경한다
-            int color_int_value = project_color(selected_project_color);
+            int color_int_value = myapp.project_color(selected_project_color);
             actionBar_LIN.setBackgroundColor(color_int_value);
             meeting_basic_info_LIN.setBackgroundColor(color_int_value);
 
@@ -844,31 +844,6 @@ public class Meeting_result_D extends Activity {
             }
         }
     }
-
-
-    /**---------------------------------------------------------------------------
-     메소드 ==> 선택한 프로젝트 or 프로젝트 선택을 해제할 때, 액션바와, 그 밑의 레이아웃에 셋팅할
-                color int 값 설정하여 반환하는 메소드
-     ---------------------------------------------------------------------------*/
-    public int project_color(String selected_project_color) {
-        // 해당 프로젝트 컬러에 따른 색 int value 값을 가져온다
-        int color_int_value_index = -1;
-        for(int i=0; i<myapp.folder_color_int_value.length; i++) {
-            if(myapp.folder_color_str[i].equals(selected_project_color)) {
-                color_int_value_index = i;
-            }
-        }
-        Log.d(TAG, "color_int_value_index: " + color_int_value_index);
-
-        if(color_int_value_index != -1) {
-            int color_int_value = myapp.folder_color_int_value[color_int_value_index];
-            return color_int_value;
-        }
-        else {
-            return -1;
-        }
-    }
-
 
 
     /**---------------------------------------------------------------------------

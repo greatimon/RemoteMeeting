@@ -1031,6 +1031,30 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
+     메소드 ==> color 를 나타내는 String 값으로, 실제 color int 값을 찾아, 반환하는 메소드
+        사용 클래스 1) Meeting_result_D
+     ---------------------------------------------------------------------------*/
+    public int project_color(String selected_project_color) {
+        // 해당 프로젝트 컬러에 따른 색 int value 값을 가져온다
+        int color_int_value_index = -1;
+        for(int i=0; i<folder_color_int_value.length; i++) {
+            if(folder_color_str[i].equals(selected_project_color)) {
+                color_int_value_index = i;
+            }
+        }
+        Log.d(TAG, "color_int_value_index: " + color_int_value_index);
+
+        if(color_int_value_index != -1) {
+            int color_int_value = folder_color_int_value[color_int_value_index];
+            return color_int_value;
+        }
+        else {
+            return -1;
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
      메소드 ==> 서버 통신 -- 지정한 프로젝트 no를 DB에 저장한다
         매개변수 1) 지정한 프로젝트 번호
         매개변수 2) 지정할 회의 번호

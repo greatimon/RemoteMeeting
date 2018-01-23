@@ -13,9 +13,11 @@ import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_project_meeting_result_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Meeting_room;
+import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 
@@ -46,7 +48,7 @@ public class Project_meeting_result_list_A extends Activity {
     public RecyclerView.LayoutManager layoutManager;
 
     // 프로젝트 번호
-    int project_no;
+    Project project;
 
 
     /**---------------------------------------------------------------------------
@@ -63,8 +65,24 @@ public class Project_meeting_result_list_A extends Activity {
         myapp = Myapp.getInstance();
 
         Intent intent = getIntent();
-        project_no = intent.getIntExtra("project_no", -1);
-        Log.d(TAG, "project_no: " + project_no);
+        // intent로 Project 클래스를 jsonString으로 변환한 값을 받는다
+        String project_str = intent.getStringExtra("project_str");
+        if(project_str != null) {
+            Log.d(TAG, "project_str: " + project_str);
+            Gson gson = new Gson();
+            // Gson을 이용해서 Project 객체로 변환시킨다
+            project = gson.fromJson(project_str, Project.class);
+        }
+
+        if(project != null) {
+            // Project 객체에서 Color 값을 가져온다
+            String project_color = project.getProject_color();
+            // 해당 Color String 값으로, Color int 값을 가져온다
+            int color_value = myapp.project_color(project_color);
+            // ActionBar 위치에 있는 레이아웃의 색을 변경한다.
+            actionBar_LIN.setBackgroundColor(color_value);
+        }
+
 
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);
@@ -76,7 +94,7 @@ public class Project_meeting_result_list_A extends Activity {
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        ArrayList<Meeting_room> meeting_room_arr= myapp.get_meeting_room_list(project_no);
+        ArrayList<Meeting_room> meeting_room_arr= myapp.get_meeting_room_list(project.getProject_no());
 
         rcv_project_meeting_result_list_adapter = new RCV_project_meeting_result_list_adapter(
                 this, R.layout.i_meeting_result_brief, meeting_room_arr);
