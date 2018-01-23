@@ -195,21 +195,21 @@ public class Myapp extends Application {
 
     // 폴더 리소스 int 배열
     public int[] folder_color_resource = {
-            R.drawable.amber,
-            R.drawable.blue,
-            R.drawable.blue_grey,
-            R.drawable.brown,
-            R.drawable.deep_orange,
-            R.drawable.deep_purple,
-            R.drawable.green,
-            R.drawable.grey,
-            R.drawable.indigo,
-            R.drawable.light_green,
-            R.drawable.orange,
-            R.drawable.pink,
-            R.drawable.purple,
-            R.drawable.red,
-            R.drawable.teal
+            R.drawable.amber_f,
+            R.drawable.blue_f,
+            R.drawable.blue_grey_f,
+            R.drawable.brown_f,
+            R.drawable.deep_orange_f,
+            R.drawable.deep_purple_f,
+            R.drawable.green_f,
+            R.drawable.grey_f,
+            R.drawable.indigo_f,
+            R.drawable.light_green_f,
+            R.drawable.orange_f,
+            R.drawable.pink_f,
+            R.drawable.purple_f,
+            R.drawable.red_f,
+            R.drawable.teal_f
     };
 
     // 임시 비트맵 저장: 스캔한 문서 비트맵
@@ -1875,7 +1875,7 @@ public class Myapp extends Application {
 
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.close();
-            return string_path;
+            return file_name;
 
         }catch(FileNotFoundException exception){
             Log.e("FileNotFoundException", exception.getMessage());

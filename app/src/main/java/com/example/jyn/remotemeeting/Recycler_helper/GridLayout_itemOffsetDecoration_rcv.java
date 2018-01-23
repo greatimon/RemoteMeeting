@@ -1,4 +1,4 @@
-package com.example.jyn.remotemeeting.Util;
+package com.example.jyn.remotemeeting.Recycler_helper;
 
 import android.content.Context;
 import android.graphics.Rect;

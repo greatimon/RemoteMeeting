@@ -15,24 +15,4 @@
         android:scaleType="centerCrop"
         />
 
-    <!--<RelativeLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:background="@drawable/shape_uploaded_image_border"-->
-        <!--android:padding="4dp"-->
-        <!--&gt;-->
-
-        <!--<ImageView-->
-            <!--android:id="@+id/uploaded_img"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:adjustViewBounds="true"-->
-            <!--android:padding="1dp"-->
-            <!--tools:src="@drawable/back_7"-->
-            <!--android:scaleType="centerCrop"-->
-            <!--/>-->
-
-    <!--</RelativeLayout>-->
-
-
 </RelativeLayout>

@@ -9,6 +9,7 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -50,6 +51,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.Adapter.RCV_share_image_adapter;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
+import com.example.jyn.remotemeeting.DataClass.Drawing_images_saveFile;
 import com.example.jyn.remotemeeting.DataClass.Preview_share_img_file;
 import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
 import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_end_D;
@@ -83,6 +85,7 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.gson.Gson;
 import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
 import com.squareup.otto.Subscribe;
@@ -2953,14 +2956,64 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     }
                     if(requestFrom.equals("save")) {
                         // 비트맵으로 저장
-                        String saveBitmaptoImage_result =
+                        // 원래 코드
+//                        String saveBitmaptoImage_fileName =
+//                                myapp.saveBitmaptoImage(bitmap_for_save,
+//                                                        "remoteMeeting",
+//                                                        "testBitmap_" + myapp.get_time("yyyyMMdd HH_mm_ss"));
+                        // try 코드
+                        String saveBitmaptoImage_fileName =
                                 myapp.saveBitmaptoImage(bitmap_for_save,
-                                                        "remoteMeeting",
-                                                        "testBitmap_" + myapp.get_time("yyyyMMdd HH_mm_ss"));
-                        Logger.d("saveBitmaptoImage_result: " + saveBitmaptoImage_result);
+                                        "remoteMeeting",
+                                        myapp.getMeeting_no() + "__" + myapp.get_time("yyyyMMdd HH_mm_ss"));
+                        Logger.d("saveBitmaptoImage_fileName: " + saveBitmaptoImage_fileName);
+
+                        /**
+                            쉐어드에 파일 이름 저장하기 -
+                            [key: 회의 번호] | [value: Drawing_images_saveFile_jsonString]
+                         */
+                        SharedPreferences drawing_imgs_fileName = getSharedPreferences(Static.DRAWING_IMGS_FOR_SHARED, MODE_PRIVATE);
+                        @SuppressLint("CommitPrefEdits")
+                        SharedPreferences.Editor drawing_imgs_fileName_edit = drawing_imgs_fileName.edit();
+
+                        // 지금 참여하고 있는 회의 번호로 저장되어 있는 쉐어드 String 값을 찾아온다
+                        String drawing_file_str = drawing_imgs_fileName.getString(myapp.getMeeting_no(), "");
+                        // Drawing_images_saveFile <--> String, 변환을 위한 Gson 선언
+                        Gson gson = new Gson();
+
+                        // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 없다면,
+                        if(drawing_file_str.equals("")) {
+                            // Drawing_images_saveFile 객체를 새로 생성하여,
+                            // 회의 번호를 set 하고
+                            // String, 어레이리스트에 해당 파일 이름을 add 한다
+                            Drawing_images_saveFile drawing_images_saveFile = new Drawing_images_saveFile();
+                            drawing_images_saveFile.setMeeting_no(myapp.getMeeting_no());
+                            drawing_images_saveFile.add_item(saveBitmaptoImage_fileName);
+
+                            // gson을 이용하여 String화 하여 쉐어드에 다시 저장한다
+                            String jsonString = gson.toJson(drawing_images_saveFile);
+
+                            drawing_imgs_fileName_edit.putString(myapp.getMeeting_no(), jsonString).apply();
+                            Log.d(TAG, "jsonString: " + jsonString);
+                        }
+                        // 지금 참여하고 있는 회의 번호로 저장되어 있는 쉐어드 값이 이미 있다면
+                        else if(!drawing_file_str.equals("")) {
+                            // 해당 쉐어드 Str 값을 gson과 데이터 클래스를 이용하여, 데이터 객체로 파싱,
+                            // String, 어레이리스트에 해당 파일 이름을 add 한다
+                            Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
+                            drawing_images_saveFile.getDrawing_images_fileName_arr().add(saveBitmaptoImage_fileName);
+
+                            // gson을 이용하여 String화 하여 쉐어드에 다시 저장한다
+                            String jsonString = gson.toJson(drawing_images_saveFile);
+                            drawing_imgs_fileName_edit.putString(myapp.getMeeting_no(), jsonString).apply();
+                            Log.d(TAG, "jsonString: " + jsonString);
+                        }
+
                         if (bitmap_for_save != null) {
                             bitmap_for_save = null;
                         }
+
+                        myapp.logAndToast("이미지 파일을 저장하였습니다");
                     }
                     // 드래그를 위한 비트맵을 메인 켄버스에 셋팅
                     else if(requestFrom.equals("drag")) {
@@ -2985,6 +3038,12 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if(got_reset_order_from_rcv_adapter) {
             initializing_when_share_image_changed();
             got_reset_order_from_rcv_adapter = false;
+        }
+
+        // 캔버스를 파일로 'save' 하고 나서,
+        // 화면에 그렸던 화면을 다시 그려주기 위해서 draw("drag")를 호출하는 핸들러 메세지 전달하기
+        if(requestFrom.equals("save")) {
+            call_draw_handler.sendEmptyMessage(4);
         }
     }
 

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -27,14 +28,15 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.example.jyn.remotemeeting.Adapter.RCV_call_adapter;
-import com.example.jyn.remotemeeting.Adapter.RCV_show_uploaded_images_after_end_meeting_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_show_drawing_images_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_show_uploaded_images_adapter;
+import com.example.jyn.remotemeeting.DataClass.Drawing_images_saveFile;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Meeting_room;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
-import com.example.jyn.remotemeeting.Util.GridLayout_itemOffsetDecoration_rcv;
+import com.example.jyn.remotemeeting.Recycler_helper.GridLayout_itemOffsetDecoration_rcv;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
 import com.example.jyn.remotemeeting.Util.ServiceGenerator;
@@ -132,7 +134,8 @@ public class Meeting_result_D extends Activity {
 
     // 리사이클러뷰 관련 변수, 클래스 선언 =========
     // =========================================
-    public RCV_show_uploaded_images_after_end_meeting_adapter rcv_upload_images_after_end_meeting_adapter;
+    public RCV_show_uploaded_images_adapter rcv_upload_images_adapter;
+    public RCV_show_drawing_images_adapter rcv_drawing_images_adapter;
 
 
 
@@ -213,29 +216,67 @@ public class Meeting_result_D extends Activity {
         // 파싱한 뒤, 종료된 영상회의를 뷰에 셋팅
         parsing_server_data(jsonString_meeting_result);
 
-        // 서버로부터 공유 파일리스트 받기
+        /** 서버로부터, 회의 때 업로드 했던 파일 리스트들의 name 받아오기 */
         ArrayList<File_info> files = myapp.get_uploaded_file_list(this, ended_meeting_no);
-        Log.d(TAG, "어댑터에 넘길 project_files.isEmpty(): " + files.isEmpty());
+        Log.d(TAG, "files.isEmpty(): " + files.isEmpty());
         if(!files.isEmpty()) {
-            Log.d(TAG, "어댑터에 넘길 project_files 개수: " + files.size());
+            Log.d(TAG, "어댑터에 넘길 files 개수: " + files.size());
             // 생성자 인수
             // 1. 액티비티
             // 2. 인플레이팅 되는 레이아웃
             // 3. arrayList 데이터
             // 4. 변별 변수
-            rcv_upload_images_after_end_meeting_adapter
-                    = new RCV_show_uploaded_images_after_end_meeting_adapter(this, R.layout.i_uploaded_images, files, "meeting_result");
+            rcv_upload_images_adapter
+                    = new RCV_show_uploaded_images_adapter(this, R.layout.i_uploaded_images, files, "meeting_result");
 
             // 그리드 레이아수 적용, 한줄에 2개
             upload_images_rcv.setLayoutManager(new GridLayoutManager(this, 2));
 
             // 아이템 간 일정한 패딩을 주기 위한 ItemDecoration
-            GridLayout_itemOffsetDecoration_rcv itemDecoration = new GridLayout_itemOffsetDecoration_rcv(this, R.dimen.item_offset);
+            GridLayout_itemOffsetDecoration_rcv itemDecoration
+                    = new GridLayout_itemOffsetDecoration_rcv(this, R.dimen.item_offset);
             upload_images_rcv.addItemDecoration(itemDecoration);
 
             // set Adapter
-            upload_images_rcv.setAdapter(rcv_upload_images_after_end_meeting_adapter);
-            rcv_upload_images_after_end_meeting_adapter.notifyDataSetChanged();
+            upload_images_rcv.setAdapter(rcv_upload_images_adapter);
+            rcv_upload_images_adapter.notifyDataSetChanged();
+        }
+
+        /** 해당 영상회의에서 저장했던, 파일 이름 리스트들 쉐어드로부터 가져오기 */
+        Gson gson = new Gson();
+        SharedPreferences drawing_imgs_fileName = getSharedPreferences(Static.DRAWING_IMGS_FOR_SHARED, MODE_PRIVATE);
+        // 지금 참여하고 있는 회의 번호로 저장되어 있는 쉐어드 String 값을 찾아온다
+        String drawing_file_str = drawing_imgs_fileName.getString(ended_meeting_no, "");
+        // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 없다면,
+        if(!drawing_file_str.equals("")) {
+            // 해당 쉐어드 Str 값을 gson과 데이터 클래스를 이용하여, 데이터 객체로 파싱하여, 어댑터로 넘긴다
+            Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
+//            Log.d(TAG, "drawing_images_saveFile.getMeeting_no(): "
+//                    + drawing_images_saveFile.getMeeting_no());
+//            Log.d(TAG, "drawing_images_saveFile.getDrawing_images_fileName_arr(): "
+//                    + drawing_images_saveFile.getDrawing_images_fileName_arr().toString());
+
+            ArrayList<String> drawing_imgs_fileName_arr = drawing_images_saveFile.getDrawing_images_fileName_arr();
+
+            Log.d(TAG, "어댑터에 넘길 files 개수: " + drawing_imgs_fileName_arr.size());
+            // 생성자 인수
+            // 1. 액티비티
+            // 2. 인플레이팅 되는 레이아웃
+            // 3. arrayList 데이터
+            rcv_drawing_images_adapter
+                    = new RCV_show_drawing_images_adapter(this, R.layout.i_uploaded_images, drawing_imgs_fileName_arr);
+
+            // 그리드 레이아수 적용, 한줄에 2개
+            drawing_images_rcv.setLayoutManager(new GridLayoutManager(this, 2));
+
+            // 아이템 간 일정한 패딩을 주기 위한 ItemDecoration
+            GridLayout_itemOffsetDecoration_rcv itemDecoration
+                    = new GridLayout_itemOffsetDecoration_rcv(this, R.dimen.item_offset);
+            drawing_images_rcv.addItemDecoration(itemDecoration);
+
+            // set Adapter
+            drawing_images_rcv.setAdapter(rcv_drawing_images_adapter);
+            rcv_drawing_images_adapter.notifyDataSetChanged();
         }
     }
 

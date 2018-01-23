@@ -5,6 +5,8 @@ package com.example.jyn.remotemeeting.Etc;
  */
 
 public class Static {
+    public static String DRAWING_IMGS_SAVE_PATH = "/storage/emulated/0/remoteMeeting/";
+    public static String DRAWING_IMGS_FOR_SHARED= "drawing_imgs_fileName";
     public static String ROOM_ID = "53236556"; // 테스트용
     public static String WEBRTC_URL = "https://appr.tc";
 
