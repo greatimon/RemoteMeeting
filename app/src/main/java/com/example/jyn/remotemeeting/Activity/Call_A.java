@@ -2981,6 +2981,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                         // Drawing_images_saveFile <--> String, 변환을 위한 Gson 선언
                         Gson gson = new Gson();
 
+                        // 이 회의에서 저장한 드로잉 이미지 파일 개수를 담을 변수
+                        int count_saved_drawing_images = 0;
+
                         // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 없다면,
                         if(drawing_file_str.equals("")) {
                             // Drawing_images_saveFile 객체를 새로 생성하여,
@@ -2989,6 +2992,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             Drawing_images_saveFile drawing_images_saveFile = new Drawing_images_saveFile();
                             drawing_images_saveFile.setMeeting_no(myapp.getMeeting_no());
                             drawing_images_saveFile.add_item(saveBitmaptoImage_fileName);
+
+                            // 저장한 드로잉 이미지 파일 개수 가져오기
+                            count_saved_drawing_images = drawing_images_saveFile.file_nums();
 
                             // gson을 이용하여 String화 하여 쉐어드에 다시 저장한다
                             String jsonString = gson.toJson(drawing_images_saveFile);
@@ -3003,6 +3009,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
                             drawing_images_saveFile.getDrawing_images_fileName_arr().add(saveBitmaptoImage_fileName);
 
+                            // 저장한 드로잉 이미지 파일 개수 가져오기
+                            count_saved_drawing_images = drawing_images_saveFile.file_nums();
+
                             // gson을 이용하여 String화 하여 쉐어드에 다시 저장한다
                             String jsonString = gson.toJson(drawing_images_saveFile);
                             drawing_imgs_fileName_edit.putString(myapp.getMeeting_no(), jsonString).apply();
@@ -3013,7 +3022,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             bitmap_for_save = null;
                         }
 
-                        myapp.logAndToast("이미지 파일을 저장하였습니다");
+                        myapp.logAndToast("이미지 파일을 저장하였습니다(" + count_saved_drawing_images + ")");
                     }
                     // 드래그를 위한 비트맵을 메인 켄버스에 셋팅
                     else if(requestFrom.equals("drag")) {

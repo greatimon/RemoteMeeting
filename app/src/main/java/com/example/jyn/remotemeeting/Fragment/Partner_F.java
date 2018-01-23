@@ -17,7 +17,7 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
-import com.example.jyn.remotemeeting.Activity.Search_partner;
+import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -186,7 +186,7 @@ public class Partner_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.search_partner)
     public void search_partner() {
-        Intent intent = new Intent(getActivity(), Search_partner.class);
+        Intent intent = new Intent(getActivity(), Search_partner_A.class);
         startActivityForResult(intent, Main_after_login_A.REQUEST_SEARCH_PARTNER);
     }
 

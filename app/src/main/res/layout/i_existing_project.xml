@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:id="@+id/container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    tools:layout_width="280dp"
+    tools:background="#dfdfdf"
+    android:background="#FFFFFF"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="7dp"
+    android:paddingBottom="7dp"
+    android:orientation="horizontal"
+    >
+
+    <ImageView
+        android:id="@+id/project_folder_img"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:padding="4dp"
+        android:layout_gravity="center"
+        android:layout_marginEnd="7dp"
+        android:scaleType="centerInside"
+        tools:src="@drawable/pink_f"/>
+
+    <TextView
+        android:id="@+id/project_name_txt"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:maxLines="2"
+        android:ellipsize="end"
+        tools:text="주말 소모임 하이브리드앱 개발 프로젝트"
+        android:textSize="14dp"
+        android:textColor="#464646"
+        tools:ignore="SpUsage" />
+
+</LinearLayout>

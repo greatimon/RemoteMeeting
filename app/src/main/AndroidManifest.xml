@@ -91,7 +91,15 @@
 
         // 파트너 검색
         <activity
-            android:name=".Activity.Search_partner"
+            android:name=".Activity.Search_partner_A"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="InnerclassSeparator">
+        </activity>
+
+        // 해당 프로젝트의 회의 결과 리스트 보기
+        <activity
+            android:name=".Activity.Project_meeting_result_list_A"
             android:screenOrientation="portrait"
             android:exported="false"
             tools:ignore="InnerclassSeparator">
@@ -156,18 +164,44 @@
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
-        // 이미지 선택 방법 선택하기
+        // 프로필 이미지 선택 방법 선택하기
         <activity
-            android:name=".Dialog.Choose_method_for_select_img_D"
+            android:name=".Dialog.Select_method_for_select_img_D"
             android:theme="@android:style/Theme.Dialog"
             android:screenOrientation="portrait"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden">
         </activity>
 
-        // 이미지 미리보기
+        // 회의 결과, 프로젝트에 할당하는 방법 선택하기
+        <activity
+            android:name=".Dialog.Select_method_for_assign_project_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
+        // 기존 프로젝트 리스트에서 할당할 프로젝트 선택하기
+        <activity
+            android:name=".Dialog.Assign_to_existing_project_D"
+            android:theme="@android:style/Theme.Dialog"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
+        // 선택한 프로필 이미지 미리보기
         <activity
             android:name=".Activity.Preview_img_A"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
+        // 클릭한 이미지 보기
+        <activity
+            android:name=".Dialog.Show_one_image_D"
             android:screenOrientation="portrait"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden">

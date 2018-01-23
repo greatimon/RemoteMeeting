@@ -6,12 +6,14 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -48,6 +50,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -79,6 +84,9 @@ public class Meeting_result_D extends Activity {
     private static final String TAG = "all_"+Meeting_result_D.class.getSimpleName();
     private String JSON_TAG_ENDED_MEETING_RESULT = "ended_meeting_result";
     private static final int REQUEST_IMAGE_SCAN_TO_DOCUMENT = 9999;
+    private static final int REQUEST_SELECT_METHOD_FOR_ASSIGN_PROJECT = 1234;
+    private static final int REQUEST_ASSIGN_TO_EXISTING_PROJECT = 4321;
+    public static final int REQUEST_SHOW_THIS_IMAGE = 6565;
     Myapp myapp;
     String ended_meeting_no;
     String ended_subject_user_no;
@@ -91,6 +99,7 @@ public class Meeting_result_D extends Activity {
     @BindView(R.id.meeting_memo_LIN)                        LinearLayout meeting_memo_LIN;
     @BindView(R.id.handwriting_to_document_LIN)             LinearLayout handwriting_to_document_LIN;
     @BindView(R.id.handwriting_to_document_LIN_for_add_img) LinearLayout handwriting_to_document_LIN_for_add_img;
+    @BindView(R.id.drawing_images_LIN)                      LinearLayout drawing_images_LIN;
     @BindView(R.id.meeting_subject_user_nickName_txt)       TextView meeting_subject_user_nickName_txt;
     @BindView(R.id.save_meeting_result_txt)                 TextView save_meeting_result_txt;
     @BindView(R.id.meeting_title_txt)                       TextView meeting_title_txt;
@@ -106,6 +115,7 @@ public class Meeting_result_D extends Activity {
 //    @BindView(R.id.handwriting_to_document_rcv)         RecyclerView handwriting_to_document_rcv;
     @BindView(R.id.upload_images_rcv)                       RecyclerView upload_images_rcv;
     @BindView(R.id.drawing_images_rcv)                      RecyclerView drawing_images_rcv;
+    @BindView(R.id.drawing_images_divider)                  View drawing_images_divider;
 
     // 서버로부터 받아온 회의 결과(jsonString)
     public String jsonString_meeting_result;
@@ -122,6 +132,9 @@ public class Meeting_result_D extends Activity {
     // 손글씨 사진 uri 값을 임시로 담을 해쉬
     private ConcurrentHashMap<Integer, Uri> temp_uri_hash;
 
+    // 지정된 프로젝트의 'project_no' (default 값: -1)
+    private int selected_project_no = -1;
+
     // 아직 서버에 회의 종료 시각이 insert 되기 전이라, 최초 받아온 정보에 회의 종료 시각, 총 회의 시간이 없을때,
     // 회의 종료 시각, 총 회의 시간을 받아오는 메소드를 다시 호출하여 결과 값을 받아 왔을 때,
     // 아직도 DB에 결과가 없을 경우, 다시 정보를 받아오는 메소드를 호출하기 위한 핸들러
@@ -131,6 +144,9 @@ public class Meeting_result_D extends Activity {
     String receive_delayed_total_meeting_time;
     // 회의 종료시각, 총 회의 시간을 최초에 받아오지 못했을 때, 총 5번만 더 시도하기 위해, 시도 횟수를 세는 변수
     int get_meeting_end_time_try_count;
+
+    // 스캔한 이미지 파일이 있을경우 -- 'remoteMeeting' 폴더로 이미지 파일 복사가 완료됨을 확인
+    public Handler saveFile_scanned_images_handler;
 
     // 리사이클러뷰 관련 변수, 클래스 선언 =========
     // =========================================
@@ -205,6 +221,19 @@ public class Meeting_result_D extends Activity {
                 }
             }
         };
+        saveFile_scanned_images_handler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+
+                // 스캔한 이미지 파일이 있어서, 'remoteMeeting' 폴더로 파일 복사하는 작업을 완료하고 나서
+                // 완료됐음을 알리는 핸들러 메세지
+                // 다음 로직을 호출
+                if(msg.what == 0) {
+                    save_meeting_result();
+                }
+            }
+        };
 
         // 혹시 있을수도 있는 공유 파일 이미지들의 파일이름을 담을 어레이리스트 생성
         share_img_file_name_arr = new ArrayList<>();
@@ -247,8 +276,13 @@ public class Meeting_result_D extends Activity {
         SharedPreferences drawing_imgs_fileName = getSharedPreferences(Static.DRAWING_IMGS_FOR_SHARED, MODE_PRIVATE);
         // 지금 참여하고 있는 회의 번호로 저장되어 있는 쉐어드 String 값을 찾아온다
         String drawing_file_str = drawing_imgs_fileName.getString(ended_meeting_no, "");
-        // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 없다면,
+        // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 있다면,
         if(!drawing_file_str.equals("")) {
+
+            // 해당 파일을 보여줄 리사이클러뷰를 담고 있는 LinearLayout, divider Visibility 'Visible' 처리 하기
+            drawing_images_LIN.setVisibility(View.VISIBLE);
+            drawing_images_divider.setVisibility(View.VISIBLE);
+
             // 해당 쉐어드 Str 값을 gson과 데이터 클래스를 이용하여, 데이터 객체로 파싱하여, 어댑터로 넘긴다
             Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
 //            Log.d(TAG, "drawing_images_saveFile.getMeeting_no(): "
@@ -359,26 +393,6 @@ public class Meeting_result_D extends Activity {
      ---------------------------------------------------------------------------*/
     @SuppressLint("SetTextI18n")
     private void set_ended_meeting_result_to_view() {
-//        LinearLayout actionBar_LIN;
-//        LinearLayout meeting_basic_info_LIN;
-//        LinearLayout project_assign_LIN;
-//        LinearLayout meeting_memo_LIN;
-//        LinearLayout handwriting_to_document_LIN;
-//        TextView meeting_subject_user_nickName_txt;
-//        TextView save_meeting_result_txt;
-//        TextView meeting_title_txt;
-//        TextView today_txt;
-//        TextView meeting_start_time_txt;
-//        TextView meeting_end_time_txt;
-//        TextView total_meeting_time_txt;
-//        TextView project_name_txt;
-//        ImageView meeting_subject_user_profile_img;
-//        ImageView project_folder_img;
-//        EditText memo_edit;
-//        RecyclerView handwriting_to_document_rcv;
-//        RecyclerView upload_images_rcv;
-//        RecyclerView drawing_images_rcv;
-
         // 회의 제목
         meeting_title_txt.setText(ended_meeting_room.getReal_meeting_title());
 
@@ -517,6 +531,181 @@ public class Meeting_result_D extends Activity {
 
 
     /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 회의 결과 저장하기 버튼 클릭
+        -- 스캔한 이미지가 있는지 없는지 확인하여, 경우에 따라 맞는 메소드 및 핸들러 메세지 전달
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.save_meeting_result_txt)
+    public void check_there_is_scanned_image_orNot() {
+        // 작성한 목록이 하나도 없다면
+        if(!check_have_any_list_i_have_created()) {
+            myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
+            finish();
+        }
+        // 작성한 목록이 하나라도 있다면
+        else if(check_have_any_list_i_have_created()) {
+            // 스캔한 이미지가 있음
+            if(temp_uri_hash.size() != 0) {
+
+                // 스캔 이미지 복사 중에, progressDialog 보여주기
+                myapp.show_progress(this, "스캔 이미지 저장 중..");
+                // 스캔한 이미지 파일을 '/storage/emulated/0/remoteMeeting/' 경로로 복사하고
+                // 원래 파일은 삭제(경로: /storage/emulated/0/Pictures/) 하는 내부 메소드 호출
+                saveFile_scanned_images();
+            }
+            // 스캔한 이미지가 없음
+            else if(temp_uri_hash.size() == 0) {
+                save_meeting_result();
+            }
+
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 'EditText에 작성한 메모'는 Shared에 저장,
+                지정한 프로젝트'는 DB에 저장 한뒤 액티비티 종료
+     ---------------------------------------------------------------------------*/
+    public void save_meeting_result() {
+        // EditText memo에 작성된 내용 있는지 확인
+        String memo_edit_str_for_check = memo_edit.getText().toString().replace(" ", "");
+        Log.d(TAG, "memo_edit_str_for_check: " + memo_edit_str_for_check);
+
+        String memo_edit_str="";
+
+        // 작성한 메모 내용이 있으면
+        if(!memo_edit_str_for_check.equals("")) {
+            memo_edit_str = memo_edit.getText().toString();
+
+            /**
+             쉐어드에 미팅 메모 저장하기 -
+             [key: 회의 번호] | [value: memo_edit_str]
+             */
+            SharedPreferences meeting_memo = getSharedPreferences(Static.MEETING_MEMO, MODE_PRIVATE);
+            SharedPreferences.Editor meeting_memo_edit = meeting_memo.edit();
+            meeting_memo_edit.putString(ended_meeting_no, memo_edit_str).apply();
+        }
+        // 지정한 프로젝트가 있으면
+        if(selected_project_no != -1) {
+            // 해당 회의를 프로젝트에 할당하여 서버에 내용 전송하고
+            myapp.assign_project(selected_project_no, ended_meeting_no);
+        }
+
+        // 액티비티 종료
+        myapp.logAndToast("회의 결과가 저장되었습니다.");
+        finish();
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 스캔한 이미지 파일을, 'remotemeeting' 폴더로 복사하고, 원래 파일은 삭제하는 메소드
+     ---------------------------------------------------------------------------*/
+    private void saveFile_scanned_images() {
+
+        // 별도 쓰레드로 시행
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 파일 저장 경로 및 이름 설정
+                    String ex_storage = Environment.getExternalStorageDirectory().getAbsolutePath();
+                    String folder_name = "/remoteMeeting/";
+                    String string_path = ex_storage+folder_name;
+                    String file_name = ended_meeting_no + "__" + myapp.get_time("yyyyMMdd HH_mm_ss:SSS") + "_scanned_";
+
+                    // temp_uri_hash에 들어있는 Uri 값을 차례로 가져와서 이미지 파일을 바로 위에서 설정한 경로로 복사하고
+                    // 원래 이미지 파일은 삭제
+                    for (int key : temp_uri_hash.keySet()) {
+
+                        // temp_uri_hash에 key값을 가져와서 파일 이름 끝부분에 붙이고, 확장자인 '.png' 까지 붙이기
+                        file_name = file_name + String.valueOf(key) + ".png";
+
+                        // temp_uri_hash에 Uri의 파일 절대 경로 가져오기
+                        String path = getPathFromUri(temp_uri_hash.get(key));
+                        Log.d(TAG, "path: " + path);
+                        Log.d(TAG, "string_path + file_name: " + string_path + file_name);
+
+                        /** 파일 복사 로직 */
+                        try {
+                            // 복사할 파일이 있는 filePath+fileName 으로 inputStream 생성
+                            FileInputStream fis = new FileInputStream(path);
+                            // 생성할 filePath+fileName 으로 OutputStream 생성
+                            FileOutputStream fos = new FileOutputStream(string_path+file_name);
+
+                            int data = 0;
+
+                            // 파일 복사
+                            while((data=fis.read())!=-1) {
+                                fos.write(data);
+                            }
+
+                            // 스트림 닫기
+                            fis.close();
+                            fos.close();
+
+                        } catch(Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        // 최종적으로
+                        finally {
+                            // 복사한 원본 파일은 삭제
+                            File from_file = new File(path);
+                            from_file.delete();
+                            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(path))));
+                            from_file = null;
+
+                            // 복사한 파일은 sendBroadcast로 '갤러리'에서도 확인할 수 있게 하기
+                            File to_file = new File(string_path+file_name);
+                            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(new File(string_path+file_name))));
+                            to_file = null;
+                        }
+
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                // 작업이 다 끝나면, 작업이 끝났음을 핸들러를 통해 알리기
+                finally {
+                    myapp.dismiss_progress();
+                    saveFile_scanned_images_handler.sendEmptyMessage(0);
+                }
+            }
+        });
+    }
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Uri 값으로 해당 파일의 절대 경로를 가져오는 메소드
+     ---------------------------------------------------------------------------*/
+    public String getPathFromUri(Uri uri){
+
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null );
+        cursor.moveToNext();
+
+        String path = cursor.getString( cursor.getColumnIndex( "_data" ) );
+        cursor.close();
+
+        return path;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     클릭이벤트 ==> 방금 종료된 영상회의를 특정 프로젝트에 지정하는데, 지정하는 방법을 선택하는 다이얼로그
+                선택 1. 기존 프로젝트에 배정
+                선택 2. 새 프로젝트 생성
+     ---------------------------------------------------------------------------*/
+    @OnClick(R.id.project_assign_LIN)
+    public void select_method_for_assign_project() {
+        Intent intent = new Intent(this, Select_method_for_assign_project_D.class);
+        // 'selected_project_no'를 intent 값으로 넘기는 이유
+        // - 'selected_project_no' 값이 '-1'이라면 지정된 프로젝트가 없는 경우 이므로
+        // Select_method_for_assign_project 클래스에서 '지정 취소' view를 GONE 처리 하기위함
+        intent.putExtra("selected_project_no", selected_project_no);
+        startActivityForResult(intent, REQUEST_SELECT_METHOD_FOR_ASSIGN_PROJECT);
+    }
+
+
+
+    /**---------------------------------------------------------------------------
      클릭이벤트 ==> 필기작성한 메모지나 종이를 스캐너 처럼 스캔하는 액티비티 열기
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.handwriting_to_document_icon, R.id.handwriting_to_document_txt})
@@ -594,24 +783,97 @@ public class Meeting_result_D extends Activity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+        // 프로젝트 지정 방법을 선택하고 돌아왔을 때
+        else if(requestCode==REQUEST_SELECT_METHOD_FOR_ASSIGN_PROJECT && resultCode==RESULT_OK) {
+            String method = data.getStringExtra("method");
+            Log.d(TAG, "method: " + method);
 
+            // 선택한 방법이, 기존 프로젝트에 할당하는 방법일 때
+            if(method.equals("assign_to_existing_project")) {
+                Intent intent = new Intent(this, Assign_to_existing_project_D.class);
+                startActivityForResult(intent, REQUEST_ASSIGN_TO_EXISTING_PROJECT);
+            }
+            // 선택한 방법이, 새 프로젝트를 생성하는 방법일 때
+            else if(method.equals("create_new_project")) {
 
-            // intent 값으로 저장한 비트맵 파일의 절대 경로를 받아온다.
-//            String canonicalPath = data.getStringExtra("canonicalPath");
-//            if(myapp.getScanned_bitmap() != null) {
-                // 받아온 절대 경로값으로 뷰에 셋팅한다
-//                Glide
-//                    .with(this)
-//                    .load(myapp.getScanned_bitmap())
-//                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-////                    .bitmapTransform(new CropCircleTransformation(context))
-//                    .into(scanned_img);
-//            }
+            }
+            // 선택한 방법이, 이미 지정된 프로젝트를 취소하는 것일 때
+            else if(method.equals("unAssign_project")) {
+                // 지정된 프로젝트 번호를 담고 있는 변수 초기화
+                selected_project_no = -1;
+                // 프로젝트 폴더 초기화
+                Glide
+                    .with(this)
+                    .load(R.drawable.unspecified_project)
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(project_folder_img);
+
+                // 프로젝트 이름 초기화
+                project_name_txt.setText("프로젝트 지정");
+
+                //' 액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러 초기화
+                actionBar_LIN.setBackgroundColor(0xff4caf50);
+                meeting_basic_info_LIN.setBackgroundColor(0xff4caf50);
+            }
+        }
+        // 할당할 프로젝트를 선택하고 돌아왔을 때
+        else if(requestCode==REQUEST_ASSIGN_TO_EXISTING_PROJECT && resultCode==RESULT_OK) {
+            selected_project_no = data.getIntExtra("selected_project_no", -1);
+            String selected_project_color = data.getStringExtra("selected_project_color");
+            String selected_project_name = data.getStringExtra("selected_project_name");
+
+            // '내부 메소드로'부터 가져온 int value 값으로,
+            // '액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러를 변경한다
+            int color_int_value = project_color(selected_project_color);
+            actionBar_LIN.setBackgroundColor(color_int_value);
+            meeting_basic_info_LIN.setBackgroundColor(color_int_value);
+
+            // intent 값을 모두 제대로 전달 받았을 때, 그 전달받은 데이터를 가지고,
+            // 프로젝트 폴더 아이콘과, 프로젝트 이름을 set 한다
+            if(selected_project_no != -1 && selected_project_color != null && selected_project_name != null) {
+                // 폴더 컬러 설정
+                Glide
+                    .with(this)
+                    .load(myapp.getFolder_color_hash().get(selected_project_color))
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(project_folder_img);
+
+                // 프로젝트 이름 설정
+                project_name_txt.setText(selected_project_name);
+            }
         }
     }
 
 
-    // 사진첨부 방법 선택하는 dialog
+    /**---------------------------------------------------------------------------
+     메소드 ==> 선택한 프로젝트 or 프로젝트 선택을 해제할 때, 액션바와, 그 밑의 레이아웃에 셋팅할
+                color int 값 설정하여 반환하는 메소드
+     ---------------------------------------------------------------------------*/
+    public int project_color(String selected_project_color) {
+        // 해당 프로젝트 컬러에 따른 색 int value 값을 가져온다
+        int color_int_value_index = -1;
+        for(int i=0; i<myapp.folder_color_int_value.length; i++) {
+            if(myapp.folder_color_str[i].equals(selected_project_color)) {
+                color_int_value_index = i;
+            }
+        }
+        Log.d(TAG, "color_int_value_index: " + color_int_value_index);
+
+        if(color_int_value_index != -1) {
+            int color_int_value = myapp.folder_color_int_value[color_int_value_index];
+            return color_int_value;
+        }
+        else {
+            return -1;
+        }
+    }
+
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 스캔이미지 삭제 여부를 확인하는 AlertDialog 띄우기
+     ---------------------------------------------------------------------------*/
     private void scanned_img_delete_confirm(final int extract_uri_Unique_value, final View view) {
 
         AlertDialog.Builder Writing_Restore_choice = new AlertDialog.Builder(this);
@@ -652,6 +914,50 @@ public class Meeting_result_D extends Activity {
         // AlertDialog 띄우기
         alert.show();
 
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 손글씨 스캔파일, EditText의 메모, 프로젝트 지정 -- 이 세 개가 '작성'되어 있는지 확인하는 메소드
+                소프트 백키를 누르거나 액티비티를 종료 하려고 할 때, 세개 항목중 하나라도 작성이 되어 있다면
+                작성된 항목이 저장되지 않는다는 AlertDialog를 띄워서 사용자에게 알리기 위함.
+     ---------------------------------------------------------------------------*/
+    public boolean check_have_any_list_i_have_created() {
+
+        String memo_edit_str_for_check = memo_edit.getText().toString().replace(" ", "");
+
+        // 체크 1. 손글씨 스캔 파일이름을 담고 있는 해쉬맵 사이즈가 0이 아니거나,
+        // 체크 2. EditText memo에 작성된 내용이 있거나
+        // 체크 3. 지정한 프로젝트가 있거나
+        // 위 내용에 하나라도 해당이 된다면 'true'를 반환한다
+        if(temp_uri_hash.size() != 0 || !memo_edit_str_for_check.equals("") || selected_project_no != -1) {
+            return true;
+        }
+        // 그 반대의 경우에는 'false'를 반환한다
+        else if(temp_uri_hash.size() == 0 || !memo_edit_str_for_check.equals("") || selected_project_no == -1) {
+            return false;
+        }
+        else {
+            return false;
+        }
+    }
+
+
+    /**---------------------------------------------------------------------------
+     오버라이드 ==> onBackPressed -- 소프트키보드를 눌러 액티비티를 종료하기 전,
+                                내가 작성한 '항목'이 있으면, AlertDialog를 호출
+                                내가 작성항 '항목'이 없으면, 원래대로 액티비티를 종료하고
+                                '기본 회의결과'가 저장되었음을 toast로 알리기
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onBackPressed() {
+        if(check_have_any_list_i_have_created()) {
+
+        }
+        else if(!check_have_any_list_i_have_created()) {
+            myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
+        }
+        super.onBackPressed();
     }
 
 

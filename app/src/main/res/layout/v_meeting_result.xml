@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             tools:ignore="HardcodedText,SpUsage"
-            android:paddingStart="5dp"
+            android:paddingStart="20dp"
             android:paddingEnd="5dp"
             android:layout_marginEnd="5dp"
             android:text="저장하기"
@@ -249,7 +249,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_below="@+id/meeting_time_LIN"
-                android:background="#e4e4e4" />
+                android:background="#cccccc" />
 
             <!--프로젝트 지정-->
             <LinearLayout
@@ -284,7 +284,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_below="@+id/project_assign_LIN"
-                android:background="#e4e4e4" />
+                android:background="#cccccc" />
 
             <!--메모 추가-->
             <LinearLayout
@@ -292,6 +292,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="12dp"
                 android:layout_below="@+id/project_assign_LIN"
@@ -318,7 +319,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_below="@+id/meeting_memo_LIN"
-                android:background="#e4e4e4" />
+                android:background="#cccccc" />
 
             <!--카메라로 찍은 메모지, 문서처럼~!-->
             <LinearLayout
@@ -381,7 +382,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_below="@+id/handwriting_to_document_LIN"
-                android:background="#e4e4e4" />
+                android:background="#cccccc" />
 
             <!--회의 중 사용한 이미지들-->
             <LinearLayout
@@ -418,12 +419,18 @@
 
                 <!--구분선-->
                 <View
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:id="@+id/drawing_images_divider"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#e4e4e4" />
+                    android:background="#cccccc" />
 
                 <!--드로잉하고 저장한 이미지들: 리사이클러뷰-->
                 <LinearLayout
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:id="@+id/drawing_images_LIN"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"

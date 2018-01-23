@@ -43,4 +43,8 @@ public class Drawing_images_saveFile {
     public void add_item(String drawing_image_fileName) {
         drawing_images_fileName_arr.add(drawing_image_fileName);
     }
+
+    public int file_nums() {
+        return drawing_images_fileName_arr.size();
+    }
 }

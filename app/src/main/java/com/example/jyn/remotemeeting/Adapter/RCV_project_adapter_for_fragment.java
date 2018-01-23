@@ -1,6 +1,8 @@
 package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +13,9 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
+import com.example.jyn.remotemeeting.Activity.Project_meeting_result_list_A;
+import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
@@ -24,19 +29,19 @@ import butterknife.ButterKnife;
  * Created by JYN on 2018-01-19.
  */
 
-public class RCV_project_adapter extends RecyclerView.Adapter<RCV_project_adapter.ViewHolder> {
+public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_project_adapter_for_fragment.ViewHolder> {
 
     private Context context;
     private int itemLayout;
     private String request;
     private ArrayList<Project> project_arr;
-    public static String TAG = "all_" + RCV_project_adapter.class.getSimpleName();
+    public static String TAG = "all_" + RCV_project_adapter_for_fragment.class.getSimpleName();
     Myapp myapp;
 
     /** RecyclerAdapter 생성자 */
-    public RCV_project_adapter(
+    public RCV_project_adapter_for_fragment(
             Context context, int itemLayout, ArrayList<Project> project_arr, final String request) {
-        Log.d(TAG, "RCV_project_adapter: 생성");
+        Log.d(TAG, "RCV_project_adapter_for_fragment: 생성");
         this.context = context;
         this.itemLayout = itemLayout;
         this.project_arr = project_arr;
@@ -53,6 +58,7 @@ public class RCV_project_adapter extends RecyclerView.Adapter<RCV_project_adapte
     class ViewHolder extends RecyclerView.ViewHolder {
 
         /** 버터나이프*/
+        @BindView(R.id.container_CONS)          ConstraintLayout container_CONS;
         @BindView(R.id.project_folder_img)      ImageView project_folder_img;
         @BindView(R.id.lock_img)                ImageView lock_img;
         @BindView(R.id.created_date_txt)        TextView created_date_txt;
@@ -66,6 +72,21 @@ public class RCV_project_adapter extends RecyclerView.Adapter<RCV_project_adapte
             super(itemView);
             Log.d(TAG, "ViewHolder");
             ButterKnife.bind(this,itemView);
+
+            container_CONS.setClickable(true);
+            container_CONS.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int pos = getAdapterPosition();
+                    Log.d(TAG, "클릭 아이템 position: " + pos);
+                    Log.d(TAG, "project_arr.get(pos).getProject_no(): " + project_arr.get(pos).getProject_no());
+
+                    // 해당 프로젝트에 지정된 영상회의 목록 보는 액티비티 열기
+                    Intent intent = new Intent(context, Project_meeting_result_list_A.class);
+                    intent.putExtra("project_no", project_arr.get(pos).getProject_no());
+                    ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_PROJECT_MEETING_RESULT_LIST);
+                }
+            });
 
         }
     }

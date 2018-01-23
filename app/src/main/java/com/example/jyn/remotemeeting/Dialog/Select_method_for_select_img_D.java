@@ -19,14 +19,14 @@ import butterknife.Unbinder;
  * Created by JYN on 2017-12-03.
  */
 
-public class Choose_method_for_select_img_D extends Activity {
+public class Select_method_for_select_img_D extends Activity {
 
     /** 버터나이프*/
     public Unbinder unbinder;
 //    @BindView(R.id.camera)Button camera;
 //    @BindView(R.id.album)Button album;
 
-    private static final String TAG = "all_"+Choose_method_for_select_img_D.class.getSimpleName();
+    private static final String TAG = "all_"+Select_method_for_select_img_D.class.getSimpleName();
     Intent intent;
 
 

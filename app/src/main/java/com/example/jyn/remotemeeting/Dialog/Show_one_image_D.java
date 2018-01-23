@@ -1,9 +1,9 @@
-package com.example.jyn.remotemeeting.Activity;
+package com.example.jyn.remotemeeting.Dialog;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
+import android.support.annotation.Nullable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.ImageView;
@@ -20,19 +20,20 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 
 /**
- * Created by JYN on 2017-12-03.
+ * Created by JYN on 2018-01-23.
  */
 
-public class Preview_img_A extends Activity {
+public class Show_one_image_D extends Activity {
 
     /** 버터나이프*/
     public Unbinder unbinder;
-    @BindView(R.id.preview_img)     ImageView preview_img;
-    @BindView(R.id.yes)             TextView yes;
-    @BindView(R.id.no)              TextView no;
+    @BindView(R.id.back_img)                ImageView back_img;
+    @BindView(R.id.show_img)                ImageView show_img;
+    @BindView(R.id.file_info_txt)           TextView file_info_txt;
 
-    private static final String TAG = "all_"+Preview_img_A.class.getSimpleName();
-    String absolutePath;
+    private static final String TAG = "all_"+Show_one_image_D.class.getSimpleName();
+    String image_source;
+    String fileName;
 
 
     /**---------------------------------------------------------------------------
@@ -41,7 +42,8 @@ public class Preview_img_A extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.a_preview_img);
+        setContentView(R.layout.v_show_one_image);
+
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
 
@@ -56,36 +58,37 @@ public class Preview_img_A extends Activity {
         }
 
         Intent intent = getIntent();
-        absolutePath = intent.getStringExtra("absolutePath");
+        image_source = intent.getStringExtra("image_source");
+        fileName = intent.getStringExtra("fileName");
 
+        String[] this_fileName = new String[2];
+        if(fileName.contains("&__&")) {
+            this_fileName = fileName.split("&__&");
+        }
+        else if(fileName.contains("__")) {
+            this_fileName = fileName.split("__");
+        }
+
+        // 이미지 셋팅
         Glide
             .with(this)
-            .load(absolutePath)
+            .load(image_source)
             .override(width, height)
             .fitCenter()
             .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-            .into(preview_img);
+            .into(show_img);
+
+        // 파일 이름 셋팅
+        file_info_txt.setText(this_fileName[1]);
     }
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 사진 선택
+     클릭이벤트 ==> 뒤로 가기 이미지 클릭
      ---------------------------------------------------------------------------*/
-    @OnClick(R.id.yes)
-    public void yes() {
-        Intent intent = new Intent();
-        intent.putExtra("absolutePath", absolutePath);
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-
-    /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 취소
-     ---------------------------------------------------------------------------*/
-    @OnClick(R.id.no)
-    public void no() {
-        finish();
+    @OnClick(R.id.back_img)
+    public void back() {
+        onBackPressed();
     }
 
 

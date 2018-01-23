@@ -14,14 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
-import com.example.jyn.remotemeeting.Adapter.RCV_project_adapter;
+import com.example.jyn.remotemeeting.Adapter.RCV_project_adapter_for_fragment;
 import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
@@ -46,10 +45,10 @@ public class Project_F extends Fragment {
     // =========================================
     public static RecyclerView recyclerView;
     public static RelativeLayout no_result;
-    public RCV_project_adapter rcv_project_adapter;
+    public RCV_project_adapter_for_fragment rcv_project_adapterForfragment;
     public RecyclerView.LayoutManager layoutManager;
 
-    // 서버로부터 프로젝트 정보 및 종료된 영상회의 정보를 받아서 담아놓을 해쉬맵
+    // 서버로부터 프로젝트 정보 및 종료된 영상회의 정보를 받아서 담아놓을 어레이리스트
     public ArrayList<Project> project_arr;
 
     // 프로젝트가 지정되어 있지 않은, 영상회의 개수
@@ -143,20 +142,20 @@ public class Project_F extends Fragment {
             recyclerView.setVisibility(View.VISIBLE);
 
             // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
-            if(rcv_project_adapter == null) {
+            if(rcv_project_adapterForfragment == null) {
                 // 생성자 인수
                 // 1. 액티비티
                 // 2. 인플레이팅 되는 레이아웃
                 // 3. concurrentHashMap project_hash
                 // 4. extra 변수
-                rcv_project_adapter = new RCV_project_adapter(
+                rcv_project_adapterForfragment = new RCV_project_adapter_for_fragment(
                         getActivity(), R.layout.i_project_folder, project_arr, "project");
-                recyclerView.setAdapter(rcv_project_adapter);
-                rcv_project_adapter.notifyDataSetChanged();
+                recyclerView.setAdapter(rcv_project_adapterForfragment);
+                rcv_project_adapterForfragment.notifyDataSetChanged();
             }
             // 어댑터가 생성되어 있을때는, 들어가는 해쉬맵만 교체
             else {
-                rcv_project_adapter.refresh_arr(project_arr);
+                rcv_project_adapterForfragment.refresh_arr(project_arr);
             }
         }
     }
@@ -257,7 +256,7 @@ public class Project_F extends Fragment {
 
         // onDestroyView() 시에 어댑터를 null 처리 해주어야,
         // 다음 onCreateView 시에 제대로 뷰에 채팅방 리스트가 나온다
-        rcv_project_adapter = null;
+        rcv_project_adapterForfragment = null;
 
         super.onDestroyView();
     }

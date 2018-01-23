@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="230dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <!--=================================-->
+    <!--다이얼로그 comment-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#FFFFFF"
+        android:gravity="center|start"
+        android:paddingStart="15dp"
+        android:text="프로젝트 지정 방법 선택"
+        android:textColor="#2b2b2b"
+        android:textSize="17sp"
+        tools:ignore="HardcodedText,RtlSymmetry" />
+    <!--메인 구분선-->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#469a49" />
+    <!--=================================-->
+
+
+    <!--프로젝트 지정 취소-->
+    <!--필요에 따라 VISIBLE, GONE 처리-->
+    <LinearLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/unAssign_project_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        >
+        <ImageView
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_gravity="center"
+            android:padding="15dp"
+            android:src="@drawable/unassign"
+            />
+        <Button
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:gravity="center|start"
+            android:paddingStart="3dp"
+            android:textAllCaps="false"
+            android:text="프로젝트 지정 취소"
+            android:textColor="#696969"
+            android:textSize="15sp"
+            tools:ignore="HardcodedText,RtlSymmetry" />
+    </LinearLayout>
+    <!--구분선-->
+    <!--필요에 따라 VISIBLE, GONE 처리-->
+    <View
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/unAssign_project_divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.7dp"
+        android:background="#d1d1d1" />
+
+    <!--기존 프로젝터에 지정, 레이아웃-->
+    <LinearLayout
+        android:id="@+id/assign_to_existing_project_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        >
+        <ImageView
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_gravity="center"
+            android:padding="12dp"
+            android:src="@drawable/assign_project"
+            />
+        <Button
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:gravity="center|start"
+            android:paddingStart="3dp"
+            android:textAllCaps="false"
+            android:text="기존 프로젝트에 지정"
+            android:textColor="#696969"
+            android:textSize="15sp"
+            tools:ignore="HardcodedText,RtlSymmetry" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.7dp"
+        android:background="#d1d1d1" />
+
+    <!--새 프로젝트 생성, 레이아웃-->
+    <LinearLayout
+        android:id="@+id/create_new_project_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        >
+        <ImageView
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_gravity="center"
+            android:padding="15dp"
+            android:src="@drawable/attach_3"
+            />
+        <Button
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:gravity="center|start"
+            android:paddingStart="3dp"
+            android:textAllCaps="false"
+            android:text="새 프로젝트 생성"
+            android:textColor="#696969"
+            android:textSize="15sp"
+            tools:ignore="HardcodedText,RtlSymmetry" />
+    </LinearLayout>
+
+</LinearLayout>

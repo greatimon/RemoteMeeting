@@ -18,7 +18,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.DataClass.Users;
-import com.example.jyn.remotemeeting.Dialog.Choose_method_for_select_img_D;
+import com.example.jyn.remotemeeting.Dialog.Select_method_for_select_img_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
@@ -176,7 +176,7 @@ public class Profile_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.choose_method_for_img, R.id.profile_img})
     public void choose_method_for_img() {
-        Intent intent = new Intent(getActivity(), Choose_method_for_select_img_D.class);
+        Intent intent = new Intent(getActivity(), Select_method_for_select_img_D.class);
         getActivity().startActivityForResult(intent, Main_after_login_A.REQUEST_CHOOSE_METHOD_FOR_IMG);
     }
 

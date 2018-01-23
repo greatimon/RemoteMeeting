@@ -36,9 +36,9 @@ import butterknife.Unbinder;
  * Created by JYN on 2017-12-02.
  */
 
-public class Search_partner extends Activity {
+public class Search_partner_A extends Activity {
 
-    private static final String TAG = "all_"+Search_partner.class.getSimpleName();
+    private static final String TAG = "all_"+Search_partner_A.class.getSimpleName();
     Myapp myapp;
     String with_domain = "";
     String without_domain = "";
@@ -75,7 +75,7 @@ public class Search_partner extends Activity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         // 리사이클러뷰 구분선 - 가로 (클래스 생성)
-        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(this, "Search_partner"));
+        recyclerView.addItemDecoration(new SimpleDividerItemDecoration(this, "Search_partner_A"));
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 

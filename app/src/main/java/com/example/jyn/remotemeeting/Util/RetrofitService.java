@@ -177,6 +177,16 @@ public interface RetrofitService {
     );
 
 
+    /** 해당 프로젝트에 지정된 회의 정보들 받아오기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_meeting_room_list (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "project_no", encoded=true) int project_no
+    );
+
+
     /** 이미지 파일 업로드 */
     @Multipart
     @POST("/{url}")
@@ -244,6 +254,17 @@ public interface RetrofitService {
     @POST("/{url}")
     Call<ResponseBody> get_meeting_end_time (
             @Path("url") String url,
+            @Field(value = "meeting_no", encoded=true) String meeting_no
+    );
+
+
+    /** 해당 영상회의에 프로젝트가 지정되었을 때, 지정한 프로젝트 저장하기 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> assign_project (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "project_no", encoded=true) int project_no,
             @Field(value = "meeting_no", encoded=true) String meeting_no
     );
 

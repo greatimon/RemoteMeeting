@@ -7,6 +7,7 @@ package com.example.jyn.remotemeeting.Etc;
 public class Static {
     public static String DRAWING_IMGS_SAVE_PATH = "/storage/emulated/0/remoteMeeting/";
     public static String DRAWING_IMGS_FOR_SHARED= "drawing_imgs_fileName";
+    public static String MEETING_MEMO= "meeting_memo";
     public static String ROOM_ID = "53236556"; // 테스트용
     public static String WEBRTC_URL = "https://appr.tc";
 
@@ -20,6 +21,8 @@ public class Static {
     public static String GET_PARTNER_LIST = "get_partner_list.php";
     public static String GET_PROJECT_LIST = "get_project_list.php";
     public static String GET_ENDED_MEETING_RESULT = "get_ended_meeting_result.php";
+    public static String GET_MEETING_ROOM_LIST = "get_meeting_room_list.php";
+    public static String ASSIGN_PROJECT = "assign_project.php";
     public static String GET_MEETING_END_TIME = "get_meeting_end_time.php";
     public static String SEARCH_PARTNERS = "search_partners.php";
     public static String BREAK_PARTNER = "break_partner.php";

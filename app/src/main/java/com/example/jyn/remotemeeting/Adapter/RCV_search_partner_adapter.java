@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.example.jyn.remotemeeting.Activity.Search_partner;
+import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Confirm_subtract_partner_D;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -141,7 +141,7 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
                     Intent intent = new Intent(context, Confirm_subtract_partner_D.class);
                     intent.putExtra("position", pos);
                     intent.putExtra("target_user_no", users.get(pos).getUser_no());
-                    ((Search_partner)context).startActivityForResult(intent, Search_partner.REQUEST_SUBTRACT_CONFIRM);
+                    ((Search_partner_A)context).startActivityForResult(intent, Search_partner_A.REQUEST_SUBTRACT_CONFIRM);
                 }
             });
         }

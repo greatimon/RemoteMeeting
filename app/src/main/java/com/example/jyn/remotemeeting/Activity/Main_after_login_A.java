@@ -82,6 +82,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     public static int REQUEST_CHAT_ROOM = 8548;
     public static int REQUEST_ADD_CHAT_ROOM_SUBJECT = 9844;
     public static int REQUEST_SAVE_MEETING_RESULT = 5656;
+    public static int REQUEST_PROJECT_MEETING_RESULT_LIST = 3337;
     public static int CONFIRM_LOGOUT = 6667;
     private SharedPreferences sharedPref;
     String JSON_TAG = "am_i_invited";
@@ -495,7 +496,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
         // 검색 아이콘 클릭했을 때
         if(id == R.id.action_search) {
-             Intent intent = new Intent(this, Search_partner.class);
+             Intent intent = new Intent(this, Search_partner_A.class);
              startActivityForResult(intent, REQUEST_SEARCH_PARTNER);
         }
         // 로그아웃 아이콘 클릭했을 때

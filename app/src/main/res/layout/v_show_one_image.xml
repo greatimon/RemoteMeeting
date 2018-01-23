@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="60dp"
+    android:background="#FFFFFF"
+    >
+    <!--상단 액션바-->
+    <LinearLayout
+        android:id="@+id/actionBar_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingStart="5dp"
+        android:background="#4CAF50"
+        android:gravity="center|start"
+        tools:ignore="RtlSymmetry">
+        <ImageView
+            android:id="@+id/back_img"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:padding="15dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/left_bracket"/>
+        <TextView
+            tools:text="반응형 홈페이지 제작 기획 회의 자료, 페이지 1.png"
+            android:id="@+id/file_info_txt"
+            android:visibility="visible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="3dp"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:textSize="14dp"
+            android:textAlignment="textStart"
+            android:lineSpacingMultiplier="1.1"
+            android:maxLines="2"
+            android:ellipsize="end"
+            tools:ignore="RtlCompat,SpUsage" />
+    </LinearLayout>
+    <!--상단 액션바-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/show_img"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerInside"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            tools:src="@drawable/back_7"/>
+    </RelativeLayout>
+
+
+
+</LinearLayout>

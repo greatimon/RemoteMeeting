@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="50dp"
+    android:layout_marginBottom="50dp"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_gravity="center"
+    android:orientation="vertical">
+
+    <!--다이얼로그 comment-->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="#FFFFFF"
+        android:gravity="center|start"
+        android:paddingStart="15dp"
+        android:text="내 프로젝트"
+        android:textColor="#2b2b2b"
+        android:textSize="17sp"
+        tools:ignore="HardcodedText,RtlSymmetry" />
+
+    <!--디바이더 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#469a49" />
+
+    <!--스크롤뷰: 프로젝트 리스트-->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        >
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/project_rcv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:ignore="RtlSymmetry">
+    </android.support.v7.widget.RecyclerView>
+    </ScrollView>
+
+
+</LinearLayout>

@@ -1,6 +1,7 @@
 package com.example.jyn.remotemeeting.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,7 +11,10 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.Activity.Call_A;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.Dialog.Meeting_result_D;
+import com.example.jyn.remotemeeting.Dialog.Show_one_image_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
@@ -71,6 +75,12 @@ public class RCV_show_uploaded_images_adapter extends RecyclerView.Adapter<RCV_s
                     Log.d(TAG, "getFile_format: " + files.get(pos).getFile_format());
                     Log.d(TAG, "checked_orNot: " + files.get(pos).getExtra());
                     Log.d(TAG, "getMeeting_no: " + files.get(pos).getMeeting_no());
+
+                    Intent intent = new Intent(context, Show_one_image_D.class);
+                    intent.putExtra("image_source", Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER
+                            + files.get(pos).getFile_name());
+                    intent.putExtra("fileName", files.get(pos).getFile_name());
+                    ((Meeting_result_D)context).startActivityForResult(intent, Meeting_result_D.REQUEST_SHOW_THIS_IMAGE);
 
                 }
             });

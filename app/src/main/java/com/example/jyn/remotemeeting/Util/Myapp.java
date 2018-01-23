@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
+import com.example.jyn.remotemeeting.DataClass.Meeting_room;
 import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -89,6 +90,7 @@ public class Myapp extends Application {
     String JSON_TAG_SEARCH_LIST = "search_list";
     String JSON_TAG_SHARE_FILE_LIST = "share_file_list";
     String JSON_TAG_PROJECT_LIST= "project_list";
+    String JSON_TAG_MEETING_ROOM_LIST= "meeting_room_arr";
     private static Myapp appInstance;
     Toast logToast;
     ProgressDialog progressDialog;
@@ -99,6 +101,7 @@ public class Myapp extends Application {
     Handler handler;
     int PDF_converting_exception_file_count = 0;
 
+    // 로그인 액티비티에서 사용하는 백 이미지들
     public int[] back_img = {
             R.drawable.back_1,
             R.drawable.back_2,
@@ -109,6 +112,7 @@ public class Myapp extends Application {
             R.drawable.back_7,
     };
 
+    // 회의 생성 액티비티에서 사용하는 백 이미지들
     public int[] round_back_img = {
             R.drawable.back__1,
             R.drawable.back__2,
@@ -117,11 +121,6 @@ public class Myapp extends Application {
             R.drawable.back__5,
             R.drawable.back__6,
             R.drawable.back__7,
-    };
-
-    public int[] video_off_back_img = {
-            R.drawable.video_off_back_4,
-            R.drawable.video_off_back_5
     };
 
     /** 색연필 버튼 id 값들 */
@@ -184,16 +183,16 @@ public class Myapp extends Application {
     // 영상통화 중, 이미지 공유 모드를 진행하기 전의 비디오 전송모드가 어떤 모드였는지 저장하기 위한 변수
     boolean video_state_was;
 
-    // 폴더 색깔을 나타내는 String 값에 따른, drawable 리소스_ 해쉬맵
+    // 프로젝트 폴더 색깔을 나타내는 String 값에 따른, drawable 리소스_ 해쉬맵
     public ConcurrentHashMap<String, Integer> folder_color_hash;
 
-    // 폴더 색깔 String 배열
+    // 프로젝트 폴더 색깔 String 배열
     public String[] folder_color_str = {
             "amber", "blue", "blue_grey", "brown", "deep_orange", "deep_purple", "green", "grey",
             "indigo", "light_green", "orange", "pink", "purple", "red", "teal"
     };
 
-    // 폴더 리소스 int 배열
+    // 프로젝트 폴더 리소스 int 배열
     public int[] folder_color_resource = {
             R.drawable.amber_f,
             R.drawable.blue_f,
@@ -210,6 +209,25 @@ public class Myapp extends Application {
             R.drawable.purple_f,
             R.drawable.red_f,
             R.drawable.teal_f
+    };
+
+    // 프로젝트 폴더 색 int값 배열
+    public int[] folder_color_int_value = {
+            0xffffc107,
+            0xff2196f3,
+            0xff607d8b,
+            0xff795548,
+            0xffff5722,
+            0xff673ab7,
+            0xff4caf50,
+            0xff9e9e9e,
+            0xff3f51b5,
+            0xff8bc34a,
+            0xffff9800,
+            0xffe91e63,
+            0xff9c27b0,
+            0xfff44336,
+            0xff009688,
     };
 
     // 임시 비트맵 저장: 스캔한 문서 비트맵
@@ -936,6 +954,126 @@ public class Myapp extends Application {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 해당 프로젝트에 지정된 회의 정보들을 받아온다
+     사용 클래스) Project_meeting_result_list_A
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public ArrayList<Meeting_room> get_meeting_room_list(final int project_no) {
+
+        ArrayList<Meeting_room> meeting_room_arr = new ArrayList<>();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final ArrayList<Meeting_room> final_meeting_room_arr = meeting_room_arr;
+
+            return new AsyncTask<Void, Void, ArrayList<Meeting_room>>() {
+                @Override
+                protected ArrayList<Meeting_room> doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.get_meeting_room_list(
+                                Static.GET_MEETING_ROOM_LIST,
+                                getUser_no(),
+                                project_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+
+                        try {
+                            if(result.equals("fail")) {
+                                logAndToast("예외발생: " + result);
+                                final_meeting_room_arr.clear();
+                            }
+                            else if(result.equals("no_result")) {
+                                final_meeting_room_arr.clear();
+                            }
+                            else {
+                                // 길이가 긴 JSONString 출력하기
+                                print_long_Json_logcat(result, TAG);
+                                // jsonString --> jsonObject
+                                JSONObject jsonObject = new JSONObject(result);
+                                // jsonObject -->jsonArray
+                                JSONArray jsonArray = jsonObject.getJSONArray(JSON_TAG_MEETING_ROOM_LIST);
+                                Log.d(TAG, "jsonArray 개수: " + jsonArray.length());
+
+                                // 데이터 클래스로 파싱하기 위한 GSON 객체 생성
+                                Gson gson = new Gson();
+
+                                for(int i=0; i<jsonArray.length(); i++) {
+                                    Meeting_room meeting_room = gson.fromJson(jsonArray.get(i).toString(), Meeting_room.class);
+                                    final_meeting_room_arr.add(meeting_room);
+                                    // 서버로부터 받은 데이터가 잘 파싱되어 있는지 확인하기 위한 Log
+                                    Log.d(TAG, "meeting_room.getMeeting_no(): " + meeting_room.getMeeting_no());
+                                }
+                                Log.d(TAG, "final_meeting_room_arr.size(): " + final_meeting_room_arr.size());
+                            }
+                        }
+                        catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        return final_meeting_room_arr;
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            }.execute().get();
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버 통신 -- 지정한 프로젝트 no를 DB에 저장한다
+        매개변수 1) 지정한 프로젝트 번호
+        매개변수 2) 지정할 회의 번호
+
+        사용 클래스 1) Meeting_result_D
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public boolean assign_project(final int selected_project_no, final String meeting_no) {
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            return new AsyncTask<Void, Void, Boolean>() {
+                @Override
+                protected Boolean doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.assign_project(
+                                Static.ASSIGN_PROJECT,
+                                getUser_no(),
+                                selected_project_no,
+                                meeting_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+                        Log.d(TAG, "assign_project_result: " + result);
+
+                        if(result.equals("fail")) {
+                            logAndToast("예외발생: " + result);
+                            return false;
+                        }
+                        else if(result.equals("success")){
+                            return true;
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return false;
+                }
+            }.execute().get();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
 
@@ -1861,8 +1999,8 @@ public class Myapp extends Application {
         // Get Absolute Path in External Sdcard
 
         String folder_name = "/"+folder+"/";
-        String file_name = name+".png";
         String string_path = ex_storage+folder_name;
+        String file_name = name+".png";
         Logger.d("string_path + file_name: " + string_path + file_name);
 
         File file_path;
