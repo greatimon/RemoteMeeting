@@ -163,6 +163,9 @@ public class Myapp extends Application {
     public String project_no = "";
     public String meeting_status = "";
 
+    // 참여중인 회의 번호(위의, 'meeting_no' 처럼 따로 초기화 하지 않음)
+    public String target_meeting_no = "";
+
     /** 참여중인 채팅방 정보 */
     public int chatroom_no = -1;
 
@@ -175,7 +178,7 @@ public class Myapp extends Application {
     public ConcurrentHashMap<String, Long> temp_my_chat_log_hash;
 
     // 요일 배열
-    String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
+    public String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
 
     // 영상통화에서 문서 공유를 요청받았을 때, 공유할 문서 리스트를 저장할 변수
     String share_image_file_name_arr_str;
@@ -409,7 +412,15 @@ public class Myapp extends Application {
     public void setFolder_color_hash(ConcurrentHashMap<String, Integer> folder_color_hash) {
         this.folder_color_hash = folder_color_hash;
     }
-//    public Bitmap getScanned_bitmap() {
+
+    public String getThis_meeting_no() {
+        return target_meeting_no;
+    }
+
+    public void setThis_meeting_no(String target_meeting_no) {
+        this.target_meeting_no = target_meeting_no;
+    }
+    //    public Bitmap getScanned_bitmap() {
 //        return scanned_bitmap;
 //    }
 //
@@ -1474,7 +1485,7 @@ public class Myapp extends Application {
     /**---------------------------------------------------------------------------
      메소드 ==> PDF 파일 있으면 이미지로 변환한 뒤, 멀티 파일 업로드 메소드 호출
      ---------------------------------------------------------------------------*/
-    public void checed_pdf_files(String contain_padf_file_orNot, Context context) {
+    public void check_pdf_files(String contain_padf_file_orNot, Context context) {
 
         // RemoteMeeting 디렉토리가 존재하지 않으면 디렉토리 생성
         File folder = new File(sdPath);
@@ -2037,7 +2048,7 @@ public class Myapp extends Application {
 
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.close();
-            return file_name;
+            return string_path + file_name;
 
         }catch(FileNotFoundException exception){
             Log.e("FileNotFoundException", exception.getMessage());
@@ -2074,5 +2085,100 @@ public class Myapp extends Application {
 
         data.setExtra(send_this_string);
         send_to_server(data);
+    }
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 시크바 투명도 alpha 값 반환 메소드
+     매개변수 1. 컬러
+     매개변수 2. 현재 alpha int 값 (10~255 사이)
+     ---------------------------------------------------------------------------*/
+    public String set_drawing_tool_seekbar_alpha(int changed_color, int changed_alpha) {
+        // 알파값에 따른 hex 값 구하기
+        String hex = Integer.toHexString(changed_alpha).toUpperCase();
+        if(hex.length() == 1) {
+            hex = "0" + hex;
+        }
+        Log.d(TAG, "hex: " + hex);
+
+        // 알파값을 제외한 현재 컬러 값 구하기
+        String except_hex = Integer.toHexString(changed_color);
+        except_hex = except_hex.substring(2, 8);
+        String IndicatorColor = hex + except_hex;
+        Log.d(TAG, "except_hex: " + except_hex);
+        Log.d(TAG, "IndicatorColor: " + IndicatorColor);
+
+        return IndicatorColor;
+    }
+
+
+    @SuppressLint("StaticFieldLeak")
+    public Project assigned_project(final String meeting_no) {
+
+        final Project project = new Project();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final Project[] final_project = {project};
+
+            return new AsyncTask<Void, Void, Project>() {
+                @Override
+                protected Project doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.assigned_project(
+                                Static.ASSIGNED_PROJECT,
+                                getUser_no(),
+                                meeting_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+                        Log.d(TAG, "assigned_project_result: " + result);
+
+                        // 에러
+                        if(result.equals("fail")) {
+//                            logAndToast("예외발생: " + result);
+                            final_project[0].setProject_no(-1);
+
+                        }
+                        // 지정된 프로젝트가 없는 경우
+                        else if(result.equals("unassigned")) {
+                            final_project[0].setProject_no(0);
+                        }
+                        // 지정된 프로젝트가 있는 경우
+                        else  {
+                            Gson gson = new Gson();
+                            final_project[0] = gson.fromJson(result, Project.class);
+                            Log.d(TAG, "final_project[0].getProject_no(): " + final_project[0].getProject_no());
+                            Log.d(TAG, "final_project[0].getProject_color(): " + final_project[0].getProject_color());
+                            Log.d(TAG, "final_project[0].getProject_name(): " + final_project[0].getProject_name());
+                            Log.d(TAG, "final_project[0].getMeeting_count(): " + final_project[0].getMeeting_count());
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return final_project[0];
+                }
+            }.execute().get();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 오늘의 해당하는 '년, 월, 일'을 int 배열로 리턴하는 메소드
+                리턴 형식: [2016, 0, 31] / month 는 '-1' 된 값
+     ---------------------------------------------------------------------------*/
+    public int[] year_month_day() {
+        int[] return_int_arr = new int[3];
+
+        Calendar cal = Calendar.getInstance();
+
+        return_int_arr[0] = cal.get(Calendar.YEAR);
+        return_int_arr[1] = cal.get(Calendar.MONTH);
+        return_int_arr[2] = cal.get(Calendar.DAY_OF_MONTH);
+
+        return return_int_arr;
     }
 }

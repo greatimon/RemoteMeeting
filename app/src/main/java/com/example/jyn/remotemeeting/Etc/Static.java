@@ -5,9 +5,11 @@ package com.example.jyn.remotemeeting.Etc;
  */
 
 public class Static {
-    public static String DRAWING_IMGS_SAVE_PATH = "/storage/emulated/0/remoteMeeting/";
     public static String DRAWING_IMGS_FOR_SHARED= "drawing_imgs_fileName";
     public static String MEETING_MEMO= "meeting_memo";
+    public static String MEETING_SCANNED_IMAGE= "meeting_scanned_image";
+    public static String RIGHT_AFTER_END_MEETING= "right_after_end_meeting";
+    public static String PROJECT_FOLDER= "project_folder";
     public static String ROOM_ID = "53236556"; // 테스트용
     public static String WEBRTC_URL = "https://appr.tc";
 
@@ -23,6 +25,7 @@ public class Static {
     public static String GET_ENDED_MEETING_RESULT = "get_ended_meeting_result.php";
     public static String GET_MEETING_ROOM_LIST = "get_meeting_room_list.php";
     public static String ASSIGN_PROJECT = "assign_project.php";
+    public static String ASSIGNED_PROJECT = "assigned_project.php";
     public static String GET_MEETING_END_TIME = "get_meeting_end_time.php";
     public static String SEARCH_PARTNERS = "search_partners.php";
     public static String BREAK_PARTNER = "break_partner.php";
@@ -36,6 +39,7 @@ public class Static {
     public static String GOT_OUT_FROM_MEETING = "got_out_from_meeting.php";
     public static String AM_I_INVITED = "am_i_invited.php";
     public static String GET_SHARE_FILE_LIST = "get_share_file_list.php";
+    public static String IS_UPLOADED_FILE = "is_uploaded_file.php";
     public static String GET_CHAT_ROOM_LIST = "get_chat_room_list.php";
     public static String GET_CHATTING_LOGS = "get_chatting_logs.php";
     public static String CREATE_CHAT_ROOM_FOR_ONE = "create_chat_room_for_one.php";

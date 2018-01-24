@@ -35,6 +35,7 @@ import com.example.jyn.remotemeeting.Adapter.RCV_show_uploaded_images_adapter;
 import com.example.jyn.remotemeeting.DataClass.Drawing_images_saveFile;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Meeting_room;
+import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
@@ -88,8 +89,12 @@ public class Meeting_result_D extends Activity {
     private static final int REQUEST_ASSIGN_TO_EXISTING_PROJECT = 4321;
     public static final int REQUEST_SHOW_THIS_IMAGE = 6565;
     Myapp myapp;
-    String ended_meeting_no;
-    String ended_subject_user_no;
+    // 회의 번호
+    String target_meeting_no;
+    // 회의 대상
+    String target_subject_user_no;
+    // Meeting_result_D 액티비티를 연 위치
+    String opened_from;
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -100,6 +105,7 @@ public class Meeting_result_D extends Activity {
     @BindView(R.id.handwriting_to_document_LIN)             LinearLayout handwriting_to_document_LIN;
     @BindView(R.id.handwriting_to_document_LIN_for_add_img) LinearLayout handwriting_to_document_LIN_for_add_img;
     @BindView(R.id.drawing_images_LIN)                      LinearLayout drawing_images_LIN;
+    @BindView(R.id.meeting_upload_images_LIN)               LinearLayout meeting_upload_images_LIN;
     @BindView(R.id.meeting_subject_user_nickName_txt)       TextView meeting_subject_user_nickName_txt;
     @BindView(R.id.save_meeting_result_txt)                 TextView save_meeting_result_txt;
     @BindView(R.id.meeting_title_txt)                       TextView meeting_title_txt;
@@ -174,19 +180,19 @@ public class Meeting_result_D extends Activity {
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
-        // 어플리케이션 객체로부터 방금 종료한 회의의 primary key인 meeting_no를 가져와서 전역변수에 넣는다
-        ended_meeting_no = myapp.getMeeting_no();
-        Log.d(TAG, "ended_meeting_no: " + ended_meeting_no);
-        // meeting_no를 가지고 온뒤에, 초기화(해당 영상회의에 더이상 참여하고 있지 않기 때문에)
-        myapp.setMeeting_no("");
-        Log.d(TAG, "myapp.getMeeting_no()_ after set '': " + myapp.getMeeting_no());
+        Intent intent = getIntent();
 
-        // 어플리케이션 객체로부터 방금 종료한 회의의, 회의대상 user_no를 가져와서 전역변수에 넣는다
-        ended_subject_user_no = myapp.getMeeting_subject_user_no();
-        Log.d(TAG, "ended_subject_user_no: " + ended_subject_user_no);
-        // 회의대상 user_no를 가지고 온뒤에, 초기화(해당 영상회의에 더이상 참여하고 있지 않기 때문에)
-        myapp.setMeeting_subject_user_no("");
-        Log.d(TAG, "myapp.getMeeting_subject_user_no()_ after set '': " + myapp.getMeeting_subject_user_no());
+        // 인텐트로 넘어온 'meeting_no'를 가져와서 전역변수에 넣는다
+        target_meeting_no = intent.getStringExtra("meeting_no");
+        Log.d(TAG, "target_meeting_no: " + target_meeting_no);
+
+        // 인텐트로 넘어온, 'from' 가져와서 전역변수에 넣는다
+        opened_from = intent.getStringExtra("from");
+        Log.d(TAG, "opened_from: " + opened_from);
+
+        // 인텐트로 넘어온 'subject_user_no'를 가져와서 전역변수에 넣는다
+        target_subject_user_no = intent.getStringExtra("subject_user_no");
+        Log.d(TAG, "target_subject_user_no: " + target_subject_user_no);
 
         // 손글씨 메모 스캔한 사진의 uri 값들을 임시로 담아놓을 해쉬맵
         temp_uri_hash = new ConcurrentHashMap<>();
@@ -239,16 +245,21 @@ public class Meeting_result_D extends Activity {
         share_img_file_name_arr = new ArrayList<>();
 
         // 종료된 영상회의의 정보를 가져오는 어플리케이션 객체 내 메소드 호출
-        jsonString_meeting_result = myapp.get_ended_meeting_result(ended_meeting_no, ended_subject_user_no);
+        jsonString_meeting_result = myapp.get_ended_meeting_result(target_meeting_no, target_subject_user_no);
 
         // jsonString_meeting_result --> 필요한 정보에 따라 알맞게 파싱하는 내부 메소드 호출
         // 파싱한 뒤, 종료된 영상회의를 뷰에 셋팅
         parsing_server_data(jsonString_meeting_result);
 
         /** 서버로부터, 회의 때 업로드 했던 파일 리스트들의 name 받아오기 */
-        ArrayList<File_info> files = myapp.get_uploaded_file_list(this, ended_meeting_no);
+        ArrayList<File_info> files = myapp.get_uploaded_file_list(this, target_meeting_no);
         Log.d(TAG, "files.isEmpty(): " + files.isEmpty());
+        // 파일 리스트가 있다면
         if(!files.isEmpty()) {
+
+            // 해당 파일을 보여줄 리사이클러뷰를 담고 있는 LinearLayout 'Visible' 처리 하기
+            meeting_upload_images_LIN.setVisibility(View.VISIBLE);
+
             Log.d(TAG, "어댑터에 넘길 files 개수: " + files.size());
             // 생성자 인수
             // 1. 액티비티
@@ -275,13 +286,9 @@ public class Meeting_result_D extends Activity {
         Gson gson = new Gson();
         SharedPreferences drawing_imgs_fileName = getSharedPreferences(Static.DRAWING_IMGS_FOR_SHARED, MODE_PRIVATE);
         // 지금 참여하고 있는 회의 번호로 저장되어 있는 쉐어드 String 값을 찾아온다
-        String drawing_file_str = drawing_imgs_fileName.getString(ended_meeting_no, "");
+        String drawing_file_str = drawing_imgs_fileName.getString(target_meeting_no, "");
         // 지금 참여하고 있는 회의번호로 저장되어 있는 쉐어드 값이 있다면,
         if(!drawing_file_str.equals("")) {
-
-            // 해당 파일을 보여줄 리사이클러뷰를 담고 있는 LinearLayout, divider Visibility 'Visible' 처리 하기
-            drawing_images_LIN.setVisibility(View.VISIBLE);
-            drawing_images_divider.setVisibility(View.VISIBLE);
 
             // 해당 쉐어드 Str 값을 gson과 데이터 클래스를 이용하여, 데이터 객체로 파싱하여, 어댑터로 넘긴다
             Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
@@ -291,6 +298,24 @@ public class Meeting_result_D extends Activity {
 //                    + drawing_images_saveFile.getDrawing_images_fileName_arr().toString());
 
             ArrayList<String> drawing_imgs_fileName_arr = drawing_images_saveFile.getDrawing_images_fileName_arr();
+
+            // 실제 파일이 있는지 없는지 확인하기
+            boolean there_is_file = false;
+
+            for(int i=0; i<drawing_imgs_fileName_arr.size(); i++) {
+                File f = new File(drawing_imgs_fileName_arr.get(i));
+                if(f.isFile()) {
+                    there_is_file = true;
+                    Log.d(TAG, drawing_images_saveFile.getDrawing_images_fileName_arr().get(i) + "_ 파일이 존재하지 않음");
+                }
+            }
+
+            // 한개의 이미지 파일이라도 디렉토리에 존재한다면,
+            // // 해당 파일을 보여줄 리사이클러뷰를 담고 있는 LinearLayout, divider Visibility 'Visible' 처리 하기
+            if(there_is_file) {
+                drawing_images_LIN.setVisibility(View.VISIBLE);
+                drawing_images_divider.setVisibility(View.VISIBLE);
+            }
 
             Log.d(TAG, "어댑터에 넘길 files 개수: " + drawing_imgs_fileName_arr.size());
             // 생성자 인수
@@ -311,6 +336,88 @@ public class Meeting_result_D extends Activity {
             // set Adapter
             drawing_images_rcv.setAdapter(rcv_drawing_images_adapter);
             rcv_drawing_images_adapter.notifyDataSetChanged();
+        }
+
+        /**
+            프로젝트 폴더의 리스트 아이템을 클릭해서 이 액티비티를 열었다면, 추가로
+             1. 액션바 위치의 '저장하기' 를 '수정하기'로 변경하기
+             2. 쉐어드에 저장되어 있는 메모있는지 확인하기
+             3. 쉐어드에 '손필기 메모 스캔'한 이미지가 있는지 확인하기(실제로 파일 존재하는지도 확인)
+             4. 지정한 프로젝트가 있는지 확인하기(DB에서 확인)
+         */
+        if(opened_from.equals(Static.PROJECT_FOLDER)) {
+            // 1. 액션바 위치의 '저장하기' 를 '수정하기'로 변경하기
+            save_meeting_result_txt.setText("수정완료");
+
+            // 2. 쉐어드에 저장되어 있는 메모있는지 확인하기 / 있으면 EditText에 setText 하기
+            /**
+             - 쉐어드, 미팅 메모 -
+             [key: 회의 번호] | [value: memo_edit_str]
+             */
+            SharedPreferences meeting_memo = getSharedPreferences(Static.MEETING_MEMO, MODE_PRIVATE);
+            String get_memo_str = meeting_memo.getString(target_meeting_no, null);
+            if(get_memo_str != null) {
+                Log.d(TAG, "get_memo_str_["+ target_meeting_no +"]: " + get_memo_str);
+                memo_edit.setText(get_memo_str);
+                // EditText 커서의 위치를 맨 마지막에 놓기
+                memo_edit.setSelection(memo_edit.length());
+            }
+
+            // 3. 쉐어드에 '손필기 메모 스캔'한 이미지가 있는지 확인하기(실제로 파일 존재하는지도 확인)
+            /**
+             - 쉐어드, 스캔한 이미지파일 -
+             [쉐어드 파일이름: Static.MEETING_SCANNED_IMAGE + Static.SPLIT + 회의 번호]
+             [key: 회의 번호] | [value: 파일 절대 경로 + 파일이름]
+             */
+            SharedPreferences meeting_scanned_image =
+                    getSharedPreferences(Static.MEETING_SCANNED_IMAGE + Static.SPLIT + target_meeting_no, MODE_PRIVATE);
+            String get_scanned_image_absolutePath = meeting_scanned_image.getString(target_meeting_no, null);
+            if(get_scanned_image_absolutePath != null) {
+                Log.d(TAG, "get_scanned_image_absolutePath: " + get_scanned_image_absolutePath);
+                // 해당 위치에, 파일 실제 존재 여부 확인
+                File f = new File(get_scanned_image_absolutePath);
+                if (f.isFile()) {
+
+                    /** add할, ImageView 및 ImageView 속성 셋팅을 위한 LinearLayout.LayoutParams 생성 */
+                    LinearLayout.LayoutParams vp =
+                            new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    ImageView imageView = new ImageView(this);
+                    // 마진 셋팅
+                    vp.setMargins(0, 20, 0, 0);
+                    // 패딩 셋팅
+                    imageView.setPadding(0, 0, 20, 0);
+                    // width, height 속성 및 마진 속성 적용
+                    imageView.setLayoutParams(vp);
+                    // 이미지 비율에 맞게 Height 조절되는 속성 적용
+                    imageView.setAdjustViewBounds(true);
+                    Glide
+                        .with(this)
+                        .load(get_scanned_image_absolutePath)
+                        .into(imageView);
+
+                    // 최종 셋팅된 ImageView를 '손글씨 메모 스캔' 부모뷰에 add 하기
+                    handwriting_to_document_LIN_for_add_img.addView(imageView);
+                }
+            }
+
+            // 4. 지정한 프로젝트가 있는지 확인하기(DB에서 확인)
+            Project assigned_project = myapp.assigned_project(target_meeting_no);
+
+            // 에러인 경우
+            if(assigned_project.getProject_no() == -1) {}
+            // 지정된 프로젝트가 없는 경우
+            else if(assigned_project.getProject_no() == 0) {}
+
+            // 지정된 프로젝트가 있는 경우
+            else if(assigned_project.getProject_no() != -1 && assigned_project.getProject_no() != 0) {
+                selected_project_no = assigned_project.getProject_no();
+                String selected_project_color = assigned_project.getProject_color();
+                String selected_project_name = assigned_project.getProject_name();
+
+                // 지정된 프로젝트 정보에 따라 컬러 변경 및, 프로젝트 폴더 아이콘과 이름을 set 하는 내부 메소드 호출
+                set_assign_project_result(selected_project_color, selected_project_name);
+            }
         }
     }
 
@@ -478,7 +585,7 @@ public class Meeting_result_D extends Activity {
                     try {
                         Call<ResponseBody> call_result = rs.get_meeting_end_time(
                                 Static.GET_MEETING_END_TIME,
-                                ended_meeting_no);
+                                target_meeting_no);
                         Response<ResponseBody> list = call_result.execute();
                         String result = list.body().string();
                         Log.d(TAG, "get_meeting_end_time_ result: " + result);
@@ -531,18 +638,19 @@ public class Meeting_result_D extends Activity {
 
 
     /**---------------------------------------------------------------------------
-     클릭이벤트 ==> 회의 결과 저장하기 버튼 클릭
+     클릭이벤트 ==> 회의 결과 저장하기 or 수정완료 버튼 클릭
         -- 스캔한 이미지가 있는지 없는지 확인하여, 경우에 따라 맞는 메소드 및 핸들러 메세지 전달
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.save_meeting_result_txt)
     public void check_there_is_scanned_image_orNot() {
+        //// 회의 끝나고, 이 액티비티가 팝업된 경우라면
         // 작성한 목록이 하나도 없다면
-        if(!check_have_any_list_i_have_created()) {
+        if(!check_have_any_list_i_have_created() && !opened_from.equals(Static.PROJECT_FOLDER)) {
             myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
             finish();
         }
         // 작성한 목록이 하나라도 있다면
-        else if(check_have_any_list_i_have_created()) {
+        else if(check_have_any_list_i_have_created() && opened_from.equals(Static.RIGHT_AFTER_END_MEETING)) {
             // 스캔한 이미지가 있음
             if(temp_uri_hash.size() != 0) {
 
@@ -554,9 +662,14 @@ public class Meeting_result_D extends Activity {
             }
             // 스캔한 이미지가 없음
             else if(temp_uri_hash.size() == 0) {
+                // 내부 메소드 호출
                 save_meeting_result();
             }
-
+        }
+        //// 프로젝트 폴더의 아이템 리스트로 부터 클릭해서, 이 액티비티가 열린 경우라면
+        else if(opened_from.equals(Static.PROJECT_FOLDER)) {
+            // 내부 메소드 호출
+            save_meeting_result();
         }
     }
 
@@ -577,22 +690,48 @@ public class Meeting_result_D extends Activity {
             memo_edit_str = memo_edit.getText().toString();
 
             /**
-             쉐어드에 미팅 메모 저장하기 -
+             쉐어드에 미팅 메모, 저장하기 -
              [key: 회의 번호] | [value: memo_edit_str]
              */
             SharedPreferences meeting_memo = getSharedPreferences(Static.MEETING_MEMO, MODE_PRIVATE);
             SharedPreferences.Editor meeting_memo_edit = meeting_memo.edit();
-            meeting_memo_edit.putString(ended_meeting_no, memo_edit_str).apply();
+            meeting_memo_edit.putString(target_meeting_no, memo_edit_str).apply();
         }
+        // 작성한 메모 내용이 없으면
+        else if(memo_edit_str_for_check.equals("")) {
+            /**
+             쉐어드 미팅 메모 삭제하기 -
+             [key: 회의 번호] | [value: memo_edit_str]
+             */
+            SharedPreferences meeting_memo = getSharedPreferences(Static.MEETING_MEMO, MODE_PRIVATE);
+            SharedPreferences.Editor meeting_memo_edit = meeting_memo.edit();
+            meeting_memo_edit.remove(target_meeting_no).apply();
+        }
+
         // 지정한 프로젝트가 있으면
         if(selected_project_no != -1) {
             // 해당 회의를 프로젝트에 할당하여 서버에 내용 전송하고
-            myapp.assign_project(selected_project_no, ended_meeting_no);
+            myapp.assign_project(selected_project_no, target_meeting_no);
         }
 
-        // 액티비티 종료
-        myapp.logAndToast("회의 결과가 저장되었습니다.");
-        finish();
+        //// 프로젝트 폴더의 아이템 리스트로 부터 클릭해서, 이 액티비티가 열린 경우라면
+        if(opened_from.equals(Static.PROJECT_FOLDER)) {
+            Intent result_intent = new Intent();
+            result_intent.putExtra("resultOK", true);
+            setResult(RESULT_OK, result_intent);
+        }
+        //// 회의종료 후, 이 액티비티가 팝업 된 경우라면
+        else if(opened_from.equals(Static.RIGHT_AFTER_END_MEETING)) {
+            // 액티비티 종료
+            myapp.logAndToast("회의 결과가 저장되었습니다.");
+        }
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, 300);
     }
 
 
@@ -610,7 +749,7 @@ public class Meeting_result_D extends Activity {
                     String ex_storage = Environment.getExternalStorageDirectory().getAbsolutePath();
                     String folder_name = "/remoteMeeting/";
                     String string_path = ex_storage+folder_name;
-                    String file_name = ended_meeting_no + "__" + myapp.get_time("yyyyMMdd HH_mm_ss:SSS") + "_scanned_";
+                    String file_name = target_meeting_no + "__" + myapp.get_time("yyyyMMdd HH_mm_ss:SSS") + "_scanned_";
 
                     // temp_uri_hash에 들어있는 Uri 값을 차례로 가져와서 이미지 파일을 바로 위에서 설정한 경로로 복사하고
                     // 원래 이미지 파일은 삭제
@@ -648,6 +787,17 @@ public class Meeting_result_D extends Activity {
 
                         // 최종적으로
                         finally {
+                            /**
+                             쉐어드에 파일 절대경로 값 저장하기 -
+                             [쉐어드 파일이름: Static.MEETING_SCANNED_IMAGE + Static.SPLIT + 회의 번호]
+                             [key: 회의 번호] | [value: 파일 절대 경로 + 파일이름]
+                             */
+                            SharedPreferences meeting_scanned_image =
+                                    getSharedPreferences(Static.MEETING_SCANNED_IMAGE + Static.SPLIT + target_meeting_no, MODE_PRIVATE);
+                            SharedPreferences.Editor meeting_scanned_image_edit = meeting_scanned_image.edit();
+                            meeting_scanned_image_edit.putString(
+                                    target_meeting_no, string_path+file_name).apply();
+
                             // 복사한 원본 파일은 삭제
                             File from_file = new File(path);
                             from_file.delete();
@@ -823,25 +973,35 @@ public class Meeting_result_D extends Activity {
             String selected_project_color = data.getStringExtra("selected_project_color");
             String selected_project_name = data.getStringExtra("selected_project_name");
 
-            // '내부 메소드로'부터 가져온 int value 값으로,
-            // '액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러를 변경한다
-            int color_int_value = myapp.project_color(selected_project_color);
-            actionBar_LIN.setBackgroundColor(color_int_value);
-            meeting_basic_info_LIN.setBackgroundColor(color_int_value);
+            // 지정된 프로젝트 정보에 따라 컬러 변경 및, 프로젝트 폴더 아이콘과 이름을 set 하는 내부 메소드 호출
+            set_assign_project_result(selected_project_color, selected_project_name);
+        }
+    }
 
-            // intent 값을 모두 제대로 전달 받았을 때, 그 전달받은 데이터를 가지고,
-            // 프로젝트 폴더 아이콘과, 프로젝트 이름을 set 한다
-            if(selected_project_no != -1 && selected_project_color != null && selected_project_name != null) {
-                // 폴더 컬러 설정
-                Glide
-                    .with(this)
-                    .load(myapp.getFolder_color_hash().get(selected_project_color))
-                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                    .into(project_folder_img);
 
-                // 프로젝트 이름 설정
-                project_name_txt.setText(selected_project_name);
-            }
+    /**---------------------------------------------------------------------------
+     메소드 ==> 지정된 프로젝트 정보에 따라 컬러 변경 및, 프로젝트 폴더 아이콘과 이름을 set 한다
+     ---------------------------------------------------------------------------*/
+    public void set_assign_project_result(String selected_project_color, String selected_project_name) {
+
+        // '내부 메소드로'부터 가져온 int value 값으로,
+        // '액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러를 변경한다
+        int color_int_value = myapp.project_color(selected_project_color);
+        actionBar_LIN.setBackgroundColor(color_int_value);
+        meeting_basic_info_LIN.setBackgroundColor(color_int_value);
+
+        // intent 값을 모두 제대로 전달 받았을 때, 그 전달받은 데이터를 가지고,
+        // 프로젝트 폴더 아이콘과, 프로젝트 이름을 set 한다
+        if(selected_project_no != -1 && selected_project_color != null && selected_project_name != null) {
+            // 폴더 컬러 설정
+            Glide
+                .with(this)
+                .load(myapp.getFolder_color_hash().get(selected_project_color))
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(project_folder_img);
+
+            // 프로젝트 이름 설정
+            project_name_txt.setText(selected_project_name);
         }
     }
 
@@ -920,16 +1080,16 @@ public class Meeting_result_D extends Activity {
 
     /**---------------------------------------------------------------------------
      오버라이드 ==> onBackPressed -- 소프트키보드를 눌러 액티비티를 종료하기 전,
-                                내가 작성한 '항목'이 있으면, AlertDialog를 호출
-                                내가 작성항 '항목'이 없으면, 원래대로 액티비티를 종료하고
-                                '기본 회의결과'가 저장되었음을 toast로 알리기
+            내가 작성한 '항목'이 있으면, AlertDialog를 호출
+            내가 작성항 '항목'이 없으면, 원래대로 액티비티를 종료하고
+            '기본 회의결과'가 저장되었음을 toast로 알리기(단, 방금 회의를 종료하고 나서 '회의 결과'를 봤을 때만)
      ---------------------------------------------------------------------------*/
     @Override
     public void onBackPressed() {
         if(check_have_any_list_i_have_created()) {
 
         }
-        else if(!check_have_any_list_i_have_created()) {
+        else if(!check_have_any_list_i_have_created() && !opened_from.equals(Static.PROJECT_FOLDER)) {
             myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
         }
         super.onBackPressed();

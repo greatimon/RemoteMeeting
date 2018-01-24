@@ -18,6 +18,7 @@ import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -72,7 +73,7 @@ public class RCV_show_drawing_images_adapter extends RecyclerView.Adapter<RCV_sh
                     Log.d(TAG, "getFile_no: " + drawing_images_fileName_arr.get(pos));
 
                     Intent intent = new Intent(context, Show_one_image_D.class);
-                    intent.putExtra("image_source", Static.DRAWING_IMGS_SAVE_PATH + drawing_images_fileName_arr.get(pos));
+                    intent.putExtra("image_source", drawing_images_fileName_arr.get(pos));
                     intent.putExtra("fileName", drawing_images_fileName_arr.get(pos));
                     ((Meeting_result_D)context).startActivityForResult(intent, Meeting_result_D.REQUEST_SHOW_THIS_IMAGE);
                 }
@@ -96,11 +97,15 @@ public class RCV_show_drawing_images_adapter extends RecyclerView.Adapter<RCV_sh
     public void onBindViewHolder(ViewHolder holder, int position) {
         Log.d(TAG, "onBindViewHolder");
 
-        Glide
-            .with(context)
-            .load(Static.DRAWING_IMGS_SAVE_PATH + drawing_images_fileName_arr.get(position))
-            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-            .into(holder.drawing_img);
+        // 해당 파일이 실제로 존재하는지 확인
+        File f = new File(drawing_images_fileName_arr.get(position));
+        if(f.isFile()) {
+            Glide
+                    .with(context)
+                    .load(drawing_images_fileName_arr.get(position))
+                    .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                    .into(holder.drawing_img);
+        }
     }
 
     @Override

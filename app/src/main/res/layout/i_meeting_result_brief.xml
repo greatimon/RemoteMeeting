@@ -5,6 +5,42 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <!--날짜 변경선-->
+    <LinearLayout
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/date_line_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        >
+        <View
+            android:id="@+id/date_line_divider_V_1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#d9dcdd"
+            />
+        <TextView
+            android:id="@+id/date_line_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:background="#e8eeee"
+            tools:text="2018년 1월 21일 (일)"
+            android:textColor="#4e4e4e"
+            android:textSize="15dp"
+            tools:ignore="SpUsage" />
+        <View
+            android:id="@+id/date_line_divider_V_2"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#d9dcdd"
+            />
+    </LinearLayout>
+
     <!--회의 결과 item-->
     <LinearLayout
         android:visibility="visible"
@@ -50,7 +86,7 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:gravity="center|start"
-                    android:textSize="14dp"
+                    android:textSize="15dp"
                     android:textColor="#434343"
                     android:textStyle="bold"
                     />
@@ -72,6 +108,8 @@
                         tools:text="그레아티"
                         android:textColor="#2b2b2b"
                         android:textSize="12dp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         tools:ignore="HardcodedText,SpUsage"
                         />
                     <ImageView
@@ -121,7 +159,7 @@
                         android:layout_height="20dp"
                         android:layout_marginEnd="6dp"
                         android:src="@drawable/memo"
-                        android:alpha="0.3"
+                        tools:alpha="0.3"
                         />
                     <ImageView
                         android:id="@+id/image_to_document_imgV"
@@ -150,45 +188,11 @@
                         android:layout_height="21dp"
                         android:paddingStart="1dp"
                         android:src="@drawable/drawing_images_1"
-                        android:alpha="0.3"
+                        tools:alpha="0.3"
                         />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
-
-    <!--날짜 변경선-->
-    <LinearLayout
-        android:visibility="gone"
-        tools:visibility="visible"
-        android:id="@+id/date_line_LIN"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
-        <View
-            android:id="@+id/date_line_divider_V_1"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#d9dcdd"
-            />
-        <TextView
-            android:id="@+id/date_line_txt"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:background="#e8eeee"
-            tools:text="2018년 1월 21일 (일)"
-            />
-        <View
-            android:id="@+id/date_line_divider_V_2"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#d9dcdd"
-            />
     </LinearLayout>
 
 </LinearLayout>

@@ -16,7 +16,6 @@ import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -33,7 +32,6 @@ import com.example.jyn.remotemeeting.Adapter.RCV_selectFile_preview_adapter;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Preview_selected_file;
 import com.example.jyn.remotemeeting.DataClass.Users;
-import com.example.jyn.remotemeeting.Dialog.Confirm_img_share_mode_accept_D;
 import com.example.jyn.remotemeeting.Dialog.Confirm_upload_files_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
@@ -58,7 +56,6 @@ import java.util.Iterator;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.OnTouch;
 import butterknife.Unbinder;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import uk.co.senab.photoview.PhotoView;
@@ -834,7 +831,7 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
             Log.d(TAG, "contain_pdf_file_orNot: " + contain_pdf_file_orNot);
 
             // 파일 업로드 시작점 메소드 호출
-            myapp.checed_pdf_files(contain_pdf_file_orNot, getActivity());
+            myapp.check_pdf_files(contain_pdf_file_orNot, getActivity());
         }
 
         /** 파일 업로드 취소 선택 시 */

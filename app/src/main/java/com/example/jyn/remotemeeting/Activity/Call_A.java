@@ -543,7 +543,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (roomUri == null) {
 //            logAndToast("FATAL ERROR: Missing URL to connect to.");
             Log.e(TAG, "Didn't get any URL in intent!");
-            setResult(RESULT_CANCELED);
+            Intent result_intent = new Intent();
+            result_intent.putExtra("subject_user_no", myapp.getMeeting_subject_user_no());
+            setResult(RESULT_CANCELED, result_intent);
             finish();
             return;
         }
@@ -554,7 +556,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (roomId == null || roomId.length() == 0) {
 //            logAndToast("FATAL ERROR: Missing URL to connect to.");
             Log.e(TAG, "Incorrect room ID in intent!");
-            setResult(RESULT_CANCELED);
+            Intent result_intent = new Intent();
+            result_intent.putExtra("subject_user_no", myapp.getMeeting_subject_user_no());
+            setResult(RESULT_CANCELED, result_intent);
             finish();
             return;
         }
@@ -1491,10 +1495,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                     if (retrofit_result.equals("success")) {
                         // 내 회의 정보 정보 변경
                         myapp.setPresent_meeting_in_ornot("");
-//                        myapp.setMeeting_no("");
+                        myapp.setMeeting_no("");
                         myapp.setReal_meeting_title("");
                         myapp.setMeeting_creator_user_no("");
-//                        myapp.setMeeting_subject_user_no("");
+                        myapp.setMeeting_subject_user_no("");
                         myapp.setMeeting_authority_user_no("");
                         myapp.setProject_no("");
                         myapp.setMeeting_status("");
@@ -1710,10 +1714,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
             audioManager.stop();
             audioManager = null;
         }
+
+        Intent result_intent = new Intent();
+        result_intent.putExtra("subject_user_no", myapp.getMeeting_subject_user_no());
         if (iceConnected && !isError) {
-            setResult(RESULT_OK);
+            setResult(RESULT_OK, result_intent);
         } else {
-            setResult(RESULT_CANCELED);
+            setResult(RESULT_CANCELED, result_intent);
         }
         finish();
     }
@@ -2962,11 +2969,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 //                                                        "remoteMeeting",
 //                                                        "testBitmap_" + myapp.get_time("yyyyMMdd HH_mm_ss"));
                         // try 코드
-                        String saveBitmaptoImage_fileName =
+                        String save_file_absolutePath =
                                 myapp.saveBitmaptoImage(bitmap_for_save,
                                         "remoteMeeting",
                                         myapp.getMeeting_no() + "__" + myapp.get_time("yyyyMMdd HH_mm_ss"));
-                        Logger.d("saveBitmaptoImage_fileName: " + saveBitmaptoImage_fileName);
+                        Logger.d("save_file_absolutePath: " + save_file_absolutePath);
 
                         /**
                             쉐어드에 파일 이름 저장하기 -
@@ -2991,7 +2998,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             // String, 어레이리스트에 해당 파일 이름을 add 한다
                             Drawing_images_saveFile drawing_images_saveFile = new Drawing_images_saveFile();
                             drawing_images_saveFile.setMeeting_no(myapp.getMeeting_no());
-                            drawing_images_saveFile.add_item(saveBitmaptoImage_fileName);
+                            drawing_images_saveFile.add_item(save_file_absolutePath);
 
                             // 저장한 드로잉 이미지 파일 개수 가져오기
                             count_saved_drawing_images = drawing_images_saveFile.file_nums();
@@ -3007,7 +3014,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
                             // 해당 쉐어드 Str 값을 gson과 데이터 클래스를 이용하여, 데이터 객체로 파싱,
                             // String, 어레이리스트에 해당 파일 이름을 add 한다
                             Drawing_images_saveFile drawing_images_saveFile = gson.fromJson(drawing_file_str, Drawing_images_saveFile.class);
-                            drawing_images_saveFile.getDrawing_images_fileName_arr().add(saveBitmaptoImage_fileName);
+                            drawing_images_saveFile.getDrawing_images_fileName_arr().add(save_file_absolutePath);
 
                             // 저장한 드로잉 이미지 파일 개수 가져오기
                             count_saved_drawing_images = drawing_images_saveFile.file_nums();
@@ -3460,7 +3467,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         Log.d(TAG, "changed_color_int: " + changed_color);
         Log.d(TAG, "String.valueOf(nameToColorMap.get(colorName)): " + String.valueOf(nameToColorMap.get(colorName)));
 
-        String IndicatorColor = set_drawing_tool_seekbar_alpha(changed_color, alpha);
+//        String IndicatorColor = set_drawing_tool_seekbar_alpha(changed_color, alpha);
 
         // 선 두께 조절 시크바 색상 변경
         slider_thickness.getBuilder()
@@ -3490,28 +3497,28 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     }
 
 
-    /**---------------------------------------------------------------------------
-     메소드 ==> 시크바 투명도 alpha 값 반환 메소드
-                매개변수 1. 컬러
-                매개변수 2. 현재 alpha int 값 (10~255 사이)
-     ---------------------------------------------------------------------------*/
-    public String set_drawing_tool_seekbar_alpha(int changed_color, int changed_alpha) {
-        // 알파값에 따른 hex 값 구하기
-        String hex = Integer.toHexString(changed_alpha).toUpperCase();
-        if(hex.length() == 1) {
-            hex = "0" + hex;
-        }
-        Log.d(TAG, "hex: " + hex);
-
-        // 알파값을 제외한 현재 컬러 값 구하기
-        String except_hex = Integer.toHexString(changed_color);
-        except_hex = except_hex.substring(2, 8);
-        String IndicatorColor = hex + except_hex;
-        Log.d(TAG, "except_hex: " + except_hex);
-        Log.d(TAG, "IndicatorColor: " + IndicatorColor);
-
-        return IndicatorColor;
-    }
+//    /**---------------------------------------------------------------------------
+//     메소드 ==> 시크바 투명도 alpha 값 반환 메소드
+//                매개변수 1. 컬러
+//                매개변수 2. 현재 alpha int 값 (10~255 사이)
+//     ---------------------------------------------------------------------------*/
+//    public String set_drawing_tool_seekbar_alpha(int changed_color, int changed_alpha) {
+//        // 알파값에 따른 hex 값 구하기
+//        String hex = Integer.toHexString(changed_alpha).toUpperCase();
+//        if(hex.length() == 1) {
+//            hex = "0" + hex;
+//        }
+//        Log.d(TAG, "hex: " + hex);
+//
+//        // 알파값을 제외한 현재 컬러 값 구하기
+//        String except_hex = Integer.toHexString(changed_color);
+//        except_hex = except_hex.substring(2, 8);
+//        String IndicatorColor = hex + except_hex;
+//        Log.d(TAG, "except_hex: " + except_hex);
+//        Log.d(TAG, "IndicatorColor: " + IndicatorColor);
+//
+//        return IndicatorColor;
+//    }
 
 
     /**---------------------------------------------------------------------------

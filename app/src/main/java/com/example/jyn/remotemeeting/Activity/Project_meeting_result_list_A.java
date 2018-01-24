@@ -20,6 +20,8 @@ import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,6 +36,7 @@ public class Project_meeting_result_list_A extends Activity {
 
     private static final String TAG = "all_"+Project_meeting_result_list_A.class.getSimpleName();
     Myapp myapp;
+    public static final int REQUEST_OPEN_THIS_MEETING_RESULT = 1111;
 
     /** 버터나이프 */
     public Unbinder unbinder;
@@ -94,13 +97,71 @@ public class Project_meeting_result_list_A extends Activity {
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        ArrayList<Meeting_room> meeting_room_arr= myapp.get_meeting_room_list(project.getProject_no());
+        // 서버로부터 meeting_room_arr 리스트 받아와서, 어댑터로 넘기는 내부 메소드 호출
+        activate_RCV();
+    }
 
-        rcv_project_meeting_result_list_adapter = new RCV_project_meeting_result_list_adapter(
-                this, R.layout.i_meeting_result_brief, meeting_room_arr);
 
-        recyclerView.setAdapter(rcv_project_meeting_result_list_adapter);
-        rcv_project_meeting_result_list_adapter.notifyDataSetChanged();
+    /**---------------------------------------------------------------------------
+     메소드 ==> 서버로부터 meeting_room_arr 리스트 받아와서, 어댑터로 넘기기
+     ---------------------------------------------------------------------------*/
+    public void activate_RCV() {
+        // 서버로부터 해당 프로젝트에 지정된 회의결과 리스트 받아오기
+        ArrayList<Meeting_room> meeting_room_arr = myapp.get_meeting_room_list(project.getProject_no());
+        /** 'meeting_no'를 기준으로, 가장 최근에 한 회의부터 리스팅 될 수 있도록
+         *  meeting_room_arr arrayList sort 하기 */
+        Collections.sort(meeting_room_arr, new Comparator<Meeting_room>() {
+            @Override
+            public int compare(Meeting_room o1, Meeting_room o2) {
+//                                Log.d(TAG, "o1.getLast_log().getMsg_no(): " + o1.getLast_log().getMsg_no());
+//                                Log.d(TAG, "o2.getLast_log().getMsg_no(): " + o2.getLast_log().getMsg_no());
+                if(Integer.parseInt(o1.getMeeting_no()) < Integer.parseInt(o2.getMeeting_no())) {
+                    return 1;
+                }
+                else if(Integer.parseInt(o1.getMeeting_no()) > Integer.parseInt(o2.getMeeting_no())) {
+                    return -1;
+                }
+                else {
+                    return 0;
+                }
+            }
+        });
+
+        // 어댑터가 생성되지 않았을 때 -> 어댑터를 생성
+        if(rcv_project_meeting_result_list_adapter == null) {
+            // 매개변수 1. this context
+            // 매개변수 2. 인플레이팅 되는 리사이클러뷰 item 레이아웃
+            // 매개변수 3. 리사이클러뷰에 표시될 데이터 어레이리스트 - meeting_room
+            // 매개변수 4. 이 프로젝트의 color
+            rcv_project_meeting_result_list_adapter = new RCV_project_meeting_result_list_adapter(
+                    this, R.layout.i_meeting_result_brief, meeting_room_arr, project.getProject_color());
+
+            recyclerView.setAdapter(rcv_project_meeting_result_list_adapter);
+            rcv_project_meeting_result_list_adapter.notifyDataSetChanged();
+        }
+        // 어댑터가 생성되어 있을때는, 들어가는 arrayList만 교체
+        else if(rcv_project_meeting_result_list_adapter != null) {
+            rcv_project_meeting_result_list_adapter.refresh_arr(meeting_room_arr);
+        }
+    }
+
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> onActivityResult
+     ---------------------------------------------------------------------------*/
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Meeting_result_D 액티비티로 부터 돌아왔을 때
+        if(requestCode==REQUEST_OPEN_THIS_MEETING_RESULT && resultCode == RESULT_OK) {
+            boolean resultOK = data.getBooleanExtra("resultOK", false);
+            if(resultOK) {
+                // 서버로부터 meeting_room_arr 리스트 받아와서, 어댑터로 넘기는 내부 메소드 호출
+                activate_RCV();
+            }
+        }
     }
 
 

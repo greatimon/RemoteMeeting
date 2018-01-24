@@ -105,6 +105,14 @@
             tools:ignore="InnerclassSeparator">
         </activity>
 
+        // 프로젝트 생성 액티비티
+        <activity
+            android:name=".Activity.Create_project_A"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="InnerclassSeparator">
+        </activity>
+
         // 채팅 액티비티
         <activity
             android:name=".Activity.Chat_A"
@@ -202,6 +210,15 @@
         // 클릭한 이미지 보기
         <activity
             android:name=".Dialog.Show_one_image_D"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            android:windowSoftInputMode="stateAlwaysHidden">
+        </activity>
+
+        // 새 프로젝트 생성 다이얼로그
+        <activity
+            android:name=".Dialog.Calendar_D"
+            android:theme="@android:style/Theme.Dialog"
             android:screenOrientation="portrait"
             android:exported="false"
             android:windowSoftInputMode="stateAlwaysHidden">

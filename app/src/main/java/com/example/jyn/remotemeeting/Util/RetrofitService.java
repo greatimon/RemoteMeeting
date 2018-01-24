@@ -278,6 +278,25 @@ public interface RetrofitService {
     );
 
 
+    /** 해당 영상회의에 업로드 되었던 이미지 파일이 있는지 확인 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> is_uploaded_file (
+            @Path("url") String url,
+            @Field(value = "meeting_no", encoded=true) String meeting_no
+    );
+
+
+    /** 해당 영상회의에 지정된 프로젝트 jsonString을 반환 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> assigned_project (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "meeting_no", encoded=true) String meeting_no
+    );
+
+
     /** 해당 회의 번호에 업로드된 파일 리스트 가져오기 */
     @FormUrlEncoded
     @POST("/{url}")

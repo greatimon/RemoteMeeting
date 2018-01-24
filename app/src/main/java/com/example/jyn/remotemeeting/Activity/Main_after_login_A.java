@@ -71,6 +71,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     String JSON_TAG_CHAT_ROOM_LIST = "chat_room_list";
     String JSON_TAG_CREATED_CHAT_ROOM_INFO = "created_chat_room_info";
     private static final int CONNECTION_REQUEST = 1;
+    public static int REQUEST_CREATE_PROJECT = 8787;
     public static int REQUEST_SEARCH_PARTNER = 1318;
     public static int REQUEST_SHOW_PROFILE_DETAIL = 7894;
     public static int REQUEST_CHOOSE_METHOD_FOR_IMG = 2225;
@@ -238,6 +239,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         String creator_img_fileName = jsonObject_1.getString("user_img_fileName");
 
                                         // 어플리케이션 객체에 회의 정보 저장해놓기
+                                        myapp.setThis_meeting_no(meeting_no);
                                         myapp.setMeeting_no(meeting_no);
                                         myapp.setReal_meeting_title(real_meeting_title);
                                         myapp.setTransform_meeting_title(transform_meeting_title);
@@ -459,7 +461,13 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "=== onCreateOptionsMenu");
-        if(current_viewPager_pos == 1) {
+
+        if(current_viewPager_pos == 0) {
+            Log.d(TAG, "create_project_menu_ inflated");
+            getMenuInflater().inflate(R.menu.create_project_menu, menu);
+            return true;
+        }
+        else if(current_viewPager_pos == 1) {
             Log.d(TAG, "search_menu_ inflated");
             getMenuInflater().inflate(R.menu.search_menu, menu);
             return true;
@@ -494,8 +502,13 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         Log.d(TAG, "=== onOptionsItemSelected");
         int id = item.getItemId();
 
+        // 프로젝트 생성 아이콘 클릭했을 때
+        if(id == R.id.action_create_project) {
+            Intent intent = new Intent(this, Create_project_A.class);
+            startActivityForResult(intent, REQUEST_CREATE_PROJECT);
+        }
         // 검색 아이콘 클릭했을 때
-        if(id == R.id.action_search) {
+        else if(id == R.id.action_search) {
              Intent intent = new Intent(this, Search_partner_A.class);
              startActivityForResult(intent, REQUEST_SEARCH_PARTNER);
         }
@@ -1112,6 +1125,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                     String[] temp = retrofit_result.split(Static.SPLIT);
 
                                     // 어플리케이션 객체에 회의 정보 저장해놓기
+                                    myapp.setThis_meeting_no(temp[1]);
                                     myapp.setMeeting_no(temp[1]);
                                     myapp.setReal_meeting_title(input_title);
                                     myapp.setMeeting_creator_user_no(myapp.getUser_no());
@@ -1164,16 +1178,27 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
         // 회의하고 돌아왔을 때
         else if(requestCode==CONNECTION_REQUEST) {
+
+            String subject_user_no = data.getStringExtra("subject_user_no");
+            if(subject_user_no != null) {
+                Log.d(TAG, "subject_user_no: " + subject_user_no);
+            }
+            else if(subject_user_no == null) {
+                subject_user_no = "";
+            }
+
             // 회의 결과를 보여주는 다이얼로그 액티비티 호출
+            final String finalSubject_user_no = subject_user_no;
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
+                    intent.putExtra("meeting_no", myapp.getThis_meeting_no());
+                    intent.putExtra("from", Static.RIGHT_AFTER_END_MEETING);
+                    intent.putExtra("subject_user_no", finalSubject_user_no);
                     startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
                 }
             }, 500);
-//            Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
-//            startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
         }
 
         // 플로팅 버튼으로, 채팅방을 만들 때

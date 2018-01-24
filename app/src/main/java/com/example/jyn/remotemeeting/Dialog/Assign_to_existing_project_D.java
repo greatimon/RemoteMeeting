@@ -94,7 +94,10 @@ public class Assign_to_existing_project_D extends Activity {
         // 애니메이션 설정
         recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-        // 어댑터 생성
+        //// 어댑터 생성
+        // 매개변수 1. this context
+        // 매개변수 2. 인플레이팅 되는 리사이클러뷰 item 레이아웃
+        // 매개변수 3. 리사이클러뷰에 표시될 데이터 어레이리스트
         rcv_adapter = new RCV_project_adapter_for_assign_project(
                 this, R.layout.i_existing_project, project_arr);
 

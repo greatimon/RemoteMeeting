@@ -386,6 +386,8 @@
 
             <!--회의 중 사용한 이미지들-->
             <LinearLayout
+                android:visibility="gone"
+                tools:visibility="visible"
                 android:id="@+id/meeting_upload_images_LIN"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

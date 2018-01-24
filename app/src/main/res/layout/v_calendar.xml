@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:background="#cacaca"
+    android:background="#FFF"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginTop="30dp"
+    android:layout_marginBottom="30dp"
+    android:paddingTop="25dp"
+    android:paddingStart="30dp"
+    android:paddingEnd="30dp"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        >
+        <TextView
+            android:id="@+id/comment_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:layout_marginBottom="25dp"
+            android:background="@drawable/shape_email_text"
+            tools:text="프로젝트 시작일 설정"
+            android:textColor="#262626"
+            android:textSize="18dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            tools:ignore="HardcodedText,SpUsage" />
+    </LinearLayout>
+
+
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            />
+        <TextView
+            android:id="@+id/cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="15dp"
+            android:textAlignment="center"
+            android:text="초기화"
+            android:textColor="#646464"
+            android:textSize="15dp"
+            android:layout_gravity="center|end"
+            tools:ignore="HardcodedText,RtlSymmetry,SpUsage" />
+        <View
+            android:layout_width="5dp"
+            android:layout_height="match_parent"/>
+        <TextView
+            android:id="@+id/select_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="15dp"
+            android:layout_marginEnd="10dp"
+            android:textAlignment="center"
+            android:text="확인"
+            android:textColor="#262626"
+            android:textSize="15dp"
+            android:layout_gravity="center|end"
+            tools:ignore="HardcodedText,RtlSymmetry,SpUsage" />
+    </LinearLayout>
+
+
+
+</LinearLayout>
