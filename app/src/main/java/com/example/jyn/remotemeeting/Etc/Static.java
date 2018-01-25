@@ -24,6 +24,7 @@ public class Static {
     public static String GET_PROJECT_LIST = "get_project_list.php";
     public static String GET_ENDED_MEETING_RESULT = "get_ended_meeting_result.php";
     public static String GET_MEETING_ROOM_LIST = "get_meeting_room_list.php";
+    public static String GET_PROJECT_INFO = "get_project_info.php";
     public static String ASSIGN_PROJECT = "assign_project.php";
     public static String ASSIGNED_PROJECT = "assigned_project.php";
     public static String GET_MEETING_END_TIME = "get_meeting_end_time.php";
@@ -44,6 +45,7 @@ public class Static {
     public static String GET_CHATTING_LOGS = "get_chatting_logs.php";
     public static String CREATE_CHAT_ROOM_FOR_ONE = "create_chat_room_for_one.php";
     public static String CREATE_CHAT_ROOM_FOR_MANY = "create_chat_room_for_many.php";
+    public static String CREATE_PROJECT = "create_project.php";
     public static String UPDATE_FIRST_LAST_MSG_NO = "update_first_last_msg_no.php";
     public static String GET_UNREAD_MSG_COUNT = "get_unread_msg_count.php";
     public static String GET_NEW_CHATROOM_INFO = "get_new_chatroom_info.php";

@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.Activity.Create_project_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_show_drawing_images_adapter;
 import com.example.jyn.remotemeeting.Adapter.RCV_show_uploaded_images_adapter;
 import com.example.jyn.remotemeeting.DataClass.Drawing_images_saveFile;
@@ -88,6 +89,7 @@ public class Meeting_result_D extends Activity {
     private static final int REQUEST_SELECT_METHOD_FOR_ASSIGN_PROJECT = 1234;
     private static final int REQUEST_ASSIGN_TO_EXISTING_PROJECT = 4321;
     public static final int REQUEST_SHOW_THIS_IMAGE = 6565;
+    public static final int REQUEST_CREATE_PROJECT_FROM_MEETING_RESULT_D = 6537;
     Myapp myapp;
     // 회의 번호
     String target_meeting_no;
@@ -646,6 +648,8 @@ public class Meeting_result_D extends Activity {
         //// 회의 끝나고, 이 액티비티가 팝업된 경우라면
         // 작성한 목록이 하나도 없다면
         if(!check_have_any_list_i_have_created() && !opened_from.equals(Static.PROJECT_FOLDER)) {
+            // 해당 회의를 프로젝트에 지정하여 서버에 내용 전송하고
+            myapp.assign_project(selected_project_no, target_meeting_no);
             myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
             finish();
         }
@@ -708,11 +712,11 @@ public class Meeting_result_D extends Activity {
             meeting_memo_edit.remove(target_meeting_no).apply();
         }
 
-        // 지정한 프로젝트가 있으면
-        if(selected_project_no != -1) {
-            // 해당 회의를 프로젝트에 할당하여 서버에 내용 전송하고
+//        // 지정한 프로젝트가 있으면
+//        if(selected_project_no != -1) {
+            // 해당 회의를 프로젝트에 지정하여 서버에 내용 전송하고
             myapp.assign_project(selected_project_no, target_meeting_no);
-        }
+//        }
 
         //// 프로젝트 폴더의 아이템 리스트로 부터 클릭해서, 이 액티비티가 열린 경우라면
         if(opened_from.equals(Static.PROJECT_FOLDER)) {
@@ -840,8 +844,9 @@ public class Meeting_result_D extends Activity {
 
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> 방금 종료된 영상회의를 특정 프로젝트에 지정하는데, 지정하는 방법을 선택하는 다이얼로그
-                선택 1. 기존 프로젝트에 배정
+                선택 1. 기존 프로젝트에 지정
                 선택 2. 새 프로젝트 생성
+                가변 선택 3. 프로젝터 지정 취소
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_assign_LIN)
     public void select_method_for_assign_project() {
@@ -939,14 +944,16 @@ public class Meeting_result_D extends Activity {
             String method = data.getStringExtra("method");
             Log.d(TAG, "method: " + method);
 
-            // 선택한 방법이, 기존 프로젝트에 할당하는 방법일 때
+            // 선택한 방법이, 기존 프로젝트에 지정하는 방법일 때
             if(method.equals("assign_to_existing_project")) {
                 Intent intent = new Intent(this, Assign_to_existing_project_D.class);
                 startActivityForResult(intent, REQUEST_ASSIGN_TO_EXISTING_PROJECT);
             }
             // 선택한 방법이, 새 프로젝트를 생성하는 방법일 때
             else if(method.equals("create_new_project")) {
-
+                Intent intent = new Intent(this, Create_project_A.class);
+                intent.putExtra("from", "meeting_result");
+                startActivityForResult(intent, REQUEST_CREATE_PROJECT_FROM_MEETING_RESULT_D);
             }
             // 선택한 방법이, 이미 지정된 프로젝트를 취소하는 것일 때
             else if(method.equals("unAssign_project")) {
@@ -963,18 +970,43 @@ public class Meeting_result_D extends Activity {
                 project_name_txt.setText("프로젝트 지정");
 
                 //' 액션바' 와 그 바로 밑 '레이아웃'의 백그라운드 컬러 초기화
-                actionBar_LIN.setBackgroundColor(0xff4caf50);
-                meeting_basic_info_LIN.setBackgroundColor(0xff4caf50);
+                actionBar_LIN.setBackgroundColor(0xff9e9e9e);
+                meeting_basic_info_LIN.setBackgroundColor(0xff9e9e9e);
             }
         }
-        // 할당할 프로젝트를 선택하고 돌아왔을 때
+        // 지정할 프로젝트를 선택하고 돌아왔을 때
         else if(requestCode==REQUEST_ASSIGN_TO_EXISTING_PROJECT && resultCode==RESULT_OK) {
+            // 지정한 프로젝트의 'no'를 전역변수에 저장
             selected_project_no = data.getIntExtra("selected_project_no", -1);
             String selected_project_color = data.getStringExtra("selected_project_color");
             String selected_project_name = data.getStringExtra("selected_project_name");
 
             // 지정된 프로젝트 정보에 따라 컬러 변경 및, 프로젝트 폴더 아이콘과 이름을 set 하는 내부 메소드 호출
-            set_assign_project_result(selected_project_color, selected_project_name);
+            set_assign_project_result(
+                    selected_project_color, selected_project_name);
+        }
+        // 새로운 프로젝트를 생성하고 돌아왔을 때
+        // 생성한 프로젝트를 바로 적용하기
+        else if(requestCode==REQUEST_CREATE_PROJECT_FROM_MEETING_RESULT_D && resultCode==RESULT_OK) {
+
+            // intent로, 생성한 project 객체의 jsonString 받아옴
+            String created_project_jsonString = data.getStringExtra("created_project_jsonString");
+            Log.d(TAG, "created_project_jsonString (Main_after_login_A - onActivityResult): "
+                    + created_project_jsonString);
+
+            // jsonString을 Project.class로 파싱할 때 사용할 Gson객체 생성
+            Gson gson = new Gson();
+
+            Project created_project = gson.fromJson(created_project_jsonString, Project.class);
+            Log.d(TAG, "created_project.getProject_color(): " + created_project.getProject_color());
+            Log.d(TAG, "created_project.getProject_name(): " + created_project.getProject_name());
+
+            // 생성한 프로젝트의 'no'를 전역변수에 저장
+            selected_project_no = created_project.getProject_no();
+
+            // 지정된 프로젝트 정보에 따라 컬러 변경 및, 프로젝트 폴더 아이콘과 이름을 set 하는 내부 메소드 호출
+            set_assign_project_result(
+                    created_project.getProject_color(), created_project.getProject_name());
         }
     }
 
@@ -993,7 +1025,7 @@ public class Meeting_result_D extends Activity {
         // intent 값을 모두 제대로 전달 받았을 때, 그 전달받은 데이터를 가지고,
         // 프로젝트 폴더 아이콘과, 프로젝트 이름을 set 한다
         if(selected_project_no != -1 && selected_project_color != null && selected_project_name != null) {
-            // 폴더 컬러 설정
+            // 폴더 설정
             Glide
                 .with(this)
                 .load(myapp.getFolder_color_hash().get(selected_project_color))
@@ -1090,6 +1122,8 @@ public class Meeting_result_D extends Activity {
 
         }
         else if(!check_have_any_list_i_have_created() && !opened_from.equals(Static.PROJECT_FOLDER)) {
+            // 해당 회의를 프로젝트에 지정하여 서버에 내용 전송하고
+            myapp.assign_project(selected_project_no, target_meeting_no);
             myapp.logAndToast("'기본' 회의결과가 저장되었습니다.");
         }
         super.onBackPressed();

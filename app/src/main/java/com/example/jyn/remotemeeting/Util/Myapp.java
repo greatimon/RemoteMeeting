@@ -7,6 +7,7 @@ import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
@@ -15,6 +16,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.multidex.MultiDex;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -197,21 +199,21 @@ public class Myapp extends Application {
 
     // 프로젝트 폴더 리소스 int 배열
     public int[] folder_color_resource = {
-            R.drawable.amber_f,
-            R.drawable.blue_f,
-            R.drawable.blue_grey_f,
-            R.drawable.brown_f,
-            R.drawable.deep_orange_f,
-            R.drawable.deep_purple_f,
-            R.drawable.green_f,
-            R.drawable.grey_f,
-            R.drawable.indigo_f,
-            R.drawable.light_green_f,
-            R.drawable.orange_f,
-            R.drawable.pink_f,
-            R.drawable.purple_f,
-            R.drawable.red_f,
-            R.drawable.teal_f
+            R.drawable.amber_f,         // 0
+            R.drawable.blue_f,          // 1
+            R.drawable.blue_grey_f,     // 2
+            R.drawable.brown_f,         // 3
+            R.drawable.deep_orange_f,   // 4
+            R.drawable.deep_purple_f,   // 5
+            R.drawable.green_f,         // 6
+            R.drawable.grey_f,          // 7
+            R.drawable.indigo_f,        // 8
+            R.drawable.light_green_f,   // 9
+            R.drawable.orange_f,        // 10
+            R.drawable.pink_f,          // 11
+            R.drawable.purple_f,        // 12
+            R.drawable.red_f,           // 13
+            R.drawable.teal_f           // 14
     };
 
     // 프로젝트 폴더 색 int값 배열
@@ -763,6 +765,13 @@ public class Myapp extends Application {
                                     Project virtual_project = new Project();
                                     virtual_project.setMeeting_count(unspecified_project_count);
                                     virtual_project.setProject_no(0);
+                                    virtual_project.setProject_color("grey");
+                                    virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
+                                    virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
+                                    virtual_project.setProject_name("프로젝트 미지정 회의목록");
+                                    virtual_project.setProject_start_dt("0000-00-00");
+                                    virtual_project.setProject_end_dt("0000-00-00");
+
                                     finalProject_arr.add(0, virtual_project);
                                 }
                                 Log.d(TAG, "finalProject_arr.size(): " + finalProject_arr.size());
@@ -1075,6 +1084,9 @@ public class Myapp extends Application {
     @SuppressLint("StaticFieldLeak")
     public boolean assign_project(final int selected_project_no, final String meeting_no) {
         final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        Log.d(TAG, "selected_project_no: " + selected_project_no);
+        Log.d(TAG, "meeting_no: " + meeting_no);
 
         // 동기 호출
         try {
@@ -2111,6 +2123,60 @@ public class Myapp extends Application {
     }
 
 
+    /**---------------------------------------------------------------------------
+     메소드 ==> 해당 회의결과에 지정된 프로젝트가 있는지 확인하고, 있다면 해당 프로젝트 객체를 리턴하는 메소드
+     ---------------------------------------------------------------------------*/
+    @SuppressLint("StaticFieldLeak")
+    public Project get_project_info(final int target_project_no) {
+
+        final Project project = new Project();
+        final RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+
+        // 동기 호출
+        try {
+            final Project[] final_project = {project};
+
+            return new AsyncTask<Void, Void, Project>() {
+                @Override
+                protected Project doInBackground(Void... voids) {
+                    try {
+                        Call<ResponseBody> call_result = rs.get_project_info(
+                                Static.GET_PROJECT_INFO,
+                                getUser_no(),
+                                target_project_no);
+                        Response<ResponseBody> list = call_result.execute();
+                        String result = list.body().string();
+                        Log.d(TAG, "get_project_info_result: " + result);
+
+                        // 에러
+                        if(result.equals("fail")) {}
+
+                        // 정상 결과 리턴
+                        else  {
+                            Gson gson = new Gson();
+                            final_project[0] = gson.fromJson(result, Project.class);
+                            Log.d(TAG, "final_project[0].getProject_no(): " + final_project[0].getProject_no());
+                            Log.d(TAG, "final_project[0].getProject_color(): " + final_project[0].getProject_color());
+                            Log.d(TAG, "final_project[0].getProject_name(): " + final_project[0].getProject_name());
+                            Log.d(TAG, "final_project[0].getMeeting_count(): " + final_project[0].getMeeting_count());
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return final_project[0];
+                }
+            }.execute().get();
+        }catch(Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 해당 회의결과에 지정된 프로젝트가 있는지 확인하고, 있다면 해당 프로젝트 객체를 리턴하는 메소드
+     ---------------------------------------------------------------------------*/
     @SuppressLint("StaticFieldLeak")
     public Project assigned_project(final String meeting_no) {
 
@@ -2180,5 +2246,31 @@ public class Myapp extends Application {
         return_int_arr[2] = cal.get(Calendar.DAY_OF_MONTH);
 
         return return_int_arr;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> dp --> pixel(float)
+     ---------------------------------------------------------------------------*/
+    public float convertDpToPixel(float dp, Context context){
+
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float px = dp * (metrics.densityDpi / 160f);
+
+        return px;
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> pixel(float) --> dp
+     ---------------------------------------------------------------------------*/
+    public float convertPixelToDp(float px, Context context){
+
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / (metrics.densityDpi / 160f);
+
+        return dp;
     }
 }

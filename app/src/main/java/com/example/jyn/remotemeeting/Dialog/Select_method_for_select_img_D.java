@@ -42,6 +42,7 @@ public class Select_method_for_select_img_D extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
+
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
         intent = new Intent();

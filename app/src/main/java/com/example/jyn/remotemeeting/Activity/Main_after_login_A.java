@@ -505,6 +505,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 프로젝트 생성 아이콘 클릭했을 때
         if(id == R.id.action_create_project) {
             Intent intent = new Intent(this, Create_project_A.class);
+            intent.putExtra("from", "main");
             startActivityForResult(intent, REQUEST_CREATE_PROJECT);
         }
         // 검색 아이콘 클릭했을 때
@@ -533,6 +534,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         tablayout.getTabAt(3).setIcon(tabIcons_non[3]);
         tablayout.getTabAt(4).setIcon(tabIcons_non[4]);
     }
+
 
     /**---------------------------------------------------------------------------
      메소드 ==> 페이징 변경 시, 뷰페이저 하단 탭, 아이콘 넣는 로직
@@ -1254,6 +1256,29 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             intent.putExtra("logout", "logout");
             startActivity(intent);
             finish();
+        }
+        // 새로운 프로젝트를 생성하고 돌아왔을 때,
+        else if(requestCode==REQUEST_CREATE_PROJECT && resultCode==RESULT_OK) {
+            /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
+            // 프로젝트 리스트를 서버로부터 다시 받아서 갱신
+            Event.Main_after_login_A__Project_F event = new Event.Main_after_login_A__Project_F("activate_RCV");
+            BusProvider.getBus().post(event);
+            Log.d(TAG, "otto 전달_ onActivityResult");
+        }
+        // 프로젝트 상세보기 액티비티에서 돌아왔을 때,
+        else if(requestCode==REQUEST_PROJECT_MEETING_RESULT_LIST) {
+            /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
+            // 프로젝트 리스트를 서버로부터 다시 받아서 갱신
+            Event.Main_after_login_A__Project_F event = new Event.Main_after_login_A__Project_F("activate_RCV");
+            BusProvider.getBus().post(event);
+            Log.d(TAG, "otto 전달_ onActivityResult");
+        }
+        // 회의 결과를 보여주는 다이얼로그 액티비티에서 돌아왔을 때,
+        else if(requestCode==REQUEST_SAVE_MEETING_RESULT) {
+            // 프로젝트 리스트를 서버로부터 다시 받아서 갱신
+            Event.Main_after_login_A__Project_F event = new Event.Main_after_login_A__Project_F("activate_RCV");
+            BusProvider.getBus().post(event);
+            Log.d(TAG, "otto 전달_ onActivityResult");
         }
 
     }

@@ -204,6 +204,24 @@ public class Event {
 
 
     /** 이벤트
+     *    Main_after_login_A --> Project_F
+     *    : 새 프로젝트를 생성하였으니,
+     *      '프로젝트 리스트를 서버로부터 다시 받아서 갱신해라' 라는 이벤트 메시지를 전달
+     * */
+    public static class Main_after_login_A__Project_F {
+        private String message;
+
+        public Main_after_login_A__Project_F(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+
+    /** 이벤트
      *    Myapp --> Call_F
      *    1) PDF 를 이미지로 컨버팅하는 과정에서, 진행상황을 '다이얼로그'로 보여주는데,
      *       그 다이얼로그의 상태를 컨트롤하는 이벤트를 전달한다

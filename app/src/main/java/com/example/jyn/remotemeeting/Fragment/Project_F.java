@@ -17,8 +17,10 @@ import android.widget.RelativeLayout;
 import com.example.jyn.remotemeeting.Adapter.RCV_project_adapter_for_fragment;
 import com.example.jyn.remotemeeting.DataClass.Project;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
+import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
+import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
 
@@ -153,10 +155,26 @@ public class Project_F extends Fragment {
                 recyclerView.setAdapter(rcv_project_adapterForfragment);
                 rcv_project_adapterForfragment.notifyDataSetChanged();
             }
-            // 어댑터가 생성되어 있을때는, 들어가는 해쉬맵만 교체
+            // 어댑터가 생성되어 있을때는, 들어가는 어레이만 교체
             else {
                 rcv_project_adapterForfragment.refresh_arr(project_arr);
             }
+        }
+    }
+
+
+    /**
+     * ---------------------------------------------------------------------------
+     * otto ==> Main_after_login_A로 부터 message 수신
+     *          : 새 프로젝트를 생성하였으니,
+     *           '프로젝트 리스트를 서버로부터 다시 받아서 갱신해라' 라는 이벤트 메시지를 전달 받음
+     * ---------------------------------------------------------------------------
+     */
+    @Subscribe
+    public void getMessage(Event.Main_after_login_A__Project_F event) {
+        Log.d(TAG, "otto 받음_ " + event.getMessage());
+        if(event.getMessage().equals("activate_RCV")) {
+            activate_RCV();
         }
     }
 

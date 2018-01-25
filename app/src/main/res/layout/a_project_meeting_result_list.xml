@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!--상단 액션바-->
+    <LinearLayout
+        android:id="@+id/actionBar_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingLeft="3dp"
+        android:paddingRight="5dp"
+        android:background="#4caf50"
+        android:gravity="center|start"
+        android:orientation="horizontal"
+        tools:ignore="RtlHardcoded,RtlSymmetry"
+        >
+        <ImageView
+            android:id="@+id/project_folder_img"
+            android:layout_width="35dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="13dp"
+            android:layout_marginStart="10dp"
+            android:padding="2dp"
+            android:src="@drawable/white_project_folder"
+            />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            >
+            <TextView
+                tools:visibility="visible"
+                android:id="@+id/project_start_dt_txt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:paddingStart="2dp"
+                tools:text="프로젝트 시작일: 2018.1.24"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="normal"
+                android:gravity="center|start"
+                android:textColor="#FFFFFF"
+                android:textSize="11dp"
+                tools:ignore="HardcodedText,NestedWeights,SpUsage"
+                />
+            <TextView
+                android:id="@+id/project_name_txt"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:paddingTop="3dp"
+                tools:text="대학 동아리 앱 개발 프로젝트"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textStyle="bold"
+                android:gravity="start|top"
+                android:textColor="#FFFFFF"
+                android:textSize="17dp"
+                tools:ignore="HardcodedText,NestedWeights,SpUsage"
+                />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/modify_project"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingStart="15dp"
+            android:paddingEnd="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="수정"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="15dp"
+            tools:ignore="HardcodedText,SpUsage"
+            />
+    </LinearLayout>
+    <!--상단 액션바-->
+
+    <!--회의 결과 리스트들이 들어가는 리사이클러뷰-->
+    <android.support.v7.widget.RecyclerView
+        android:visibility="visible"
+        tools:visibility="visible"
+        android:id="@+id/meeting_result_recyclerView"
+        android:layout_below="@+id/actionBar_LIN"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </android.support.v7.widget.RecyclerView>
+
+    <TextView
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:id="@+id/no_result"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="60dp"
+        android:gravity="center"
+        android:text="프로젝트에 지정된 회의결과가 없습니다."
+        android:textSize="17dp"
+        android:textColor="#2d2d2d"
+        tools:ignore="HardcodedText,SpUsage" />
+
+
+</RelativeLayout>

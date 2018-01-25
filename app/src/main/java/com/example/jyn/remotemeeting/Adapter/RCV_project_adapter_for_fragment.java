@@ -147,6 +147,10 @@ public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_p
             project_status = "";
             project_lock = false;
         }
+        // 실제 프로젝트인 경우, 날짜를 표시하는 "-" 기호를 "." 으로 교체
+        else if(project_no != 0) {
+            project_start_dt = project_start_dt.replace("-", ".");
+        }
 
         // 폴더 컬러 설정
         Glide
@@ -189,14 +193,14 @@ public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_p
         }
 
         // 프로젝트 지정이 되지 않은 회의 개수를 담고 있는 가상의 프로젝트인 경우,
-        if(project_no == 0) {
-            // 프로젝트 진행 상황은 보여주지 않는다
-            holder.project_state_txt.setVisibility(View.GONE);
-            // 프로젝트 title, 폰트를 크게 한다
-            holder.project_name_txt.setTextSize(15);
-            // 프로젝트 title, 줄간격을 좀 넓힌다
-            holder.project_name_txt.setLineSpacing(0, 1.2f);
-        }
+//        if(project_no == 0) {
+//            // 프로젝트 진행 상황은 보여주지 않는다
+//            holder.project_state_txt.setVisibility(View.GONE);
+//            // 프로젝트 title, 폰트를 크게 한다
+//            holder.project_name_txt.setTextSize(15);
+//            // 프로젝트 title, 줄간격을 좀 넓힌다
+//            holder.project_name_txt.setLineSpacing(0, 1.2f);
+//        }
     }
 
 

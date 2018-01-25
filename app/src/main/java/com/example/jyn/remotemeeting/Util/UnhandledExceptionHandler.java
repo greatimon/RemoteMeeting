@@ -50,7 +50,7 @@ public class UnhandledExceptionHandler implements Thread.UncaughtExceptionHandle
                 errorView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
                 ScrollView scrollingContainer = new ScrollView(activity);
                 scrollingContainer.addView(errorView);
-                Log.e(TAG, title + "\n\n" + msg);
+                Log.e(TAG, title + "\n" + msg);
                 DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

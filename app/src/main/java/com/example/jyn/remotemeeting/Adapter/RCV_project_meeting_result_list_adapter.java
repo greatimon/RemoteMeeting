@@ -510,4 +510,13 @@ public class RCV_project_meeting_result_list_adapter extends RecyclerView.Adapte
         this.meeting_room_arr = meeting_room_arr;
         notifyDataSetChanged();
     }
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> 영상회의 결과를 담고 있는 arr를 초기화 하고, 아무것도 없는 화면을 출력하기 위해
+            notifyDataSetChanged()를 호출한다
+     ---------------------------------------------------------------------------*/
+    public void clear_item_arr() {
+        this.meeting_room_arr.clear();
+        notifyDataSetChanged();
+    }
 }

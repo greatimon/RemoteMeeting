@@ -1,7 +1,5 @@
 package com.example.jyn.remotemeeting.Util;
 
-import javax.xml.transform.Result;
-
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -43,6 +41,20 @@ public interface RetrofitService {
     Call<ResponseBody> get_project_list (
             @Path("url") String url,
             @Field(value = "user_no", encoded=true) String user_no
+    );
+
+
+    /** 프로젝트 생성 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> create_project (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "project_name", encoded=true) String project_name,
+            @Field(value = "project_color", encoded=true) String project_color,
+            @Field(value = "project_start_dt", encoded=true) String project_start_dt,
+            @Field(value = "project_end_dt", encoded=true) String project_end_dt,
+            @Field(value = "exist_project_no", encoded=true) int exist_project_no
     );
 
 
@@ -294,6 +306,16 @@ public interface RetrofitService {
             @Path("url") String url,
             @Field(value = "user_no", encoded=true) String user_no,
             @Field(value = "meeting_no", encoded=true) String meeting_no
+    );
+
+
+    /** 해당 'project_no'에 해당하는 프로젝트 객체의 jsonString을 반환 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> get_project_info (
+            @Path("url") String url,
+            @Field(value = "user_no", encoded=true) String user_no,
+            @Field(value = "target_project_no", encoded=true) int target_project_no
     );
 
 

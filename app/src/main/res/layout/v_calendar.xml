@@ -20,6 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:layout_marginBottom="25dp"
         >
         <TextView
             android:id="@+id/comment_txt"
@@ -29,11 +30,23 @@
             android:paddingEnd="15dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
-            android:layout_marginBottom="25dp"
             android:background="@drawable/shape_email_text"
             tools:text="프로젝트 시작일 설정"
             android:textColor="#262626"
             android:textSize="18dp"
+            android:gravity="center"
+            android:layout_gravity="center"
+            tools:ignore="HardcodedText,SpUsage" />
+        <TextView
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:id="@+id/already_selected_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            tools:text="설정된 프로젝트 종료일: 2018.01.25"
+            android:textColor="#3d3d3d"
+            android:textSize="12dp"
             android:gravity="center"
             android:layout_gravity="center"
             tools:ignore="HardcodedText,SpUsage" />
@@ -50,6 +63,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginBottom="15dp"
         >
         <View
             android:layout_width="0dp"
@@ -78,7 +92,7 @@
             android:layout_marginEnd="10dp"
             android:textAlignment="center"
             android:text="확인"
-            android:textColor="#262626"
+            android:textColor="#388E3C"
             android:textSize="15dp"
             android:layout_gravity="center|end"
             tools:ignore="HardcodedText,RtlSymmetry,SpUsage" />
