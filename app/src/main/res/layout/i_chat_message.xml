@@ -13,8 +13,9 @@
         android:id="@+id/not_me_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingEnd="10dp"
         android:orientation="horizontal"
-        >
+        tools:ignore="RtlSymmetry">
         <ImageView
             android:visibility="visible"
             android:id="@+id/sender_profile_img"
@@ -133,10 +134,11 @@
         android:layout_alignParentEnd="true"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingStart="10dp"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:orientation="horizontal"
-        >
+        tools:ignore="RtlSymmetry">
 
         <com.pnikosis.materialishprogress.ProgressWheel
             android:visibility="visible"

@@ -621,6 +621,15 @@ public class Chat_F extends Fragment {
 //                                Log.d(TAG, "레트로핏_ 채팅방 리스트 결과: " + result);
                                 // 길이가 긴 JSONString 출력하기
                                 myapp.print_long_Json_logcat(result, TAG);
+
+                                if(result.contains(String.valueOf("<br />"))) {
+                                    String[] temp = result.split("<br />");
+
+                                    result = temp[temp.length-1];
+                                    // 길이가 긴 JSONString 출력하기
+                                    myapp.print_long_Json_logcat(result, TAG);
+                                }
+
                                 // jsonString --> jsonObject
                                 JSONObject jsonObject = new JSONObject(result);
                                 // jsonObject --> jsonArray

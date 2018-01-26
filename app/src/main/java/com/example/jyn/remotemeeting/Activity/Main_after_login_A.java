@@ -1094,14 +1094,14 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         }
 
         // 프로필 상세보기 액티비티에서 돌아왔을 때
-        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && requestCode==RESULT_CANCELED) {
+        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL) {
             /** otto 를 통해, 프래그먼트로 이벤트 전달하기 */
             Event.Main_after_login_A__Partner_F event = new Event.Main_after_login_A__Partner_F("activate_File_RCV");
             BusProvider.getBus().post(event);
 
         }
         // 프로필 상세보기에서, 1:1 채팅을 눌렀을 때
-        else if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && resultCode==RESULT_OK) {
+        if(requestCode==REQUEST_SHOW_PROFILE_DETAIL && resultCode==RESULT_OK) {
             String target_user_no = data.getStringExtra("target_user_no");
             if(target_user_no != null) {
 

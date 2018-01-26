@@ -161,9 +161,18 @@ public class Profile_detail_D extends Activity {
         Log.d(TAG, "이메일 보내기 클릭");
         // TODO: redis - 클릭이벤트
         myapp.Redis_log_click_event(getClass().getSimpleName(), view);
-
     }
 
+
+    /**---------------------------------------------------------------------------
+     오버라이드 ==> onBackPressed -- 소프트키보드 백버튼
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        setResult(RESULT_CANCELED, intent);
+        super.onBackPressed();
+    }
 
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> 채팅
@@ -297,9 +306,9 @@ public class Profile_detail_D extends Activity {
         // 어플리케이션 객체 null 처리
         myapp = null;
 
-        Intent intent = new Intent();
-        setResult(RESULT_CANCELED, intent);
-        finish();
+//        Intent intent = new Intent();
+//        setResult(RESULT_CANCELED, intent);
+//        finish();
 
         super.onDestroy();
     }

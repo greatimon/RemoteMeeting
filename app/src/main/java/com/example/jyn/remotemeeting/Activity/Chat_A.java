@@ -612,7 +612,7 @@ public class Chat_A extends Activity {
 
         send_msg.setText("");
         send_msg.setClickable(false);
-        send_msg.setTextColor(Color.parseColor("#999999"));
+        send_msg.setTextColor(Color.parseColor("#383838"));
     }
 
 

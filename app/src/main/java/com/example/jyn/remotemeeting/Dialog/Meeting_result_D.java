@@ -912,6 +912,7 @@ public class Meeting_result_D extends Activity {
     /**---------------------------------------------------------------------------
      콜백메소드 ==> onActivityResult
      ---------------------------------------------------------------------------*/
+    @SuppressLint("ResourceType")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -953,6 +954,9 @@ public class Meeting_result_D extends Activity {
                 imageView.setLayoutParams(vp);
                 // 이미지 비율에 맞게 Height 조절되는 속성 적용
                 imageView.setAdjustViewBounds(true);
+                // setID, 레디스 클릭이벤트 로그 저장을 위함
+                imageView.setId(R.id.handwriting_to_document_txt);
+
                 // 클릭리스너 달기
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
