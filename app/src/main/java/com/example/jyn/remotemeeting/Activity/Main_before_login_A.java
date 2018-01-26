@@ -278,7 +278,11 @@ public class Main_before_login_A extends AppCompatActivity
      클릭이벤트 ==> 구글 로그인 버튼 클릭
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.google_login_layout)
-    public void login_google() {
+    public void login_google(View view) {
+
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
         startActivityForResult(signInIntent, GOOGLE_LOGIN);
     }
@@ -550,6 +554,10 @@ public class Main_before_login_A extends AppCompatActivity
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.login)
     public void login_email(View view) {
+
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
 //        onShared_Initializing();
         String email_str = input_email_ET.getText().toString();
         String pw_str = input_pw_ET.getText().toString();

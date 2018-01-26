@@ -203,7 +203,9 @@ public class Calendar_D extends Activity implements OnDateSelectedListener {
      클릭이벤트 ==> 날짜 선택
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.select_date)
-    public void select_date() {
+    public void select_date(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         // 프로젝트 시작일 설정일 때
         if(for_str.equals("start_date")) {
@@ -348,6 +350,12 @@ public class Calendar_D extends Activity implements OnDateSelectedListener {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

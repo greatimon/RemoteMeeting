@@ -98,7 +98,10 @@ public class Add_subject_user_D extends Activity {
      클릭이벤트 ==> 지정 취소
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.cancel)
-    public void cancel() {
+    public void cancel(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -108,7 +111,9 @@ public class Add_subject_user_D extends Activity {
      클릭이벤트 ==> 지정
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.register)
-    public void register() {
+    public void register(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         String target_user_no = rcv_add_subject_adapter.added_subject_user_no;
         if(target_user_no.equals("")) {
@@ -173,6 +178,12 @@ public class Add_subject_user_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

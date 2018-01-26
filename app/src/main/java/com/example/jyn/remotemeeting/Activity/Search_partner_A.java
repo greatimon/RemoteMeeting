@@ -218,8 +218,12 @@ public class Search_partner_A extends Activity {
      클릭이벤트 ==> 뒤로가기(액티비티 이동) == 소프트 키보드 백버튼 매소드 연결
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
-    public void back() {
+    public void back(View view) {
         onBackPressed();
+
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         setResult(RESULT_OK);
         finish();
     }
@@ -229,7 +233,10 @@ public class Search_partner_A extends Activity {
      클릭이벤트 ==> 검색 EditText 초기화, 이미지 리소스 변경 및 clickable 상태 변경
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.ini_editText)
-    public void ini_editText() {
+    public void ini_editText(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         search_keyword.setText("");
         ini_editText.setImageResource(R.drawable.cancel_none_activated);
         ini_editText.setClickable(false);
@@ -243,6 +250,12 @@ public class Search_partner_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

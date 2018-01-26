@@ -94,6 +94,9 @@ public class RCV_add_subject_adapter extends RecyclerView.Adapter<RCV_add_subjec
                 public void onClick(View v) {
                     int pos = getAdapterPosition();
 
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     String checked_orNot = users.get(pos).getExtra();
                     String target_user_no = users.get(pos).getUser_no();
 

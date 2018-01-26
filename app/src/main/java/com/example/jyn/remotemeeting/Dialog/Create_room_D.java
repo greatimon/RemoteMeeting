@@ -102,7 +102,10 @@ public class Create_room_D extends Activity {
      클릭이벤트 ==> 회의 대상 지정
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.add_subject_img, R.id.add_subject_text, R.id.profile_img, R.id.nickName, R.id.email, R.id.comment})
-    public void add_subject_user() {
+    public void add_subject_user(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Add_subject_user_D.class.getSimpleName());
@@ -117,7 +120,10 @@ public class Create_room_D extends Activity {
      클릭이벤트 ==> 회의 시작
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.go_meeting)
-    public void go_meeting() {
+    public void go_meeting(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: 영문으로 변환 전의 회의 제목 공백 제거 안하기로 함
 //        String input_title = (title.getText().toString()).replace(" ", ""); // 공백제거
 //        String convert_str = Hangul.convert(input_title);   // 영문으로 변환(이모티콘, 특수문자 안됨)
@@ -191,6 +197,12 @@ public class Create_room_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

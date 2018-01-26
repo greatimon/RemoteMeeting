@@ -651,7 +651,10 @@ public class Meeting_result_D extends Activity {
         -- 스캔한 이미지가 있는지 없는지 확인하여, 경우에 따라 맞는 메소드 및 핸들러 메세지 전달
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.save_meeting_result_txt)
-    public void check_there_is_scanned_image_orNot() {
+    public void check_there_is_scanned_image_orNot(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         //// 회의 끝나고, 이 액티비티가 팝업된 경우라면
         // 작성한 목록이 하나도 없다면
         if(!check_have_any_list_i_have_created() && !opened_from.equals(Static.PROJECT_FOLDER)) {
@@ -856,7 +859,10 @@ public class Meeting_result_D extends Activity {
                 가변 선택 3. 프로젝터 지정 취소
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_assign_LIN)
-    public void select_method_for_assign_project() {
+    public void select_method_for_assign_project(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Select_method_for_assign_project_D.class.getSimpleName());
@@ -876,7 +882,10 @@ public class Meeting_result_D extends Activity {
      클릭이벤트 ==> 필기작성한 메모지나 종이를 스캐너 처럼 스캔하는 액티비티 열기
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.handwriting_to_document_icon, R.id.handwriting_to_document_txt})
-    public void handwriting_to_document() {
+    public void handwriting_to_document(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Image_scan_to_document_D.class.getSimpleName());
@@ -935,6 +944,9 @@ public class Meeting_result_D extends Activity {
                 imageView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        // TODO: redis - 클릭이벤트
+                        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                         scanned_img_delete_confirm(extract_uri_Unique_value, view);
                     }
                 });
@@ -1162,6 +1174,12 @@ public class Meeting_result_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

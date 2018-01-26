@@ -202,6 +202,10 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "채팅방 생성 버튼 클릭");
+
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 // TODO: redis - 화면 이동
                 myapp.Redis_log_view_crossOver_from_to(
                         getClass().getSimpleName(), Add_chat_room_subject_users_D.class.getSimpleName());
@@ -218,6 +222,10 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "회의룸 생성 버튼 클릭");
+
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 // TODO: redis - 화면 이동
                 myapp.Redis_log_view_crossOver_from_to(
                         getClass().getSimpleName(), Create_room_D.class.getSimpleName());
@@ -233,6 +241,10 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "회의룸 입장 버튼 클릭");
+
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 // 내가 초대된 회의가 있는지 없는지 확인하기
                 RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
                 Call<ResponseBody> call_result = rs.am_i_invited(
@@ -473,11 +485,6 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         if(menuMultipleActions.isExpanded()) {
             menuMultipleActions.collapseImmediately();
         }
-
-        // TODO: 테스트 코드 - 레디스에 저장할 로그, jsonString 변환 잘 되는지 테스트
-        myapp.Redis_log_view_crossOver_from_to(getClass().getSimpleName(), Static.class.getSimpleName());
-        myapp.Redis_log_session_info("enter");
-        myapp.Redis_log_click_event(getClass().getSimpleName(), dark_back);
     }
 
 
@@ -486,6 +493,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // otto 해제
         BusProvider.getBus().unregister(this);
 

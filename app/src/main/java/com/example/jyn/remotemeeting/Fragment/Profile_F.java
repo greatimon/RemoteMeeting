@@ -150,7 +150,10 @@ public class Profile_F extends Fragment {
      클릭이벤트 ==> 프로필 수정모드로
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.modify)
-    public void modify() {
+    public void modify(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         modify.setVisibility(View.GONE);
         cancel.setVisibility(View.VISIBLE);
         complete.setVisibility(View.VISIBLE);
@@ -175,7 +178,10 @@ public class Profile_F extends Fragment {
      클릭이벤트 ==> 이미지 가져오기
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.choose_method_for_img, R.id.profile_img})
-    public void choose_method_for_img() {
+    public void choose_method_for_img(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Select_method_for_select_img_D.class.getSimpleName());
@@ -190,7 +196,10 @@ public class Profile_F extends Fragment {
      클릭이벤트 ==> 수정 완료
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.complete)
-    public void complete() {
+    public void complete(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 닉네임 temp 변수에 넣기
         String edit_nickname = nickName_ET.getText().toString();
         myapp.setTemp_nickname(edit_nickname);
@@ -239,7 +248,10 @@ public class Profile_F extends Fragment {
      클릭이벤트 ==> 수정 취소
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.cancel)
-    public void cancel() {
+    public void cancel(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         modify.setVisibility(View.VISIBLE);
         cancel.setVisibility(View.GONE);
         complete.setVisibility(View.GONE);
@@ -265,7 +277,10 @@ public class Profile_F extends Fragment {
      클릭이벤트 ==> 사진 초기화 -- 디폴트 이미지로 넣기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.init)
-    public void init_img() {
+    public void init_img(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 디폴트 이미지 셋팅
         set_img("", "init");
 
@@ -511,6 +526,32 @@ public class Profile_F extends Fragment {
                 myapp.logAndToast("onFailure_result" + t.getMessage());
             }
         });
+    }
+
+
+    /**---------------------------------------------------------------------------
+     콜백메소드 ==> 뷰페이저 focus 에 따른 콜백메소드
+     ---------------------------------------------------------------------------*/
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+
+        if (isVisibleToUser) {
+            //화면에 실제로 보일때
+            Log.d("프래그먼트", "Profile_F 화면에 실제로 보일 때");
+
+            // TODO: redis - 이전 화면 이동내용을, 이동완료된 클래스에서 처리
+            // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
+            myapp.Redis_log_view_crossOver_from_to(
+                    myapp.getCurr_frag_at_main(), getClass().getSimpleName());
+
+            // TODO: 현재 프래그먼트 클래스의 simpleName을 어플리케이션 객체에 저장
+            myapp.setCurr_frag_at_main(getClass().getSimpleName());
+        }
+        else {
+            //preload 될때(전페이지에 있을때)
+            Log.d("프래그먼트", "Profile_F 될때(전페이지에 있을때)");
+        }
     }
 
 

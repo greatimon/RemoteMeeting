@@ -96,7 +96,10 @@ public class Add_chat_room_subject_users_D extends Activity {
      클릭이벤트 ==> 지정 취소
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.cancel)
-    public void cancel() {
+    public void cancel(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -106,7 +109,9 @@ public class Add_chat_room_subject_users_D extends Activity {
      클릭이벤트 ==> 확인
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.register)
-    public void register() {
+    public void register(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         int target_user_no_hashMap_size = rcv_add_subject_adapter.user_no_hashMap.size();
         if(target_user_no_hashMap_size == 0) {
@@ -185,6 +190,12 @@ public class Add_chat_room_subject_users_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

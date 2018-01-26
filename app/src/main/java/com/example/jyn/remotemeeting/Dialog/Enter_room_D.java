@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -121,7 +122,10 @@ public class Enter_room_D extends Activity {
      클릭이벤트 ==> 회의 참여
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.go_meeting)
-    public void go_meeting() {
+    public void go_meeting(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Intent intent = new Intent();
         intent.putExtra("real_meeting_title", real_meeting_title);
         intent.putExtra("transform_meeting_title", transform_meeting_title);
@@ -136,6 +140,12 @@ public class Enter_room_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

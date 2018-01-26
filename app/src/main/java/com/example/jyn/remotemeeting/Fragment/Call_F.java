@@ -65,7 +65,7 @@ import uk.co.senab.photoview.PhotoViewAttacher;
  * Created by JYN on 2017-11-10.
  */
 
-public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapListener, OnStartDragListener {
+public class Call_F extends Fragment implements PhotoViewAttacher.OnViewTapListener, OnStartDragListener {
 
     private LinearLayout exit_LIN;
     private RelativeLayout popup_menu_REL;
@@ -306,6 +306,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         exit_LIN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
 //                callEvents.onCallHangUp();
                 Call_A.hangup_confirm.sendEmptyMessage(1);
             }
@@ -318,12 +321,18 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         cameraSwitchText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 callEvents.onCameraSwitch();
             }
         });
         cameraSwitchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 callEvents.onCameraSwitch();
             }
         });
@@ -350,6 +359,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         popup_menu_icon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // TODO: redis - 클릭이벤트
+                myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
                 switch (popup_menu_REL.getVisibility()) {
                     case View.GONE:
                         popup_menu_REL.setVisibility(View.VISIBLE);
@@ -451,7 +463,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> 회의 파일함 아이콘 클릭
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.file_box_LIN})
-    public void go_file_box() {
+    public void go_file_box(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 회의 파일함 oepn 메소드 호출
         file_box();
     }
@@ -462,6 +477,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.button_call_face_rec, R.id.text_call_face_rec})
     public void face_recognition_on_off(View v) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
         // 얼굴인식 + 3d object 모드를 on/off 할때 비디오 모드도 같이 on/off 하기 위해서 해당 메소드 호출
         video_on_off(button_call_face_rec);
 
@@ -485,7 +503,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> 파일 공유하기 아이콘 클릭
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.go_share})
-    public void go_share() {
+    public void go_share(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Log.d(TAG, "파일 공유하기 아이콘 클릭");
 
         if(RCV_selectFile_preview_adapter.selected_file_arr.size() == 0) {
@@ -507,7 +528,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> 오디오 on/off
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.button_call_toggle_mic, R.id.text_call_toggle_mic})
-    public void audio_on_off() {
+    public void audio_on_off(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         boolean enabled = callEvents.onToggleMic();
         Log.d(TAG, "toggleMuteButton_enabled: " + enabled);
 
@@ -542,6 +566,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.button_call_toggle_video, R.id.text_call_toggle_video})
     public void video_on_off(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
 
 //        if(view.getId() == R.id.button_call_toggle_video || view.getId() == R.id.text_call_toggle_video) {
 //            Log.d(TAG, "원래 버튼 클릭을 통한 비디오 on/off 기능 실행");
@@ -654,7 +681,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> back_img 클릭 -- 로컬 파일리스트 => 회의 파일함 or 회의 파일함 => 메뉴
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back_to_menu)
-    public void back_to_menu() {
+    public void back_to_menu(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 현재보고 있는 뷰가 project가 아니라면, 즉 로컬 파일리스트를 보고 있다면
         // 로컬뷰 가리고, 프로젝트뷰 보여주기
         String get_format = recyclerView.getAdapter().toString();
@@ -686,7 +716,9 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> 회의 파일함에서 선택한 파일들의 미리보기 모드
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.preview)
-    public void selectFile_preview_mode() {
+    public void selectFile_preview_mode(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         if(myapp.getChecked_files().size() == 0) {
             myapp.logAndToast("선택한 파일이 없습니다.");
@@ -709,6 +741,8 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
     @OnClick(R.id.add_files)
     public void upload_files(View view) {
         // todo: 클릭할 때 로직 구분 해야함 - 서버 파일 업로드 / 파일 화면 공유
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         // 체크된 파일 중에서 pdf 파일이 있는지 확인
         // 해쉬맵의 키, 밸류 값 모두 file_name이기 때문에 key값만 가지고 판별
@@ -759,7 +793,10 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
      클릭이벤트 ==> 팝업 닫기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.close_popup)
-    public void close_popup() {
+    public void close_popup(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 체크된 파일 리스트를 담는 checked_files 해쉬맵 초기화
         // 업로드할 파일 리스트를 담는 init_files_for_upload 해쉬맵도 초기화
         myapp.init_checked_files();

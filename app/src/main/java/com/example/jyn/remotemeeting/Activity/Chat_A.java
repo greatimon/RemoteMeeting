@@ -481,7 +481,10 @@ public class Chat_A extends Activity {
      클릭이벤트 ==> 액션바 오른쪽 햄버거 모양 '메뉴' 클릭 -- Chat_draw_menu 다이얼로그 액티비티 열기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.setting)
-    public void setting() {
+    public void setting(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Chat_draw_menu_D.class.getSimpleName());
@@ -496,7 +499,9 @@ public class Chat_A extends Activity {
      클릭이벤트 ==> back 클릭 -- setResult_and_finish() 메소드 호출
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
-    public void back() {
+    public void back(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
         setResult_and_finish();
     }
 
@@ -517,6 +522,7 @@ public class Chat_A extends Activity {
             -- Main_after_login_A 액티비티에서 해당 'from'에 해당하는 뷰페이저 페이지를 보여주기 위함
      ---------------------------------------------------------------------------*/
     public void setResult_and_finish() {
+
         Intent intent = new Intent();
         intent.putExtra("from", from);
         Log.d(TAG, "from: " + from);
@@ -551,7 +557,10 @@ public class Chat_A extends Activity {
      클릭이벤트 ==> send_btn 클릭 -- 메세지 전송 (through Netty)
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.send_btn)
-    public void send_btn() {
+    public void send_btn(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         String input_msg = send_msg.getText().toString();
 
         Chat_log chat_log = new Chat_log();
@@ -639,6 +648,12 @@ public class Chat_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         /** Data_for_netty 객체 만들어서, 서버로 통신메세지 보내기 */
         // '내가 나가는 채팅방 번호' 전달
         Data_for_netty data = new Data_for_netty();

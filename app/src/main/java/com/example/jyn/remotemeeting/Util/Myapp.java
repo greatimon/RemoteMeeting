@@ -115,6 +115,10 @@ public class Myapp extends Application {
     // 로그인 방법
     String login_method = "";
 
+    // 'Main_after_login_A'에서 현재 보고 있는 프래그먼트 클래스 이름을 담는 변수
+    // 초기 값은 'Project' --> 로그인하면 보여주는 화면이기 때문
+    String curr_frag_at_main = Project.class.getSimpleName();
+
     // 로그인 액티비티에서 사용하는 백 이미지들
     public int[] back_img = {
             R.drawable.back_1,
@@ -450,6 +454,15 @@ public class Myapp extends Application {
     public void setLogin_method(String login_method) {
         this.login_method = login_method;
     }
+
+    public String getCurr_frag_at_main() {
+        return curr_frag_at_main;
+    }
+
+    public void setCurr_frag_at_main(String curr_frag_at_main) {
+        this.curr_frag_at_main = curr_frag_at_main;
+    }
+
     //    public Bitmap getScanned_bitmap() {
 //        return scanned_bitmap;
 //    }
@@ -2374,19 +2387,37 @@ public class Myapp extends Application {
      ---------------------------------------------------------------------------*/
     public void Redis_log_click_event(String curr_class, View view) {
 
-        String[] temp = view.getResources().getResourceName(view.getId()).split("[/]");
+        Redis_log_click_event redis_log_click_event = null;
 
-        Redis_log_click_event redis_log_click_event = new Redis_log_click_event();
+//        // onBackPressed, 뒤로가기 버튼 눌렀때
+//        if(view == null) {
+//            redis_log_click_event = new Redis_log_click_event();
+//
+//            // 로그 공통 변수 set
+//            redis_log_click_event.setDate_now(Get_currentTime.get_full());
+//            redis_log_click_event.setUser_no(getUser_no());
+//            redis_log_click_event.setNickname(getUser_nickname());
+//            redis_log_click_event.setSession_id(getSession_id());
+//            // 이 로그 타입에만 있는 변수 set
+//            redis_log_click_event.setCurr_class(curr_class);
+//            redis_log_click_event.setClick_id_int(0);
+//            redis_log_click_event.setClick_id_str("onBackPressed");
+//        }
+        if(view != null) {
+            String[] temp = view.getResources().getResourceName(view.getId()).split("[/]");
 
-        // 로그 공통 변수 set
-        redis_log_click_event.setDate_now(Get_currentTime.get_full());
-        redis_log_click_event.setUser_no(getUser_no());
-        redis_log_click_event.setNickname(getUser_nickname());
-        redis_log_click_event.setSession_id(getSession_id());
-        // 이 로그 타입에만 있는 변수 set
-        redis_log_click_event.setCurr_class(curr_class);
-        redis_log_click_event.setClick_id_int(view.getId());
-        redis_log_click_event.setClick_id_str(temp[temp.length-1]);
+            redis_log_click_event = new Redis_log_click_event();
+
+            // 로그 공통 변수 set
+            redis_log_click_event.setDate_now(Get_currentTime.get_full());
+            redis_log_click_event.setUser_no(getUser_no());
+            redis_log_click_event.setNickname(getUser_nickname());
+            redis_log_click_event.setSession_id(getSession_id());
+            // 이 로그 타입에만 있는 변수 set
+            redis_log_click_event.setCurr_class(curr_class);
+            redis_log_click_event.setClick_id_int(view.getId());
+            redis_log_click_event.setClick_id_str(temp[temp.length-1]);
+        }
 
         // jsonString 으로 변환
         Gson gson = new Gson();

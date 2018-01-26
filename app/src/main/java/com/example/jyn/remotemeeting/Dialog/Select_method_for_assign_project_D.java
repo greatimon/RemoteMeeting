@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -29,6 +30,8 @@ public class Select_method_for_assign_project_D extends Activity {
 
     private static final String TAG = "all_"+Select_method_for_assign_project_D.class.getSimpleName();
     Intent intent;
+
+    Myapp myapp;
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -53,6 +56,8 @@ public class Select_method_for_assign_project_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
 
         // 이 클래스를 호출한 클래스 인텐트 값으로 받기
         Intent get_intent = getIntent();
@@ -72,7 +77,10 @@ public class Select_method_for_assign_project_D extends Activity {
      클릭이벤트 ==> 지정된 프로젝트 unAssign(지정 취소)
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.unAssign_project_LIN)
-    public void unAssign_project() {
+    public void unAssign_project(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Log.d(TAG, "'지정된 프로젝트 unAssign(지정 취소)' 선택");
         Intent return_intent = new Intent();
         return_intent.putExtra("method", "unAssign_project");
@@ -85,7 +93,10 @@ public class Select_method_for_assign_project_D extends Activity {
      클릭이벤트 ==> 이미 존재하는 프로젝트에 지정
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.assign_to_existing_project_LIN)
-    public void assign_to_existing_project() {
+    public void assign_to_existing_project(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Log.d(TAG, "'이미 존재하는 프로젝트에 지정' 선택");
         Intent return_intent = new Intent();
         return_intent.putExtra("method", "assign_to_existing_project");
@@ -98,7 +109,10 @@ public class Select_method_for_assign_project_D extends Activity {
      클릭이벤트 ==> 새 프로젝트 생성
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.create_new_project_LIN)
-    public void create_new_project() {
+    public void create_new_project(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Log.d(TAG, "'새 프로젝트 생성' 선택");
         Intent return_intent = new Intent();
         return_intent.putExtra("method", "create_new_project");
@@ -123,10 +137,18 @@ public class Select_method_for_assign_project_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
         }
+        // 어플리케이션 객체 null 처리
+        myapp = null;
         super.onDestroy();
     }
 }

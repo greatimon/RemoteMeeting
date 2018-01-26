@@ -350,7 +350,10 @@ public class Create_project_A extends Activity {
      클릭이벤트 ==> 프로젝트 시작날짜 설정
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_start_dt_LIN)
-    public void set_project_start_dt() {
+    public void set_project_start_dt(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Calendar_D.class.getSimpleName());
@@ -372,7 +375,10 @@ public class Create_project_A extends Activity {
      클릭이벤트 ==> 프로젝트 종료날짜 설정
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_end_dt_LIN)
-    public void set_project_end_dt() {
+    public void set_project_end_dt(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Calendar_D.class.getSimpleName());
@@ -394,7 +400,10 @@ public class Create_project_A extends Activity {
      클릭이벤트 ==> 프로젝트 컬러 설정 다이얼로그 액티비티 열기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_color_LIN)
-    public void set_project_color() {
+    public void set_project_color(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Select_project_color_D.class.getSimpleName());
@@ -411,7 +420,9 @@ public class Create_project_A extends Activity {
             -- '프로젝트 이름, 프로젝트 시작일' --> 이 두개는 반드시 설정되어 있어야함
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.create_project_txt)
-    public void form_fillout_check() {
+    public void form_fillout_check(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         String project_name_for_check = project_name_edit.getText().toString().replace(" ", "");
 
@@ -652,6 +663,12 @@ public class Create_project_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

@@ -78,6 +78,10 @@ public class RCV_project_adapter_for_assign_project extends RecyclerView.Adapter
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     int pos = getAdapterPosition();
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "project_arr.get(pos).getProject_no(): " + project_arr.get(pos).getProject_no());

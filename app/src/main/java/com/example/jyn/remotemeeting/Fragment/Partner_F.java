@@ -186,7 +186,10 @@ public class Partner_F extends Fragment {
      클릭이벤트 ==> 파트너 검색 액티비티 이동
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.search_partner)
-    public void search_partner() {
+    public void search_partner(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Search_partner_A.class.getSimpleName());
@@ -224,6 +227,14 @@ public class Partner_F extends Fragment {
         if (isVisibleToUser) {
             //화면에 실제로 보일때
             Log.d("프래그먼트", "Partner_F 화면에 실제로 보일 때");
+
+            // TODO: redis - 이전 화면 이동내용을, 이동완료된 클래스에서 처리
+            // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
+            myapp.Redis_log_view_crossOver_from_to(
+                    myapp.getCurr_frag_at_main(), getClass().getSimpleName());
+
+            // TODO: 현재 프래그먼트 클래스의 simpleName을 어플리케이션 객체에 저장
+            myapp.setCurr_frag_at_main(getClass().getSimpleName());
         }
         else {
             //preload 될때(전페이지에 있을때)

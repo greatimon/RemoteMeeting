@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,6 +36,8 @@ public class Chat_draw_menu_D extends Activity {
     private static final String TAG = "all_"+Chat_draw_menu_D.class.getSimpleName();
     String request_class;
 
+    Myapp myapp;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -49,6 +52,9 @@ public class Chat_draw_menu_D extends Activity {
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
 //                WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
+
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
 
         // 이 클래스를 호출한 클래스 인텐트 값으로 받기
         Intent get_intent = getIntent();
@@ -86,10 +92,18 @@ public class Chat_draw_menu_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
         }
+        // 어플리케이션 객체 null 처리
+        myapp = null;
         super.onDestroy();
     }
 }

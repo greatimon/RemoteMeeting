@@ -145,7 +145,10 @@ public class Profile_detail_D extends Activity {
      클릭이벤트 ==> 뒤로가기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
-    public void back() {
+    public void back(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         onBackPressed();
     }
 
@@ -154,8 +157,11 @@ public class Profile_detail_D extends Activity {
      클릭이벤트 ==> 이메일 보내기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.email)
-    public void email() {
+    public void email(View view) {
         Log.d(TAG, "이메일 보내기 클릭");
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
     }
 
 
@@ -163,7 +169,10 @@ public class Profile_detail_D extends Activity {
      클릭이벤트 ==> 채팅
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.go_chat)
-    public void go_chat() {
+    public void go_chat(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Log.d(TAG, "채팅 하기 클릭");
         Intent intent = new Intent();
         intent.putExtra("target_user_no", user_no);
@@ -232,7 +241,10 @@ public class Profile_detail_D extends Activity {
      클릭이벤트 ==> 파트너 맺기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.follow)
-    public void follow() {
+    public void follow(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         follow.setClickable(false);
         /** 서버 통신 - 파트너 맺기 */
         RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
@@ -272,6 +284,12 @@ public class Profile_detail_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

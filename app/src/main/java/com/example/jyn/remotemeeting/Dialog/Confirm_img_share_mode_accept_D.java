@@ -6,12 +6,14 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,6 +32,8 @@ public class Confirm_img_share_mode_accept_D extends Activity {
     /** 버터나이프 */
     public Unbinder unbinder;
 
+    Myapp myapp;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -43,6 +47,9 @@ public class Confirm_img_share_mode_accept_D extends Activity {
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(false);
 
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
+
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
 
@@ -55,7 +62,10 @@ public class Confirm_img_share_mode_accept_D extends Activity {
      클릭이벤트 ==> '예' -- 문서 공유 모드 수락
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.yes)
-    public void yes() {
+    public void yes(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Intent intent = new Intent();
         setResult(RESULT_OK, intent);
         finish();
@@ -66,7 +76,10 @@ public class Confirm_img_share_mode_accept_D extends Activity {
      클릭이벤트 ==> '아니오' -- 문서 공유 모드 거부
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.no)
-    public void no() {
+    public void no(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -77,10 +90,17 @@ public class Confirm_img_share_mode_accept_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
         }
+        // 어플리케이션 객체 null 처리
+        myapp = null;
         super.onDestroy();
     }
 }

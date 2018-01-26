@@ -6,11 +6,13 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -31,6 +33,8 @@ public class Confirm_subtract_partner_D extends Activity {
     /** 이 클래스를 호출한 클래스 SimpleName */
     String request_class;
 
+    Myapp myapp;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -43,6 +47,9 @@ public class Confirm_subtract_partner_D extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
+
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
@@ -63,7 +70,10 @@ public class Confirm_subtract_partner_D extends Activity {
      클릭이벤트 ==> 파트너 끊기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.yes)
-    public void yes() {
+    public void yes(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         Intent intent = new Intent();
         if(position != -1 && !target_user_no.equals("")) {
             intent.putExtra("position", position);
@@ -78,7 +88,10 @@ public class Confirm_subtract_partner_D extends Activity {
      클릭이벤트 ==> 파트너 유지
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.no)
-    public void no() {
+    public void no(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         setResult(RESULT_CANCELED);
         finish();
     }
@@ -89,10 +102,18 @@ public class Confirm_subtract_partner_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();
         }
+        // 어플리케이션 객체 null 처리
+        myapp = null;
         super.onDestroy();
     }
 }

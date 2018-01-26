@@ -81,6 +81,9 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
                 public void onClick(View v) {
                     int pos = getAdapterPosition();
 
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "getFile_no: " + files.get(pos).getFile_no());
                     Log.d(TAG, "getFile_name: " + files.get(pos).getFile_name());

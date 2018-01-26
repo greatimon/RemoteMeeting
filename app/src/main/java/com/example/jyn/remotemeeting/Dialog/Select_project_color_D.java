@@ -139,6 +139,9 @@ public class Select_project_color_D extends Activity {
             R.id.indigo_f, R.id.light_green_f, R.id.orange_f,
             R.id.pink_f, R.id.purple_f, R.id.red_f, R.id.teal_f})
     public void select_project_color_frag(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         select_project_color(frag_imgV.get(view.getId()));
     }
 
@@ -147,10 +150,6 @@ public class Select_project_color_D extends Activity {
      메소드 ==> 이미지 뷰의 view_id 값을 받아, 이전에 설정한 컬러인지 아닌지 확인 후
                 setResult 후 finish() 한다
      ---------------------------------------------------------------------------*/
-//    @OnClick({R.id.amber, R.id.blue, R.id.blue_grey, R.id.brown,
-//            R.id.deep_orange, R.id.deep_purple, R.id.green,
-//            R.id.indigo, R.id.light_green, R.id.orange,
-//            R.id.pink, R.id.purple, R.id.red, R.id.teal})
     public void select_project_color(int view_id) {
 
         //// 이전에 설정한 컬러에 해당하는 ImageView가 아닐 때만, 선택이 가능하도록 한다
@@ -216,6 +215,11 @@ public class Select_project_color_D extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

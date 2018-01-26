@@ -79,6 +79,10 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
             follow.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     final int pos = getAdapterPosition();
 
                     Log.d(TAG, "클릭 아이템 position: " + pos);

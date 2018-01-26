@@ -67,6 +67,10 @@ public class RCV_show_drawing_images_adapter extends RecyclerView.Adapter<RCV_sh
             drawing_img.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     int pos = getAdapterPosition();
 
                     Log.d(TAG, "클릭 아이템 position: " + pos);

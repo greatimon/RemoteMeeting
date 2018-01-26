@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -92,7 +93,9 @@ public class Email_join_A extends Activity {
      클릭이벤트 ==> 뒤로가기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
-    public void back() {
+    public void back(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
         onBackPressed();
     }
 
@@ -101,7 +104,10 @@ public class Email_join_A extends Activity {
      클릭이벤트 ==> 회원가입
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.join_btn)
-    public void join_btn() {
+    public void join_btn(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         String email_str = input_email.getText().toString();
         String pw_str = input_pw.getText().toString();
         String pw2_str = input_pw2.getText().toString();
@@ -171,6 +177,7 @@ public class Email_join_A extends Activity {
 
                     if(temp[0].equals("success")) {
                         myapp.logAndToast("가입이 완료되었습니다");
+
                         finish();
                     }
                     else if(temp[0].equals("overlap")) {
@@ -201,6 +208,12 @@ public class Email_join_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

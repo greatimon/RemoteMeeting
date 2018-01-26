@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -92,7 +93,9 @@ public class Additional_info_for_google_api_join_A extends Activity {
      클릭이벤트 ==> 뒤로가기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.back)
-    public void back() {
+    public void back(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
         onBackPressed();
     }
 
@@ -106,7 +109,9 @@ public class Additional_info_for_google_api_join_A extends Activity {
      클릭이벤트 ==> 회원가입
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.join_btn)
-    public void join_btn() {
+    public void join_btn(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         String nickName_str = input_nickName.getText().toString();
 
@@ -185,6 +190,12 @@ public class Additional_info_for_google_api_join_A extends Activity {
      ---------------------------------------------------------------------------*/
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         // 버터나이프 바인드 해제
         if(unbinder != null) {
             unbinder.unbind();

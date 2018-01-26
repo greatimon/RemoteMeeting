@@ -548,6 +548,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (roomUri == null) {
 //            logAndToast("FATAL ERROR: Missing URL to connect to.");
             Log.e(TAG, "Didn't get any URL in intent!");
+
             Intent result_intent = new Intent();
             result_intent.putExtra("subject_user_no", myapp.getMeeting_subject_user_no());
             setResult(RESULT_CANCELED, result_intent);
@@ -561,6 +562,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         if (roomId == null || roomId.length() == 0) {
 //            logAndToast("FATAL ERROR: Missing URL to connect to.");
             Log.e(TAG, "Incorrect room ID in intent!");
+
             Intent result_intent = new Intent();
             result_intent.putExtra("subject_user_no", myapp.getMeeting_subject_user_no());
             setResult(RESULT_CANCELED, result_intent);
@@ -1083,6 +1085,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     @OnClick({R.id.enable_drag_btn})
     public void enable_drag(View view) {
         Log.d(TAG, "이동/그리기 모드 전환 버튼 클릭");
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         view.setAlpha(enable_drag ? 0.3f : 1.0f);
 
@@ -1112,6 +1116,8 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.open_drawing_tool, R.id.close_drawing_tool})
     public void drawing_menu(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
 
         //// 드로잉 도구 OPEN
         // 드로잉 도구 1, 2를 차례대로 오픈하고, 그 다음에 드로잉 도구를 close 한다
@@ -1171,7 +1177,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      클릭이벤트 ==> 이미지 쉐어 모드 -- 내가 그린 DrawPath, undo
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.undo)
-    public void undo() {
+    public void undo(View view) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
         Realm temp_realm = Realm.getDefaultInstance();
         // 해당 이미지의 내가 그린 drawPath 만 다 가져오기
         RealmResults<DrawPath> results = temp_realm
@@ -1218,8 +1226,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      클릭이벤트 ==> 이미지 쉐어 모드 -- 뷰에 보여지는 상태 그대로, 이미지 파일 저장하기
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.save_Image})
-    public void save_Image() {
+    public void save_Image(View view) {
         Log.d(TAG, "뷰에 보여지는 상태 그대로, 이미지 파일 저장 버튼 클릭");
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         call_draw_handler.sendEmptyMessage(3);
     }
 
@@ -1230,6 +1241,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      ---------------------------------------------------------------------------*/
     @OnTouch({R.id.undo, R.id.save_Image})
     public boolean undo_and_save_image_btn_onTouch_listener(View v, MotionEvent e) {
+
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
         int motion = e.getAction();
         if(e.getPointerCount() == 1) {
             if(motion == MotionEvent.ACTION_DOWN) {
@@ -1438,6 +1453,12 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
     @Override
     protected void onDestroy() {
+        // TODO: redis - 화면 이동
+        if(request_class != null) {
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), request_class);
+        }
+
         Thread.setDefaultUncaughtExceptionHandler(null);
         disconnect();
         if (logToast != null) {
@@ -1732,6 +1753,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         } else {
             setResult(RESULT_CANCELED, result_intent);
         }
+
         finish();
     }
 
@@ -3445,6 +3467,9 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
      ---------------------------------------------------------------------------*/
     @Override
     public void onClick(View v) {
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
         String colorName = colorIdToName.get(v.getId());
         if (colorName == null) {
             return;

@@ -132,7 +132,11 @@ public class Project_meeting_result_list_A extends Activity {
      클릭이벤트 ==> 프로젝트 수정하기
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.modify_project)
-    public void modify_project() {
+    public void modify_project(View view) {
+
+        // TODO: redis - 클릭이벤트
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // TODO: redis - 화면 이동
         myapp.Redis_log_view_crossOver_from_to(
                 getClass().getSimpleName(), Create_project_A.class.getSimpleName());

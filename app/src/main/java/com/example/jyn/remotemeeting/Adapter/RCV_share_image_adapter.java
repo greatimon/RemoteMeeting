@@ -81,6 +81,10 @@ public class RCV_share_image_adapter
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     int pos = getAdapterPosition();
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "클릭 아이템 파일이름: " + share_img_file_arr.get(pos).getFileName());

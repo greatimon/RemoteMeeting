@@ -98,6 +98,10 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
             container.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    // TODO: redis - 클릭이벤트
+                    myapp.Redis_log_click_event(getClass().getSimpleName(), v);
+
                     int pos = getAdapterPosition();
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "채팅방 no: " + rooms.get(pos).getChatroom_no());
