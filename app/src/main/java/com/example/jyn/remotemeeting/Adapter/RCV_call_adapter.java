@@ -93,8 +93,13 @@ public class RCV_call_adapter extends RecyclerView.Adapter<RCV_call_adapter.View
                     String file_format = files.get(pos).getFile_format();
                     // '파일 추가 버튼일 때
                     if(file_format.equals("zero")) {
+                        // TODO: redis - 화면 이동
+                        myapp.Redis_log_view_crossOver_from_to(
+                                getClass().getSimpleName(), Register_file_to_project_D.class.getSimpleName());
+
                         // 추가할 파일의 종류 선택하는 다이얼로그 액티비티 열기
                         Intent intent = new Intent(context, Register_file_to_project_D.class);
+                        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                         ((Call_A)context).startActivityForResult(intent, Call_A.REQUEST_GET_LOCAL_FILE);
                     }
                     // 파일 추가 버튼이 아닐 때

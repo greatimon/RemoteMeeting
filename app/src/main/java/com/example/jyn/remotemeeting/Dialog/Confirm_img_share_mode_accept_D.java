@@ -24,6 +24,7 @@ import butterknife.Unbinder;
 
 public class Confirm_img_share_mode_accept_D extends Activity {
 
+    String request_class;
     private static final String TAG = "all_"+Confirm_img_share_mode_accept_D.class.getSimpleName();
 
     /** 버터나이프 */
@@ -44,6 +45,9 @@ public class Confirm_img_share_mode_accept_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
     }
 
 

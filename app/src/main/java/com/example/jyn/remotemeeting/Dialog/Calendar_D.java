@@ -34,6 +34,7 @@ import butterknife.Unbinder;
 public class Calendar_D extends Activity implements OnDateSelectedListener {
 
 
+    String request_class;
     private static final String TAG = "all_"+Calendar_D.class.getSimpleName();
     Myapp myapp;
 
@@ -91,6 +92,10 @@ public class Calendar_D extends Activity implements OnDateSelectedListener {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         // 캘린더뷰 뷰 바인딩, 리스너 등록
         calendarView = findViewById(R.id.calendarView);

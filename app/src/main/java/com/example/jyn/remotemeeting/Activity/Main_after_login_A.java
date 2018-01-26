@@ -36,6 +36,7 @@ import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.BackPressCloseHandler;
+import com.example.jyn.remotemeeting.Util.Get_currentTime;
 import com.example.jyn.remotemeeting.Util.IsNetwork;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.RetrofitService;
@@ -89,6 +90,9 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     String JSON_TAG = "am_i_invited";
     Myapp myapp;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     private static boolean commandLineRun = false;
 
     Toolbar toolbar;
@@ -105,18 +109,30 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
     BackPressCloseHandler backPressCloseHandler;
     IsNetwork isNetwork;
+//    private int[] tabIcons = {
+//            R.drawable.project_act1,
+//            R.drawable.partner_act,
+//            R.drawable.chat_act,
+//            R.drawable.noti_act,
+//            R.drawable.profile_act,
+//    };
+//    private int[] tabIcons_non = {
+//            R.drawable.project_non1,
+//            R.drawable.partner_non,
+//            R.drawable.chat_non,
+//            R.drawable.noti_non,
+//            R.drawable.profile_non
+//    };
     private int[] tabIcons = {
             R.drawable.project_act1,
             R.drawable.partner_act,
             R.drawable.chat_act,
-            R.drawable.noti_act,
-            R.drawable.profile_act,
+            R.drawable.profile_act
     };
     private int[] tabIcons_non = {
             R.drawable.project_non1,
             R.drawable.partner_non,
             R.drawable.chat_non,
-            R.drawable.noti_non,
             R.drawable.profile_non
     };
 
@@ -149,6 +165,14 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
+
+        // 어플리케이션 객체에 현재시각 String 값으로 저장
+        // session_id로 사용하기 위함
+        Log.d(TAG, "현재 시간: " + Get_currentTime.setSession_id_using_time());
+
         // 뷰 찾기
         tablayout = findViewById(R.id.tab);
         viewpager = findViewById(R.id.viewpager);
@@ -178,7 +202,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "채팅방 생성 버튼 클릭");
+                // TODO: redis - 화면 이동
+                myapp.Redis_log_view_crossOver_from_to(
+                        getClass().getSimpleName(), Add_chat_room_subject_users_D.class.getSimpleName());
+
                 Intent intent = new Intent(view.getContext(), Add_chat_room_subject_users_D.class);
+                intent.putExtra("request_class", getClass().getSimpleName());
                 startActivityForResult(intent, REQUEST_ADD_CHAT_ROOM_SUBJECT);
             }
         });
@@ -189,7 +218,12 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "회의룸 생성 버튼 클릭");
+                // TODO: redis - 화면 이동
+                myapp.Redis_log_view_crossOver_from_to(
+                        getClass().getSimpleName(), Create_room_D.class.getSimpleName());
+
                 Intent intent = new Intent(view.getContext(), Create_room_D.class);
+                intent.putExtra("request_class", getClass().getSimpleName());
                 startActivityForResult(intent, REQUEST_CREATE_ROOM);
             }
         });
@@ -249,6 +283,10 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         myapp.setProject_no("0");
                                         myapp.setMeeting_status("on");
 
+                                        // TODO: redis - 화면 이동
+                                        myapp.Redis_log_view_crossOver_from_to(
+                                                getClass().getSimpleName(), Enter_room_D.class.getSimpleName());
+
                                         // Enter_room 다이얼로그 액티비티 열기
                                         Intent intent = new Intent(getBaseContext(), Enter_room_D.class);
                                         intent.putExtra("creator_user_no", creator_user_no);
@@ -257,6 +295,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                                         intent.putExtra("creator_img_fileName", creator_img_fileName);
                                         intent.putExtra("real_meeting_title", real_meeting_title);
                                         intent.putExtra("transform_meeting_title", transform_meeting_title);
+                                        intent.putExtra("request_class", getClass().getSimpleName());
                                         startActivityForResult(intent, REQUEST_ENTER_ROOM);
                                     }
 
@@ -361,7 +400,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                 invalidateOptionsMenu();
 
                 // 프로필 화면에 가면 플로팅 버튼 숨기기
-                if(position == 4) {
+                if(position == 3) {
                     if(menuMultipleActions.isExpanded()){
                         menuMultipleActions.collapseImmediately();
                     }
@@ -434,6 +473,11 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         if(menuMultipleActions.isExpanded()) {
             menuMultipleActions.collapseImmediately();
         }
+
+        // TODO: 테스트 코드 - 레디스에 저장할 로그, jsonString 변환 잘 되는지 테스트
+        myapp.Redis_log_view_crossOver_from_to(getClass().getSimpleName(), Static.class.getSimpleName());
+        myapp.Redis_log_session_info("enter");
+        myapp.Redis_log_click_event(getClass().getSimpleName(), dark_back);
     }
 
 
@@ -472,7 +516,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             getMenuInflater().inflate(R.menu.search_menu, menu);
             return true;
         }
-        else if(current_viewPager_pos == 4) {
+        else if(current_viewPager_pos == 3) {
             Log.d(TAG, "logout_menu_ inflated");
             getMenuInflater().inflate(R.menu.logout_menu, menu);
             return true;
@@ -504,19 +548,34 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
 
         // 프로젝트 생성 아이콘 클릭했을 때
         if(id == R.id.action_create_project) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Create_project_A.class.getSimpleName());
+
             Intent intent = new Intent(this, Create_project_A.class);
             intent.putExtra("from", "main");
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, REQUEST_CREATE_PROJECT);
         }
         // 검색 아이콘 클릭했을 때
         else if(id == R.id.action_search) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Search_partner_A.class.getSimpleName());
+
              Intent intent = new Intent(this, Search_partner_A.class);
+            intent.putExtra("request_class", getClass().getSimpleName());
              startActivityForResult(intent, REQUEST_SEARCH_PARTNER);
         }
         // 로그아웃 아이콘 클릭했을 때
         else if(id == R.id.action_logout) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Confirm_logout_D.class.getSimpleName());
+
             // 로그아웃을 진행할 건지 확인하는 다이얼로그 띄우기
             Intent intent = new Intent(this, Confirm_logout_D.class);
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, CONFIRM_LOGOUT);
         }
 
@@ -532,7 +591,7 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         tablayout.getTabAt(1).setIcon(tabIcons_non[1]);
         tablayout.getTabAt(2).setIcon(tabIcons_non[2]);
         tablayout.getTabAt(3).setIcon(tabIcons_non[3]);
-        tablayout.getTabAt(4).setIcon(tabIcons_non[4]);
+//        tablayout.getTabAt(4).setIcon(tabIcons_non[4]);
     }
 
 
@@ -560,6 +619,11 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
     private void connectToRoom(String roomId, boolean commandLineRun, boolean loopback, boolean useValuesFromIntent, int runTimeMs) {
         Main_after_login_A.commandLineRun = commandLineRun;
         Log.d(TAG, roomId);
+
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Call_A.class.getSimpleName());
+
 
         /**
          * 인자값 intent 셋팅
@@ -741,7 +805,8 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
                 intent.putExtra(Static.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, videoOutHeight);
             }
         }
-        
+
+        intent.putExtra("request_class", getClass().getSimpleName());
         startActivityForResult(intent, CONNECTION_REQUEST);
     }
 
@@ -883,10 +948,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // CachePot 이용해서 클릭한 rooms 객체 전달
             CachePot.getInstance().push("chat_room", room);
 
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Chat_A.class.getSimpleName());
+
             // Chat_A 액티비티(채팅방) 열기
             // 상대방 프로필로부터 채팅방을 여는 것임을 intent 값으로 알린다
             Intent intent = new Intent(getBaseContext(), Chat_A.class);
             intent.putExtra("from", "profile");
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, REQUEST_CHAT_ROOM);
 
         } catch (JSONException e) {
@@ -956,10 +1026,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // CachePot 이용해서 클릭한 rooms 객체 전달
             CachePot.getInstance().push("chat_room", room);
 
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Chat_A.class.getSimpleName());
+
             // Chat_A 액티비티(채팅방) 열기
             // 상대방 프로필로부터 채팅방을 여는 것임을 intent 값으로 알린다
             Intent intent = new Intent(getBaseContext(), Chat_A.class);
             intent.putExtra("from", "create_chat_room");
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, REQUEST_CHAT_ROOM);
 
         } catch (JSONException e) {
@@ -1055,8 +1130,13 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // 0.2초 뒤에 실행 - onResume 실행될 시간 벌어주기
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Preview_img_A.class.getSimpleName());
+
                     Intent intent = new Intent(getBaseContext(), Preview_img_A.class);
                     intent.putExtra("absolutePath",file.getAbsolutePath());
+                    intent.putExtra("request_class", getClass().getSimpleName());
                     startActivityForResult(intent, REQUEST_CHOOSE_OR_NOT);
                 }
             }, 200);
@@ -1072,8 +1152,13 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             // 0.2초 뒤에 실행 - onResume 실행될 시간 벌어주기
             new Handler().postDelayed(new Runnable() {
                 @Override public void run() {
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Preview_img_A.class.getSimpleName());
+
                     Intent intent = new Intent(getBaseContext(), Preview_img_A.class);
                     intent.putExtra("absolutePath", absolutePath);
+                    intent.putExtra("request_class", getClass().getSimpleName());
                     startActivityForResult(intent, REQUEST_CHOOSE_OR_NOT);
                 }
             }, 200);
@@ -1194,10 +1279,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Meeting_result_D.class.getSimpleName());
+
                     Intent intent = new Intent(getBaseContext(), Meeting_result_D.class);
                     intent.putExtra("meeting_no", myapp.getThis_meeting_no());
                     intent.putExtra("from", Static.RIGHT_AFTER_END_MEETING);
                     intent.putExtra("subject_user_no", finalSubject_user_no);
+                    intent.putExtra("request_class", getClass().getSimpleName());
                     startActivityForResult(intent, REQUEST_SAVE_MEETING_RESULT);
                 }
             }, 500);
@@ -1250,10 +1340,15 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
             SharedPreferences.Editor Auto_login_edit = Auto_login.edit();
             Auto_login_edit.putBoolean("google", false).apply();
 
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Main_before_login_A.class.getSimpleName());
+
             Intent intent = new Intent(this, Main_before_login_A.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("logout", "logout");
+            intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
             startActivity(intent);
             finish();
         }

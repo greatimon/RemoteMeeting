@@ -18,12 +18,17 @@ import android.os.Message;
 import android.support.multidex.MultiDex;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
+import com.example.jyn.remotemeeting.Activity.Main_before_login_A;
 import com.example.jyn.remotemeeting.DataClass.Data_for_netty;
 import com.example.jyn.remotemeeting.DataClass.File_info;
 import com.example.jyn.remotemeeting.DataClass.Meeting_room;
 import com.example.jyn.remotemeeting.DataClass.Project;
+import com.example.jyn.remotemeeting.DataClass.Redis_log_click_event;
+import com.example.jyn.remotemeeting.DataClass.Redis_log_session_info;
+import com.example.jyn.remotemeeting.DataClass.Redis_log_view_crossOver_from_to;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Call_F;
@@ -102,6 +107,13 @@ public class Myapp extends Application {
     String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/RemoteMeeting";
     Handler handler;
     int PDF_converting_exception_file_count = 0;
+
+    // 로그인 시, 로그인 한 시각을 String 값으로 저장하기 위한 변수
+    // --> session_id 값으로 사용하기 위함
+    String session_id = "";
+
+    // 로그인 방법
+    String login_method = "";
 
     // 로그인 액티비티에서 사용하는 백 이미지들
     public int[] back_img = {
@@ -421,6 +433,22 @@ public class Myapp extends Application {
 
     public void setThis_meeting_no(String target_meeting_no) {
         this.target_meeting_no = target_meeting_no;
+    }
+
+    public String getSession_id() {
+        return session_id;
+    }
+
+    public void setSession_id(String session_id) {
+        this.session_id = session_id;
+    }
+
+    public String getLogin_method() {
+        return login_method;
+    }
+
+    public void setLogin_method(String login_method) {
+        this.login_method = login_method;
     }
     //    public Bitmap getScanned_bitmap() {
 //        return scanned_bitmap;
@@ -759,20 +787,23 @@ public class Myapp extends Application {
 //                                        Log.d(TAG, "project.getMeeting_count(): " + project.getMeeting_count());
                                     }
 
-                                    // 프로젝트 지정이 안되어 있는 회의 개수를 담는 가상의 '프로젝트' 폴더가 있다고 가정하고
-                                    // 해당 '프로젝트' 폴더를 만들어서 어레이에 add 한다
-                                    // 프로젝트 지정이 없는 회의개수를 담는 가상의 '프로젝트'의 project_no = 0;
-                                    Project virtual_project = new Project();
-                                    virtual_project.setMeeting_count(unspecified_project_count);
-                                    virtual_project.setProject_no(0);
-                                    virtual_project.setProject_color("grey");
-                                    virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
-                                    virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
-                                    virtual_project.setProject_name("프로젝트 미지정 회의목록");
-                                    virtual_project.setProject_start_dt("0000-00-00");
-                                    virtual_project.setProject_end_dt("0000-00-00");
+                                    // 프로젝트 미지정된 회의가 있을때만
+                                    if(unspecified_project_count > 0) {
+                                        // 프로젝트 지정이 안되어 있는 회의 개수를 담는 가상의 '프로젝트' 폴더가 있다고 가정하고
+                                        // 해당 '프로젝트' 폴더를 만들어서 어레이에 add 한다
+                                        // 프로젝트 지정이 없는 회의개수를 담는 가상의 '프로젝트'의 project_no = 0;
+                                        Project virtual_project = new Project();
+                                        virtual_project.setMeeting_count(unspecified_project_count);
+                                        virtual_project.setProject_no(0);
+                                        virtual_project.setProject_color("grey");
+                                        virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
+                                        virtual_project.setProject_director_user_no(Integer.parseInt(getUser_no()));
+                                        virtual_project.setProject_name("프로젝트 미지정 회의목록");
+                                        virtual_project.setProject_start_dt("0000-00-00");
+                                        virtual_project.setProject_end_dt("0000-00-00");
 
-                                    finalProject_arr.add(0, virtual_project);
+                                        finalProject_arr.add(0, virtual_project);
+                                    }
                                 }
                                 Log.d(TAG, "finalProject_arr.size(): " + finalProject_arr.size());
                             }
@@ -2026,8 +2057,14 @@ public class Myapp extends Application {
         return list;
     }
 
+
+    /**---------------------------------------------------------------------------
+     생명주기 ==> onTerminate()
+     ---------------------------------------------------------------------------*/
     @Override
     public void onTerminate() {
+        // todo: redis - 세션
+        Redis_log_session_info("out");
         // TODO: 서비스 돌리기 이전, 테스트 코드 - 나중에 삭제
 //        channel.close();
         super.onTerminate();
@@ -2273,4 +2310,146 @@ public class Myapp extends Application {
 
         return dp;
     }
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Redis 로그 전송 jsonString 빌드, case 1.
+                - 액티비티 이동정보 로그 (from|to 클래스 이름)
+     ---------------------------------------------------------------------------*/
+    public void Redis_log_view_crossOver_from_to(String from_class, String to_class) {
+
+        Redis_log_view_crossOver_from_to redis_log_view_crossOver_from_to
+                = new Redis_log_view_crossOver_from_to();
+
+        // 로그 공통 변수 set
+        redis_log_view_crossOver_from_to.setDate_now(Get_currentTime.get_full());
+        redis_log_view_crossOver_from_to.setUser_no(getUser_no());
+        redis_log_view_crossOver_from_to.setNickname(getUser_nickname());
+        redis_log_view_crossOver_from_to.setSession_id(getSession_id());
+
+        // 이 로그 타입에만 있는 변수 set
+        redis_log_view_crossOver_from_to.setFrom_class(from_class);
+        redis_log_view_crossOver_from_to.setTo_class(to_class);
+
+        // jsonString 으로 변환
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(redis_log_view_crossOver_from_to);
+        Log.d(TAG, "view_crossOver_from_to: " + jsonString);
+
+        // jsonString, 서버 전송하는 내부 메소드 호출
+        Redis_save_log("view_crossOver_from_to",jsonString);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Redis 로그 전송 jsonString 빌드, case 2.
+                - session 정보 로그 ('enter' or 'out')
+     ---------------------------------------------------------------------------*/
+    public void Redis_log_session_info(String session_type) {
+
+        Redis_log_session_info redis_log_session_info = new Redis_log_session_info();
+
+        // 로그 공통 변수 set
+        redis_log_session_info.setDate_now(Get_currentTime.get_full());
+        redis_log_session_info.setUser_no(getUser_no());
+        redis_log_session_info.setNickname(getUser_nickname());
+        redis_log_session_info.setSession_id(getSession_id());
+
+        // 이 로그 타입에만 있는 변수 set
+        redis_log_session_info.setType(session_type);
+        redis_log_session_info.setMethod(getLogin_method());
+
+        // jsonString 으로 변환
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(redis_log_session_info);
+        Log.d(TAG, "session_info: " + jsonString);
+
+        // jsonString, 서버 전송하는 내부 메소드 호출
+        Redis_save_log("session_info",jsonString);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Redis 로그 전송 jsonString 빌드, case 3.
+                - 클릭이벤트 정보 로그 (클릭한 뷰의 id, int|String 값)
+     ---------------------------------------------------------------------------*/
+    public void Redis_log_click_event(String curr_class, View view) {
+
+        String[] temp = view.getResources().getResourceName(view.getId()).split("[/]");
+
+        Redis_log_click_event redis_log_click_event = new Redis_log_click_event();
+
+        // 로그 공통 변수 set
+        redis_log_click_event.setDate_now(Get_currentTime.get_full());
+        redis_log_click_event.setUser_no(getUser_no());
+        redis_log_click_event.setNickname(getUser_nickname());
+        redis_log_click_event.setSession_id(getSession_id());
+        // 이 로그 타입에만 있는 변수 set
+        redis_log_click_event.setCurr_class(curr_class);
+        redis_log_click_event.setClick_id_int(view.getId());
+        redis_log_click_event.setClick_id_str(temp[temp.length-1]);
+
+        // jsonString 으로 변환
+        Gson gson = new Gson();
+        String jsonString = gson.toJson(redis_log_click_event);
+        Log.d(TAG, "click_event: " + jsonString);
+
+        // jsonString, 서버 전송하는 내부 메소드 호출
+        Redis_save_log("click_event",jsonString);
+    }
+
+
+    /**---------------------------------------------------------------------------
+     메소드 ==> Redis 로그 전송 jsonString, 서버 전송
+     ---------------------------------------------------------------------------*/
+    public void Redis_save_log(String log_type, String jsonString) {
+
+        String log_key = getUser_no() + ":" + log_type;
+//        String log_key = log_type;
+        String log_value = jsonString;
+
+        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+        Call<ResponseBody> call = rs.redis_save_log(
+                Static.REDIS_SAVE_LOG,
+                log_key,
+                log_value);
+
+//        call.enqueue(null);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String retrofit_result = response.body().string();
+                    Log.d(TAG, "retrofit_result: "+retrofit_result);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                logAndToast("onFailure_result" + t.getMessage());
+            }
+        });
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

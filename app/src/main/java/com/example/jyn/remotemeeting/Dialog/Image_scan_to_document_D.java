@@ -14,6 +14,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.scanlibrary.ScanActivity;
@@ -39,6 +40,9 @@ public class Image_scan_to_document_D extends Activity {
     public Unbinder unbinder;
     @BindView(R.id.scanned_img)         ImageView scanned_img;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -58,6 +62,10 @@ public class Image_scan_to_document_D extends Activity {
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
+
         // 카메라 열기
         startScan(ScanConstants.OPEN_CAMERA);
 
@@ -68,8 +76,13 @@ public class Image_scan_to_document_D extends Activity {
      메소드 ==> 카메라 열면서, 카메라 스캐너 시작
      ---------------------------------------------------------------------------*/
     protected void startScan(int preference) {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), ScanActivity.class.getSimpleName());
+
         Intent intent = new Intent(this, ScanActivity.class);
         intent.putExtra(ScanConstants.OPEN_INTENT_PREFERENCE, preference);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SCAN_CODE);
     }
 

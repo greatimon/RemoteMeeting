@@ -12,7 +12,6 @@ import android.text.style.ImageSpan;
 import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Fragment.Chat_F;
-import com.example.jyn.remotemeeting.Fragment.Notice_F;
 import com.example.jyn.remotemeeting.Fragment.Partner_F;
 import com.example.jyn.remotemeeting.Fragment.Profile_F;
 import com.example.jyn.remotemeeting.Fragment.Project_F;
@@ -23,7 +22,7 @@ import com.example.jyn.remotemeeting.Fragment.Project_F;
 
 public class Main_viewpager_adapter extends FragmentPagerAdapter {
 
-    public static int PAGE_NUMBER = 5;
+    public static int PAGE_NUMBER = 4;
     Context context;
 
     public Main_viewpager_adapter(FragmentManager fm, Context context) {
@@ -34,6 +33,18 @@ public class Main_viewpager_adapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         switch(position) {
+//            case 0:
+//                return Project_F.newInstance();
+//            case 1:
+//                return Partner_F.newInstance();
+//            case 2:
+//                return Chat_F.newInstance();
+//            case 3:
+//                return Notice_F.newInstance();
+//            case 4:
+//                return Profile_F.newInstance();
+//            default:
+//                return null;
             case 0:
                 return Project_F.newInstance();
             case 1:
@@ -41,9 +52,9 @@ public class Main_viewpager_adapter extends FragmentPagerAdapter {
             case 2:
                 return Chat_F.newInstance();
             case 3:
-                return Notice_F.newInstance();
-            case 4:
                 return Profile_F.newInstance();
+//            case 4:
+//                return Profile_F.newInstance();
             default:
                 return null;
         }

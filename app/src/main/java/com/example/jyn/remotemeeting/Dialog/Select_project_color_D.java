@@ -28,6 +28,7 @@ import butterknife.Unbinder;
 
 public class Select_project_color_D extends Activity {
 
+    String request_class;
     private static final String TAG = "all_"+Select_project_color_D.class.getSimpleName();
     Myapp myapp;
 
@@ -92,6 +93,10 @@ public class Select_project_color_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         // 이미지뷰에 int 값 setTag 하는 내부 메소드 호출
         // Tag 하는 int 값 --> 프로젝트 컬러의 해당하는 color resource index 값

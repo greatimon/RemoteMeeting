@@ -176,7 +176,12 @@ public class Profile_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.choose_method_for_img, R.id.profile_img})
     public void choose_method_for_img() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Select_method_for_select_img_D.class.getSimpleName());
+
         Intent intent = new Intent(getActivity(), Select_method_for_select_img_D.class);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         getActivity().startActivityForResult(intent, Main_after_login_A.REQUEST_CHOOSE_METHOD_FOR_IMG);
     }
 

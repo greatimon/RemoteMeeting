@@ -14,6 +14,8 @@ import com.example.jyn.remotemeeting.R;
 
 /**
  * Created by JYN on 2017-11-10.
+ *
+ * 사용하지 않는 뷰페이저 프래그먼트
  */
 public class Notice_F extends Fragment {
 

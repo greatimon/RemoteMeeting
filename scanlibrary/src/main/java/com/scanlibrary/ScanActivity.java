@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.ComponentCallbacks2;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,11 +14,18 @@ import android.os.Bundle;
  */
 public class ScanActivity extends Activity implements IScanner, ComponentCallbacks2 {
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.scan_layout);
         init();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
     }
 
     private void init() {

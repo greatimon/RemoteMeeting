@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_add_subject_adapter;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
@@ -44,6 +45,9 @@ public class Add_subject_user_D extends Activity {
     private static final String TAG = "all_"+Add_subject_user_D.class.getSimpleName();
     Myapp myapp;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     // 리사이클러뷰 관련 클래스
     public RCV_add_subject_adapter rcv_add_subject_adapter;
     public RecyclerView.LayoutManager layoutManager;
@@ -66,6 +70,10 @@ public class Add_subject_user_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);

@@ -11,6 +11,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 
 import butterknife.BindView;
@@ -34,6 +35,8 @@ public class Select_method_for_assign_project_D extends Activity {
     @BindView(R.id.unAssign_project_LIN)        LinearLayout unAssign_project_LIN;
     @BindView(R.id.unAssign_project_divider)    View unAssign_project_divider;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -50,6 +53,10 @@ public class Select_method_for_assign_project_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         intent = getIntent();
         int selected_project_no = intent.getIntExtra("selected_project_no", -1);

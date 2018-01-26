@@ -33,7 +33,8 @@ import com.google.android.gms.vision.face.Face;
  * Graphic instance for rendering face position, orientation, and landmarks within an associated
  * graphic overlay view.
  */
-class FaceGraphic extends GraphicOverlay.Graphic {
+class
+FaceGraphic extends GraphicOverlay.Graphic {
     // 샘플 코드에서는 사용했던 상수
     private static final float FACE_POSITION_RADIUS = 10.0f;
     private static final float ID_TEXT_SIZE = 40.0f;

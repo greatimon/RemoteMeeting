@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 
 import butterknife.ButterKnife;
@@ -19,7 +20,8 @@ import butterknife.Unbinder;
  * Created by JYN on 2017-12-03.
  */
 
-public class Select_method_for_select_img_D extends Activity {
+public class
+Select_method_for_select_img_D extends Activity {
 
     /** 버터나이프*/
     public Unbinder unbinder;
@@ -28,6 +30,9 @@ public class Select_method_for_select_img_D extends Activity {
 
     private static final String TAG = "all_"+Select_method_for_select_img_D.class.getSimpleName();
     Intent intent;
+
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
 
     /**---------------------------------------------------------------------------
@@ -46,6 +51,10 @@ public class Select_method_for_select_img_D extends Activity {
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
         intent = new Intent();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
     }
 
 

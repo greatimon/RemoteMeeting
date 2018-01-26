@@ -137,10 +137,15 @@ public class RCV_search_partner_adapter extends RecyclerView.Adapter<RCV_search_
                     Log.d(TAG, "getUser_img_fileName: " + users.get(pos).getUser_img_filename());
                     Log.d(TAG, "partner_orNot: " + users.get(pos).getExtra());
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Confirm_subtract_partner_D.class.getSimpleName());
+
                     // 프로필 상세보기 다이얼로그 액티비티 열기
                     Intent intent = new Intent(context, Confirm_subtract_partner_D.class);
                     intent.putExtra("position", pos);
                     intent.putExtra("target_user_no", users.get(pos).getUser_no());
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Search_partner_A)context).startActivityForResult(intent, Search_partner_A.REQUEST_SUBTRACT_CONFIRM);
                 }
             });

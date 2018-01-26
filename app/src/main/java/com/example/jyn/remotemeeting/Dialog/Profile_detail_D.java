@@ -63,6 +63,10 @@ public class Profile_detail_D extends Activity {
     String on_meeting_orNot;
     int REQUEST_SUBTRACT_CONFIRM = 1643;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -80,6 +84,10 @@ public class Profile_detail_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         Intent intent = getIntent();
         user_no = intent.getExtras().getString("user_no");
@@ -169,7 +177,12 @@ public class Profile_detail_D extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.unFollow)
     public void unFollow() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Confirm_subtract_partner_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Confirm_subtract_partner_D.class);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SUBTRACT_CONFIRM);
     }
 

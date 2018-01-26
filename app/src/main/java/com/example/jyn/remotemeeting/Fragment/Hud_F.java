@@ -22,7 +22,8 @@ import java.util.Map;
  * Created by JYN on 2017-11-10.
  */
 
-public class Hud_F extends Fragment {
+public class
+Hud_F extends Fragment {
 
     private View controlView;
     private TextView encoderStatView;

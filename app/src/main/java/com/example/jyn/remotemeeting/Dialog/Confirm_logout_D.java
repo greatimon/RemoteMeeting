@@ -25,6 +25,8 @@ public class Confirm_logout_D extends Activity {
     public Unbinder unbinder;
     private static final String TAG = "all_"+Confirm_logout_D.class.getSimpleName();
 
+    String request_class;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -40,6 +42,10 @@ public class Confirm_logout_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
     }
 
 

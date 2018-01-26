@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 
 import butterknife.ButterKnife;
@@ -27,6 +28,9 @@ public class Confirm_subtract_partner_D extends Activity {
     String target_user_no = "";
     private static final String TAG = "all_"+Confirm_subtract_partner_D.class.getSimpleName();
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -42,6 +46,10 @@ public class Confirm_subtract_partner_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         Intent intent = getIntent();
         position = intent.getIntExtra("position", -1);

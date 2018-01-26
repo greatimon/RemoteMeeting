@@ -98,6 +98,9 @@ public class Meeting_result_D extends Activity {
     // Meeting_result_D 액티비티를 연 위치
     String opened_from;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     /** 버터나이프*/
     public Unbinder unbinder;
     @BindView(R.id.actionBar_LIN)                           LinearLayout actionBar_LIN;
@@ -181,6 +184,10 @@ public class Meeting_result_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         Intent intent = getIntent();
 
@@ -850,11 +857,16 @@ public class Meeting_result_D extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_assign_LIN)
     public void select_method_for_assign_project() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Select_method_for_assign_project_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Select_method_for_assign_project_D.class);
         // 'selected_project_no'를 intent 값으로 넘기는 이유
         // - 'selected_project_no' 값이 '-1'이라면 지정된 프로젝트가 없는 경우 이므로
         // Select_method_for_assign_project 클래스에서 '지정 취소' view를 GONE 처리 하기위함
         intent.putExtra("selected_project_no", selected_project_no);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SELECT_METHOD_FOR_ASSIGN_PROJECT);
     }
 
@@ -865,7 +877,12 @@ public class Meeting_result_D extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.handwriting_to_document_icon, R.id.handwriting_to_document_txt})
     public void handwriting_to_document() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Image_scan_to_document_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Image_scan_to_document_D.class);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_IMAGE_SCAN_TO_DOCUMENT);
     }
 
@@ -946,13 +963,23 @@ public class Meeting_result_D extends Activity {
 
             // 선택한 방법이, 기존 프로젝트에 지정하는 방법일 때
             if(method.equals("assign_to_existing_project")) {
+                // TODO: redis - 화면 이동
+                myapp.Redis_log_view_crossOver_from_to(
+                        getClass().getSimpleName(), Assign_to_existing_project_D.class.getSimpleName());
+
                 Intent intent = new Intent(this, Assign_to_existing_project_D.class);
+                intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                 startActivityForResult(intent, REQUEST_ASSIGN_TO_EXISTING_PROJECT);
             }
             // 선택한 방법이, 새 프로젝트를 생성하는 방법일 때
             else if(method.equals("create_new_project")) {
+                // TODO: redis - 화면 이동
+                myapp.Redis_log_view_crossOver_from_to(
+                        getClass().getSimpleName(), Create_project_A.class.getSimpleName());
+
                 Intent intent = new Intent(this, Create_project_A.class);
                 intent.putExtra("from", "meeting_result");
+                intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                 startActivityForResult(intent, REQUEST_CREATE_PROJECT_FROM_MEETING_RESULT_D);
             }
             // 선택한 방법이, 이미 지정된 프로젝트를 취소하는 것일 때

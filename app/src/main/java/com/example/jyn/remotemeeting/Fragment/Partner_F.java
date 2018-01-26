@@ -20,6 +20,7 @@ import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.Adapter.RCV_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Otto.BusProvider;
 import com.example.jyn.remotemeeting.Otto.Event;
 import com.example.jyn.remotemeeting.R;
@@ -186,7 +187,12 @@ public class Partner_F extends Fragment {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.search_partner)
     public void search_partner() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Search_partner_A.class.getSimpleName());
+
         Intent intent = new Intent(getActivity(), Search_partner_A.class);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, Main_after_login_A.REQUEST_SEARCH_PARTNER);
     }
 

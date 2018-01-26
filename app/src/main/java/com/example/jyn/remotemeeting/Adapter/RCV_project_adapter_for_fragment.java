@@ -17,6 +17,7 @@ import com.example.jyn.remotemeeting.Activity.Main_after_login_A;
 import com.example.jyn.remotemeeting.Activity.Project_meeting_result_list_A;
 import com.example.jyn.remotemeeting.Activity.Search_partner_A;
 import com.example.jyn.remotemeeting.DataClass.Project;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.google.gson.Gson;
@@ -82,6 +83,10 @@ public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_p
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "project_arr.get(pos).getProject_no(): " + project_arr.get(pos).getProject_no());
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Project_meeting_result_list_A.class.getSimpleName());
+
                     // 해당 프로젝트에 지정된 영상회의 목록 보는 액티비티 열기
                     Intent intent = new Intent(context, Project_meeting_result_list_A.class);
 
@@ -90,6 +95,7 @@ public class RCV_project_adapter_for_fragment extends RecyclerView.Adapter<RCV_p
                     String jsonString = gson.toJson(project_arr.get(pos));
                     intent.putExtra("project_str", jsonString);
 
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_PROJECT_MEETING_RESULT_LIST);
                 }
             });

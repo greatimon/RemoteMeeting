@@ -17,6 +17,8 @@ import com.example.jyn.remotemeeting.R;
 
 public class Out_confirm_D extends Activity {
 
+    String request_class;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -30,6 +32,9 @@ public class Out_confirm_D extends Activity {
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
 
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
     }
 
     /**---------------------------------------------------------------------------

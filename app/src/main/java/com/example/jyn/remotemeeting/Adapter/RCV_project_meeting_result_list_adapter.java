@@ -133,11 +133,16 @@ public class RCV_project_meeting_result_list_adapter extends RecyclerView.Adapte
                     Log.d(TAG, "meeting_room_arr.getMeeting_end_time(): " + meeting_room_arr.get(pos).getMeeting_end_time());
                     Log.d(TAG, "meeting_room_arr.getTotal_meeting_time(): " + meeting_room_arr.get(pos).getTotal_meeting_time());
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Meeting_result_D.class.getSimpleName());
+
                     // 해당 영상회의 결과 다이얼로그 액티비티 열기
                     Intent intent = new Intent(context, Meeting_result_D.class);
                     intent.putExtra("meeting_no", meeting_room_arr.get(pos).getMeeting_no());
                     intent.putExtra("from", Static.PROJECT_FOLDER);
                     intent.putExtra("subject_user_no", meeting_room_arr.get(pos).getMeeting_subject_user_no());
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Project_meeting_result_list_A)context)
                             .startActivityForResult(intent, Project_meeting_result_list_A.REQUEST_OPEN_THIS_MEETING_RESULT);
                 }

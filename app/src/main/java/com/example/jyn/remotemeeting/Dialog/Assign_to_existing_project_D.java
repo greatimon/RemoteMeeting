@@ -17,6 +17,7 @@ import android.view.WindowManager;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_project_adapter_for_assign_project;
 import com.example.jyn.remotemeeting.DataClass.Project;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
@@ -52,6 +53,9 @@ public class Assign_to_existing_project_D extends Activity {
     //
     public static Handler receive_project_no_from_adapter_handler;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -74,6 +78,10 @@ public class Assign_to_existing_project_D extends Activity {
 
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         /** 서버로부터 프로젝트 리스트 받기 */
         project_arr = myapp.get_project_list();

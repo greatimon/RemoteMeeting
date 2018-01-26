@@ -60,6 +60,10 @@ public class Chat_A extends Activity {
     int REQUEST_CHAT_DRAW_MENU = 1000;
     String JSON_TAG_GET_CHATTING_LOGS = "chatting_logs";
     Myapp myapp;
+
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     Chat_room chat_room;
     int member_count;
     String chat_room_title;
@@ -103,6 +107,11 @@ public class Chat_A extends Activity {
         recyclerView = findViewById(R.id.recyclerView);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
+
         // otto 등록
         BusProvider.getBus().register(this);
 
@@ -473,7 +482,12 @@ public class Chat_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.setting)
     public void setting() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Chat_draw_menu_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Chat_draw_menu_D.class);
+        intent.putExtra("request_class", getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_CHAT_DRAW_MENU);
     }
 

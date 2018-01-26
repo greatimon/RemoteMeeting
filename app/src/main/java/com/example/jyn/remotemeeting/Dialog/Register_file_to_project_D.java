@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 
 import butterknife.ButterKnife;
@@ -22,6 +23,9 @@ public class Register_file_to_project_D extends Activity {
 
     Intent intent;
     private static final String TAG = "all_"+Register_file_to_project_D.class.getSimpleName();
+
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
 //    @BindView(R.id.pdf)     public Button pdf_click;
 //    @BindView(R.id.img)     public Button img_click;
@@ -40,6 +44,10 @@ public class Register_file_to_project_D extends Activity {
 
         intent = new Intent();
         Log.d(TAG, "onCreate");
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
     }
 
     @OnClick(R.id.pdf)

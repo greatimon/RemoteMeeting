@@ -18,6 +18,7 @@ import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Dialog.Profile_detail_D;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
+import com.example.jyn.remotemeeting.Util.Myapp;
 
 import java.util.ArrayList;
 
@@ -36,6 +37,7 @@ public class RCV_partner_adapter extends RecyclerView.Adapter<RCV_partner_adapte
     private String request;
     private ArrayList<Users> users;
     public static String TAG = "all_"+RCV_partner_adapter.class.getSimpleName();
+    public Myapp myapp;
 
 
     /** RecyclerAdapter 생성자 */
@@ -46,6 +48,9 @@ public class RCV_partner_adapter extends RecyclerView.Adapter<RCV_partner_adapte
         this.itemLayout = itemLayout;
         this.users = users;
         this.request = request;
+
+        // 어플리케이션 객체 생성
+        myapp = Myapp.getInstance();
     }
 
     /** 뷰홀더 */
@@ -75,6 +80,10 @@ public class RCV_partner_adapter extends RecyclerView.Adapter<RCV_partner_adapte
                     Log.d(TAG, "getUser_nickName: " + users.get(pos).getUser_nickname());
                     Log.d(TAG, "getUser_img_fileName: " + users.get(pos).getUser_img_filename());
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Profile_detail_D.class.getSimpleName());
+
                     // 프로필 상세보기 다이얼로그 액티비티 열기
                     Intent intent = new Intent(context, Profile_detail_D.class);
                     intent.putExtra("user_no", users.get(pos).getUser_no());
@@ -82,6 +91,7 @@ public class RCV_partner_adapter extends RecyclerView.Adapter<RCV_partner_adapte
                     intent.putExtra("email", users.get(pos).getUser_email());
                     intent.putExtra("img_fileName", users.get(pos).getUser_img_filename());
                     intent.putExtra("on_meeting", users.get(pos).getPresent_meeting_in_ornot());
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_SHOW_PROFILE_DETAIL);
                 }
             });

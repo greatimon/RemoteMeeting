@@ -44,6 +44,7 @@ public class Add_chat_room_subject_users_D extends Activity {
 
     private static final String TAG = "all_"+Add_chat_room_subject_users_D.class.getSimpleName();
     Myapp myapp;
+    String request_class;
 
     // 리사이클러뷰 관련 클래스
     public RCV_add_subject_adapter rcv_add_subject_adapter;
@@ -67,6 +68,10 @@ public class Add_chat_room_subject_users_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);

@@ -3,6 +3,7 @@ package com.example.jyn.remotemeeting.Activity;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -52,6 +53,9 @@ public class Email_join_A extends Activity {
     private static final String TAG = "all_"+Email_join_A.class.getSimpleName();
     Myapp myapp;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -64,6 +68,10 @@ public class Email_join_A extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         // editText 밑줄 색 커스텀
         int color = Color.parseColor("#fbfbfb");

@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.Adapter.RCV_search_partner_adapter;
 import com.example.jyn.remotemeeting.DataClass.Users;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
@@ -56,6 +57,8 @@ public class Search_partner_A extends Activity {
     public RCV_search_partner_adapter rcv_search_partner_adapter;
     public RecyclerView.LayoutManager layoutManager;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -68,6 +71,10 @@ public class Search_partner_A extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         /** 리사이클러뷰 */
         recyclerView.setHasFixedSize(true);

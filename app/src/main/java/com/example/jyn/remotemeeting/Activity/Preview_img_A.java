@@ -34,6 +34,9 @@ public class Preview_img_A extends Activity {
     private static final String TAG = "all_"+Preview_img_A.class.getSimpleName();
     String absolutePath;
 
+    // 이 클래스를 호출한 클래스 SimpleName
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -44,6 +47,10 @@ public class Preview_img_A extends Activity {
         setContentView(R.layout.a_preview_img);
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         /** 디바이스 화면사이즈 가져오기 */
         DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();

@@ -120,10 +120,15 @@ public class RCV_chatRoom_list_adapter extends RecyclerView.Adapter<RCV_chatRoom
                     // CachePot 이용해서 클릭한 rooms 객체 전달
                     CachePot.getInstance().push("chat_room", rooms.get(pos));
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Chat_A.class.getSimpleName());
+
                     // Chat_A 액티비티(채팅방) 열기
                     // 채팅방 리스트로부터 채팅방을 여는 것임을 intent 값으로 알린다
                     Intent intent = new Intent(context, Chat_A.class);
                     intent.putExtra("from", "list");
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Main_after_login_A)context).startActivityForResult(intent, Main_after_login_A.REQUEST_CHAT_ROOM);
                 }
             });

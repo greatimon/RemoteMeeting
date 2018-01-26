@@ -10,7 +10,6 @@ import android.provider.Settings;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
@@ -52,6 +51,9 @@ public class Additional_info_for_google_api_join_A extends Activity {
     String email;
     String firebase_UID;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -64,6 +66,10 @@ public class Additional_info_for_google_api_join_A extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         // editText 밑줄 색 커스텀
         int color = Color.parseColor("#fbfbfb");

@@ -56,6 +56,7 @@ public class Create_room_D extends Activity {
 
     private static final String TAG = "all_"+Create_room_D.class.getSimpleName();
     Myapp myapp;
+    String request_class;
     static int REQUEST_ADD_SUBJECT = 1616;
     String subject_user_no = "";
 
@@ -76,6 +77,10 @@ public class Create_room_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         // 이미지 모서리 둥글게 만들기
         int random = new Random().nextInt(7);
@@ -98,7 +103,12 @@ public class Create_room_D extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick({R.id.add_subject_img, R.id.add_subject_text, R.id.profile_img, R.id.nickName, R.id.email, R.id.comment})
     public void add_subject_user() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Add_subject_user_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Add_subject_user_D.class);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_ADD_SUBJECT);
     }
 

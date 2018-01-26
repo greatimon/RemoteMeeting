@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.Fragment.Partner_F;
 import com.example.jyn.remotemeeting.R;
 
@@ -35,6 +36,9 @@ public class Show_one_image_D extends Activity {
     String image_source;
     String fileName;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -46,6 +50,10 @@ public class Show_one_image_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         /** 디바이스 화면사이즈 가져오기 */
         DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();

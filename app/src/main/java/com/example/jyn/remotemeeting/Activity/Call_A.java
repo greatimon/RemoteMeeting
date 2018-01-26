@@ -156,6 +156,7 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public static int REQUEST_CONFIRM_UPLOAD_FILES = 1220;
     public static int REQUEST_CONFIRM_IMAGE_SHARE_MODE = 1899;
     Myapp myapp;
+    String request_class;
 
     // Peer connection statistics callback period in ms.
     // 피어 연결 통계 콜백 기간 (밀리 초).
@@ -429,6 +430,10 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         // 커스텀 로거 생성
         Logger.clearLogAdapters();
@@ -743,8 +748,13 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
 
                     // 서버에서 중계한, 파일 공유 요청을 전달일 때
                     else if(order.equals("relay_request_image_file_share")) {
+                        // TODO: redis - 화면 이동
+                        myapp.Redis_log_view_crossOver_from_to(
+                                getClass().getSimpleName(), Confirm_img_share_mode_accept_D.class.getSimpleName());
+
                         Intent intent = new Intent(Call_A.this, Confirm_img_share_mode_accept_D.class);
                         startActivityForResult(intent, REQUEST_CONFIRM_IMAGE_SHARE_MODE);
+                        intent.putExtra("request_class", getClass().getSimpleName());
                         String share_file_arr_str =  received_data.getAttachment();
                         Logger.d("서버에서 중계한, 파일 공유 요청 리스트: "+share_file_arr_str);
                         myapp.setShare_image_file_name_arr_str(share_file_arr_str);
@@ -2285,12 +2295,22 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
     public void onBackPressed() {
         // 이미지 공유 모드인 경우
         if(image_share_REL.getVisibility() == View.VISIBLE) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Confirm_img_share_mode_end_D.class.getSimpleName());
+
             Intent intent = new Intent(Call_A.this, Confirm_img_share_mode_end_D.class);
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, REQUEST_END_IMG_SHARE_MODE);
         }
         // 이미지 공유 모드가 아닌 경우
         else if(image_share_REL.getVisibility() == View.GONE) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Out_confirm_D.class.getSimpleName());
+
             Intent intent = new Intent(Call_A.this, Out_confirm_D.class);
+            intent.putExtra("request_class", getClass().getSimpleName());
             startActivityForResult(intent, REQUEST_OUT);
         }
     }

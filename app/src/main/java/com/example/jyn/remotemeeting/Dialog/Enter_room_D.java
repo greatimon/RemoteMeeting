@@ -52,6 +52,9 @@ public class Enter_room_D extends Activity {
     String real_meeting_title;
     String transform_meeting_title;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
      ---------------------------------------------------------------------------*/
@@ -69,6 +72,10 @@ public class Enter_room_D extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         // 이미지 모서리 둥글게 만들기
         int random = new Random().nextInt(7);

@@ -33,6 +33,7 @@ public class Chat_draw_menu_D extends Activity {
     @BindView(R.id.menu)LinearLayout menu;
 
     private static final String TAG = "all_"+Chat_draw_menu_D.class.getSimpleName();
+    String request_class;
 
 
     /**---------------------------------------------------------------------------
@@ -49,6 +50,9 @@ public class Chat_draw_menu_D extends Activity {
 //                WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
 
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra("request_class");
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);

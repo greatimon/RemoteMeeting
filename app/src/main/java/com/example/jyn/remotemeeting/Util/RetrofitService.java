@@ -327,4 +327,13 @@ public interface RetrofitService {
             @Field(value = "meeting_no", encoded=true) String meeting_no
     );
 
+
+    /** 레디스에 저장할 로그 전송 */
+    @FormUrlEncoded
+    @POST("/{url}")
+    Call<ResponseBody> redis_save_log (
+            @Path("url") String url,
+            @Field(value = "log_key", encoded=true) String log_key,
+            @Field(value = "log_value", encoded=true) String log_value
+    );
 }

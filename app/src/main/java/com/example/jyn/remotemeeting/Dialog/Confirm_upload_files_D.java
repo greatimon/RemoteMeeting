@@ -11,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 
 import butterknife.BindView;
@@ -33,6 +34,9 @@ public class Confirm_upload_files_D extends Activity {
     int upload_files_count;
     boolean contain_pdf_file_orNot = false;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +49,10 @@ public class Confirm_upload_files_D extends Activity {
 
         // 버터나이프 바인드
         unbinder = ButterKnife.bind(this);
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         Intent intent = getIntent();
         upload_files_count = intent.getIntExtra("upload_files_count", 0);

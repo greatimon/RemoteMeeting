@@ -72,9 +72,14 @@ public class RCV_show_drawing_images_adapter extends RecyclerView.Adapter<RCV_sh
                     Log.d(TAG, "클릭 아이템 position: " + pos);
                     Log.d(TAG, "getFile_no: " + drawing_images_fileName_arr.get(pos));
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Show_one_image_D.class.getSimpleName());
+
                     Intent intent = new Intent(context, Show_one_image_D.class);
                     intent.putExtra("image_source", drawing_images_fileName_arr.get(pos));
                     intent.putExtra("fileName", drawing_images_fileName_arr.get(pos));
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Meeting_result_D)context).startActivityForResult(intent, Meeting_result_D.REQUEST_SHOW_THIS_IMAGE);
                 }
             });

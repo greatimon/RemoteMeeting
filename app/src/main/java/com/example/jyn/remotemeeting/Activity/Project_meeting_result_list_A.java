@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.example.jyn.remotemeeting.Adapter.RCV_project_meeting_result_list_adapter;
 import com.example.jyn.remotemeeting.DataClass.Meeting_room;
 import com.example.jyn.remotemeeting.DataClass.Project;
+import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 import com.example.jyn.remotemeeting.Util.SimpleDividerItemDecoration;
@@ -59,6 +60,8 @@ public class Project_meeting_result_list_A extends Activity {
     // 프로젝트 객체
     Project project;
 
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -73,6 +76,10 @@ public class Project_meeting_result_list_A extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         Intent intent = getIntent();
         // intent로 Project 클래스를 jsonString으로 변환한 값을 받는다
@@ -126,9 +133,14 @@ public class Project_meeting_result_list_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.modify_project)
     public void modify_project() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Create_project_A.class.getSimpleName());
+
         Intent intent = new Intent(this, Create_project_A.class);
         intent.putExtra("from", "meeting_result_list");
         intent.putExtra("exist_project_no", project.getProject_no());
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_MODIFY_PROJECT);
     }
 

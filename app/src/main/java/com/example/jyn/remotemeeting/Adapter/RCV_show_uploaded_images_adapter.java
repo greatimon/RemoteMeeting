@@ -76,10 +76,15 @@ public class RCV_show_uploaded_images_adapter extends RecyclerView.Adapter<RCV_s
                     Log.d(TAG, "checked_orNot: " + files.get(pos).getExtra());
                     Log.d(TAG, "getMeeting_no: " + files.get(pos).getMeeting_no());
 
+                    // TODO: redis - 화면 이동
+                    myapp.Redis_log_view_crossOver_from_to(
+                            getClass().getSimpleName(), Show_one_image_D.class.getSimpleName());
+
                     Intent intent = new Intent(context, Show_one_image_D.class);
                     intent.putExtra("image_source", Static.SERVER_URL_MEETING_UPLOAD_FILE_FOLDER
                             + files.get(pos).getFile_name());
                     intent.putExtra("fileName", files.get(pos).getFile_name());
+                    intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                     ((Meeting_result_D)context).startActivityForResult(intent, Meeting_result_D.REQUEST_SHOW_THIS_IMAGE);
 
                 }

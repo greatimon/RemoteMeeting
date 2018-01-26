@@ -54,6 +54,8 @@ public class Create_project_A extends Activity {
 
     private static final String TAG = "all_"+Create_project_A.class.getSimpleName();
     Myapp myapp;
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
     final int REQUEST_SET_START_DATE = 1234;
     final int REQUEST_SET_END_DATE = 4321;
@@ -118,6 +120,10 @@ public class Create_project_A extends Activity {
         unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
+
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
 
         // 인텐트값 받기
         Intent intent = getIntent();
@@ -345,6 +351,10 @@ public class Create_project_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_start_dt_LIN)
     public void set_project_start_dt() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Calendar_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Calendar_D.class);
         intent.putExtra("for", "start_date");
         intent.putExtra("selected_year", selected_start_year);
@@ -353,6 +363,7 @@ public class Create_project_A extends Activity {
         intent.putExtra("selected_end_year", selected_end_year);
         intent.putExtra("selected_end_month", selected_end_month);
         intent.putExtra("selected_end_day", selected_end_day);
+        intent.putExtra("request_class", getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SET_START_DATE);
     }
 
@@ -362,6 +373,10 @@ public class Create_project_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_end_dt_LIN)
     public void set_project_end_dt() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Calendar_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Calendar_D.class);
         intent.putExtra("for", "end_date");
         intent.putExtra("selected_year", selected_end_year);
@@ -370,6 +385,7 @@ public class Create_project_A extends Activity {
         intent.putExtra("selected_start_year", selected_start_year);
         intent.putExtra("selected_start_month", selected_start_month);
         intent.putExtra("selected_start_day", selected_start_day);
+        intent.putExtra("request_class", getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SET_END_DATE);
     }
 
@@ -379,8 +395,13 @@ public class Create_project_A extends Activity {
      ---------------------------------------------------------------------------*/
     @OnClick(R.id.project_color_LIN)
     public void set_project_color() {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Select_project_color_D.class.getSimpleName());
+
         Intent intent = new Intent(this, Select_project_color_D.class);
         intent.putExtra("color_resource_index", color_resource_index);
+        intent.putExtra("request_class", getClass().getSimpleName());
         startActivityForResult(intent, REQUEST_SET_COLOR);
     }
 

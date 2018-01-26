@@ -12,6 +12,7 @@ public class Static {
     public static String PROJECT_FOLDER= "project_folder";
     public static String ROOM_ID = "53236556"; // 테스트용
     public static String WEBRTC_URL = "https://appr.tc";
+    public static String REQUEST_CLASS = "request_class";
 
     public static String SPLIT = "_GREATIMON_";
 
@@ -36,6 +37,7 @@ public class Static {
     public static String UPLOAD_MULTI_FILES = "upload_multi_files.php";
     public static String UPDATE_NICKNAME = "update_nickname.php";
     public static String SET_DEFAULT_IMG = "set_default_img.php";
+    public static String REDIS_SAVE_LOG = "redis_save_log.php";
     public static String CREATE_MEETING_ROOM = "create_meeting_room.php";
     public static String GOT_OUT_FROM_MEETING = "got_out_from_meeting.php";
     public static String AM_I_INVITED = "am_i_invited.php";

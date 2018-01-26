@@ -742,9 +742,14 @@ public class Call_F extends Fragment  implements PhotoViewAttacher.OnViewTapList
         // 파일 업로드를 묻는 다이얼로그 띄우기
         if((get_format.equals("pdf") || get_format.equals("img") || get_format.equals("all"))
                 && checked_files.size() > 0) {
+            // TODO: redis - 화면 이동
+            myapp.Redis_log_view_crossOver_from_to(
+                    getClass().getSimpleName(), Confirm_upload_files_D.class.getSimpleName());
+
             Intent intent = new Intent(getActivity(), Confirm_upload_files_D.class);
             intent.putExtra("upload_files_count", checked_files.size());
             intent.putExtra("contain_pdf_file_orNot", have_pdf_ofNot);
+            intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
             getActivity().startActivityForResult(intent, Call_A.REQUEST_CONFIRM_UPLOAD_FILES);
         }
     }

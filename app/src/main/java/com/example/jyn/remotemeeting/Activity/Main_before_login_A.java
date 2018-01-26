@@ -20,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.jyn.remotemeeting.DataClass.Redis_log_view_crossOver_from_to;
 import com.example.jyn.remotemeeting.DataClass.Users;
 import com.example.jyn.remotemeeting.Etc.Static;
 import com.example.jyn.remotemeeting.R;
@@ -65,6 +66,8 @@ public class Main_before_login_A extends AppCompatActivity
 
     private static final String TAG = "all_"+Main_before_login_A.class.getSimpleName();
     Myapp myapp;
+    /** 이 클래스를 호출한 클래스 SimpleName */
+    String request_class;
 
     ImageView back_IV;
     EditText input_email_ET, input_pw_ET;
@@ -109,6 +112,10 @@ public class Main_before_login_A extends AppCompatActivity
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
+        // 이 클래스를 호출한 클래스 인텐트 값으로 받기
+        Intent get_intent = getIntent();
+        request_class = get_intent.getStringExtra(Static.REQUEST_CLASS);
+
         back_IV = findViewById(R.id.background_img);
         input_email_ET = findViewById(R.id.input_email);
         input_pw_ET = findViewById(R.id.input_pw);
@@ -148,7 +155,7 @@ public class Main_before_login_A extends AppCompatActivity
 
         Log.d(TAG, "densityDPI = " + metrics.densityDpi);
 
-        Log.d(TAG, "현재 시간: " + Get_currentTime.get_full());
+//        Log.d(TAG, "현재 시간: " + Get_currentTime.get_full());
         Log.d(TAG, "오늘 날짜(Calendar 이용): "
                 + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "-"
                 + Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
@@ -407,9 +414,14 @@ public class Main_before_login_A extends AppCompatActivity
 
                     // 일치하는 정보가 없다면 네임을 추가로 받는 액티비티 띄우기
                     if(temp[0].equals("non_overlap")) {
+                        // todo: redis - 화면 이동
+                        myapp.Redis_log_view_crossOver_from_to(
+                                getClass().getSimpleName(), Additional_info_for_google_api_join_A.class.getSimpleName());
+
                         Intent intent = new Intent(getBaseContext(), Additional_info_for_google_api_join_A.class);
                         intent.putExtra("email", email);
                         intent.putExtra("firebase_UID", firebase_UID);
+                        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                         startActivityForResult(intent, ADDITIONAL_INFO_REQUEST);
                     }
                     // 일치하는 정보가 있으므로, 이미 회원가입이 되어 있는 유저임
@@ -455,7 +467,7 @@ public class Main_before_login_A extends AppCompatActivity
         String login_info_json = gson.toJson(user);
         Log.d(TAG, "login_info_json: " + login_info_json);
 
-        /** 서버 통신 - 자체 이메일 로그인 */
+        /** 서버 통신 - 로그인 */
         RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
         Call<ResponseBody> call_result = rs.email_login(
                 Static.EMAIL_LOGIN,
@@ -497,7 +509,24 @@ public class Main_before_login_A extends AppCompatActivity
                             Auto_login_edit.putBoolean("google", true).apply();
                         }
 
+                        // 자체 회원가입한 이메일로 로그인하는 경우, 로그인방법 어플리케이션 객체에 저장
+                        if(type.equals("email")) {
+                            myapp.setLogin_method("email");
+                        }
+                        // 구글 계정으로 로그인하는 경우, 로그인방법 어플리케이션 객체에 저장
+                        else if(!type.equals("email")) {
+                            myapp.setLogin_method("google");
+                        }
+
+                        // todo: redis - 세션
+                        myapp.Redis_log_session_info("enter");
+
+                        // TODO: redis - 화면 이동
+                        myapp.Redis_log_view_crossOver_from_to(
+                                getClass().getSimpleName(), Main_after_login_A.class.getSimpleName());
+
                         Intent intent = new Intent(getBaseContext(), Main_after_login_A.class);
+                        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
                         startActivity(intent);
                     }
 
@@ -580,8 +609,13 @@ public class Main_before_login_A extends AppCompatActivity
      클릭이벤트 ==> 회원가입
      ---------------------------------------------------------------------------*/
     public void email_join(View view) {
+        // TODO: redis - 화면 이동
+        myapp.Redis_log_view_crossOver_from_to(
+                getClass().getSimpleName(), Email_join_A.class.getSimpleName());
+
         Intent intent = new Intent(this, Email_join_A.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra(Static.REQUEST_CLASS, getClass().getSimpleName());
         startActivity(intent);
     }
 
