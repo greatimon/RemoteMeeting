@@ -46,7 +46,7 @@
                 android:layout_height="30dp"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
-                android:src="@drawable/camera"/>
+                android:src="@drawable/camera_1"/>
         </RelativeLayout>
     </RelativeLayout>
 

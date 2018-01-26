@@ -664,7 +664,8 @@ public class Meeting_result_D extends Activity {
             finish();
         }
         // 작성한 목록이 하나라도 있다면
-        else if(check_have_any_list_i_have_created() && opened_from.equals(Static.RIGHT_AFTER_END_MEETING)) {
+//        else if(check_have_any_list_i_have_created() && opened_from.equals(Static.RIGHT_AFTER_END_MEETING)) {
+        else if(check_have_any_list_i_have_created()) {
             // 스캔한 이미지가 있음
             if(temp_uri_hash.size() != 0) {
 
@@ -682,8 +683,20 @@ public class Meeting_result_D extends Activity {
         }
         //// 프로젝트 폴더의 아이템 리스트로 부터 클릭해서, 이 액티비티가 열린 경우라면
         else if(opened_from.equals(Static.PROJECT_FOLDER)) {
-            // 내부 메소드 호출
-            save_meeting_result();
+            // 스캔한 이미지가 있음
+            if(temp_uri_hash.size() != 0) {
+
+                // 스캔 이미지 복사 중에, progressDialog 보여주기
+                myapp.show_progress(this, "스캔 이미지 저장 중..");
+                // 스캔한 이미지 파일을 '/storage/emulated/0/remoteMeeting/' 경로로 복사하고
+                // 원래 파일은 삭제(경로: /storage/emulated/0/Pictures/) 하는 내부 메소드 호출
+                saveFile_scanned_images();
+            }
+            // 스캔한 이미지가 없음
+            else if(temp_uri_hash.size() == 0) {
+                // 내부 메소드 호출
+                save_meeting_result();
+            }
         }
     }
 

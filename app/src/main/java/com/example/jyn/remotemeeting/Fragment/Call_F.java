@@ -57,6 +57,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import jp.wasabeef.glide.transformations.BlurTransformation;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import uk.co.senab.photoview.PhotoView;
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -448,14 +449,27 @@ public class Call_F extends Fragment implements PhotoViewAttacher.OnViewTapListe
     public void set_subject_user_data() {
         Users subject_user = myapp.get_user_info(myapp.getMeeting_subject_user_no());
 
-        Glide
-            .with(getActivity())
-            .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + subject_user.getUser_img_filename())
-            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-            .bitmapTransform(new CropCircleTransformation(getActivity()))
-            .into(subject_profile_img);
-        subject_nickName.setText(subject_user.getUser_nickname());
+        // 이미지 셋팅
+        if(!subject_user.getUser_img_filename().equals("none")) {
+            Glide
+                .with(getActivity())
+                .load(Static.SERVER_URL_PROFILE_FILE_FOLDER + subject_user.getUser_img_filename())
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .bitmapTransform(new CropCircleTransformation(getActivity()))
+                .into(subject_profile_img);
 
+        }
+        else if(subject_user.getUser_img_filename().equals("none")) {
+            Glide
+                .with(getActivity())
+                .load(R.drawable.default_profile)
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .bitmapTransform(new CropCircleTransformation(getActivity()))
+                .into(subject_profile_img);
+        }
+
+        // 닉네임 데이터 셋팅
+        subject_nickName.setText(subject_user.getUser_nickname());
     }
 
 

@@ -12,6 +12,10 @@ import android.view.WindowManager;
 import com.example.jyn.remotemeeting.R;
 import com.example.jyn.remotemeeting.Util.Myapp;
 
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
+
 /**
  * Created by JYN on 2017-11-11.
  */
@@ -21,6 +25,8 @@ public class Out_confirm_D extends Activity {
     String request_class;
 
     Myapp myapp;
+    /** 버터나이프*/
+    public Unbinder unbinder;
 
     /**---------------------------------------------------------------------------
      생명주기 ==> onCreate
@@ -35,6 +41,8 @@ public class Out_confirm_D extends Activity {
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
         this.setFinishOnTouchOutside(true);
 
+        // 버터나이프 바인드
+        unbinder = ButterKnife.bind(this);
         // 어플리케이션 객체 생성
         myapp = Myapp.getInstance();
 
@@ -46,6 +54,7 @@ public class Out_confirm_D extends Activity {
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> 회의 종료 취소
      ---------------------------------------------------------------------------*/
+    @OnClick(R.id.no)
     public void out_no_clicked(View view) {
         // TODO: redis - 클릭이벤트
         myapp.Redis_log_click_event(getClass().getSimpleName(), view);
@@ -58,6 +67,7 @@ public class Out_confirm_D extends Activity {
     /**---------------------------------------------------------------------------
      클릭이벤트 ==> 회의 종료
      ---------------------------------------------------------------------------*/
+    @OnClick(R.id.yes)
     public void out_yes_clicked(View view) {
         // TODO: redis - 클릭이벤트
         myapp.Redis_log_click_event(getClass().getSimpleName(), view);
@@ -73,6 +83,10 @@ public class Out_confirm_D extends Activity {
         if(request_class != null) {
             myapp.Redis_log_view_crossOver_from_to(
                     getClass().getSimpleName(), request_class);
+        }
+        // 버터나이프 바인드 해제
+        if(unbinder != null) {
+            unbinder.unbind();
         }
         // 어플리케이션 객체 null 처리
         myapp = null;

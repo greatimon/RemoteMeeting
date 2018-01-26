@@ -88,6 +88,9 @@ import retrofit2.Response;
 
 /**
  * Created by JYN on 2017-12-01.
+ *
+ * 어플리케이션 객체
+ *  - 어플 구동중에 여러 클래스에서 사용해야 하는 변수나, 메소드를 정의함
  */
 
 public class Myapp extends Application {
@@ -117,7 +120,7 @@ public class Myapp extends Application {
 
     // 'Main_after_login_A'에서 현재 보고 있는 프래그먼트 클래스 이름을 담는 변수
     // 초기 값은 'Project' --> 로그인하면 보여주는 화면이기 때문
-    String curr_frag_at_main = Project.class.getSimpleName();
+    public String curr_frag_at_main;
 
     // 로그인 액티비티에서 사용하는 백 이미지들
     public int[] back_img = {
@@ -489,6 +492,8 @@ public class Myapp extends Application {
         }
 
         Realm.init(this);
+
+        curr_frag_at_main = "Project_F";
     }
 
     /** 싱글톤 */
@@ -785,7 +790,14 @@ public class Myapp extends Application {
 
                                     // gson 이용해서 project 객체로 변환해서, 그 project 객체 안에서, project_no 값을 가져와서,
                                     for(int k=0; k<jsonArray_for_project.length(); k++) {
+
                                         Project project = gson.fromJson(jsonArray_for_project.get(k).toString(), Project.class);
+
+                                        // TODO: 더미데이터는 표시 안하기 위해 add 하지 않음
+                                        if(project.getProject_status().equals("완료")) {
+                                            continue;
+                                        }
+
                                         finalProject_arr.add(project);
 
                                         // 서버로부터 받은 데이터가 잘 파싱되어 있는지 확인하기 위한 Log
@@ -2430,39 +2442,46 @@ public class Myapp extends Application {
 
 
     /**---------------------------------------------------------------------------
-     메소드 ==> Redis 로그 전송 jsonString, 서버 전송
+     메소드 ==> Redis 로그 전송 jsonString, 서버 전송 -- 스레드로 구동
      ---------------------------------------------------------------------------*/
-    public void Redis_save_log(String log_type, String jsonString) {
+    public void Redis_save_log(final String log_type, final String jsonString) {
 
-        String log_key = getUser_no() + ":" + log_type;
-//        String log_key = log_type;
-        String log_value = jsonString;
-
-        RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
-        Call<ResponseBody> call = rs.redis_save_log(
-                Static.REDIS_SAVE_LOG,
-                log_key,
-                log_value);
-
-//        call.enqueue(null);
-
-        call.enqueue(new Callback<ResponseBody>() {
+        new Thread() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    String retrofit_result = response.body().string();
-                    Log.d(TAG, "retrofit_result: "+retrofit_result);
+            public void run() {
+                super.run();
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+                String log_key = getUser_no() + ":" + log_type;
+//                String log_key = log_type;
+                String log_value = jsonString;
 
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                logAndToast("onFailure_result" + t.getMessage());
+                RetrofitService rs = ServiceGenerator.createService(RetrofitService.class);
+                Call<ResponseBody> call = rs.redis_save_log(
+                        Static.REDIS_SAVE_LOG,
+                        log_key,
+                        log_value);
+
+                call.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        try {
+                            String retrofit_result = response.body().string();
+                            Log.d(TAG, "Redis_retrofit_result: "+retrofit_result);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        logAndToast("onFailure_result" + t.getMessage());
+                    }
+                });
             }
-        });
+        }.start();
+
+
     }
 }
 

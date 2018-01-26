@@ -540,6 +540,11 @@ public class Profile_F extends Fragment {
             //화면에 실제로 보일때
             Log.d("프래그먼트", "Profile_F 화면에 실제로 보일 때");
 
+            if(myapp == null) {
+                // 어플리케이션 객체 생성
+                myapp = Myapp.getInstance();
+            }
+
             // TODO: redis - 이전 화면 이동내용을, 이동완료된 클래스에서 처리
             // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
             myapp.Redis_log_view_crossOver_from_to(

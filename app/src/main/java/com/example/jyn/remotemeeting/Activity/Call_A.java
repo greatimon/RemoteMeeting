@@ -670,11 +670,11 @@ public class Call_A extends Activity implements AppRTCClient.SignalingEvents,   
         // TODO: == webRTC 구동을 끄기위한 주석 ==
         // TODO: 개발을 위해 임시적으로 주석처리
         // TODO: 나중에 반드시 주석 해제 할 것!!!!!!!!!!!
-//        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-//            startScreenCapture();
-//        } else {
-//            startCall();
-//        }
+        if (screencaptureEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startScreenCapture();
+        } else {
+            startCall();
+        }
 
         /**---------------------------------------------------------------------------
          핸들러 ==> 회의 종료 다이얼로그(액티비티) 띄우기

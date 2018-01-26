@@ -73,15 +73,16 @@
             tools:ignore="InnerclassSeparator">
         </activity>
 
-        // 구글 API 회원가입 추가 정보 받기 - 닉네임
+        // 메인_로그인 후
         <activity
             android:name=".Activity.Main_after_login_A"
+            android:windowSoftInputMode="adjustPan"
             android:screenOrientation="portrait"
             android:exported="false"
             tools:ignore="InnerclassSeparator">
         </activity>
 
-        // 메인_로그인 후
+        // 구글 API 회원가입 추가 정보 받기 - 닉네임
         <activity
             android:name=".Activity.Additional_info_for_google_api_join_A"
             android:screenOrientation="portrait"

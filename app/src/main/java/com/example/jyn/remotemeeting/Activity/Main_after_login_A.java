@@ -559,6 +559,11 @@ public class Main_after_login_A extends AppCompatActivity implements TabLayout.O
         Log.d(TAG, "=== onOptionsItemSelected");
         int id = item.getItemId();
 
+        // TODO: redis - 클릭이벤트
+        View view = new View(this);
+        view.setId(id);
+        myapp.Redis_log_click_event(getClass().getSimpleName(), view);
+
         // 프로젝트 생성 아이콘 클릭했을 때
         if(id == R.id.action_create_project) {
             // TODO: redis - 화면 이동

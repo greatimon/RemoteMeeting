@@ -217,10 +217,24 @@ public class Project_F extends Fragment {
             //화면에 실제로 보일때
             Log.d("프래그먼트", "Partner_F 화면에 실제로 보일 때");
 
-            // TODO: redis - 이전 화면 이동내용을, 이동완료된 클래스에서 처리
-            // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
-            myapp.Redis_log_view_crossOver_from_to(
-                    myapp.getCurr_frag_at_main(), getClass().getSimpleName());
+            if(myapp == null) {
+                // 어플리케이션 객체 생성
+                myapp = Myapp.getInstance();
+            }
+
+            if(myapp.getCurr_frag_at_main() == null) {
+                // TODO: redis - 이전 화면 이동내용을, 이동완료된 클래스에서 처리
+                // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
+                myapp.Redis_log_view_crossOver_from_to(
+                        "Project_F", getClass().getSimpleName());
+            }
+            else if(myapp.getCurr_frag_at_main() != null) {
+                // 'Main_after_login_A'에서, 프래그먼트끼리의 이동 정보를 Redis에 전송하기 위함
+                myapp.Redis_log_view_crossOver_from_to(
+                        myapp.getCurr_frag_at_main(), getClass().getSimpleName());
+            }
+
+
 
             // TODO: 현재 프래그먼트 클래스의 simpleName을 어플리케이션 객체에 저장
             myapp.setCurr_frag_at_main(getClass().getSimpleName());
