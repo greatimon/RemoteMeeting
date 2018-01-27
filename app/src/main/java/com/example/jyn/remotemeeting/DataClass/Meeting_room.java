@@ -24,13 +24,24 @@ public class Meeting_room {
     private String uplopaded_img_fileNames = "";
     private String drawing_img_fileNames = "";
 
-    // 최초: 0
+    //// 회의 결과 어레이리스트를 서버로부터 받아와서, 회의결과와 관련된 데이터들이
+    //// 있는지 없는지 확인하고, 있다면 해당 데이터를 객체에 저장한다
+    // 최초(확인전): 0
     // 확인결과 데이터가 있음: 1
     // 확인결과 데이터가 없음: -1
     private int memo_state = 0;
     private int scanned_img_state = 0;
     private int uplopaded_img_state = 0;
     private int drawing_img_state = 0;
+
+    //// 회의 결과 어레이리스트에서, 바로 이전 인덱스의 회의결과와 비교했을 때,
+    //// 회의 날짜가 변경됐는지 확인하고, 변경되었다면 변경된 날짜를 객체에 저장한다
+    private boolean show_date = false;
+    private String changed_date = "";
+
+    //// 날짜변경선 백그라운드에 적용할 컬러 int 값
+    private int date_back_color_int_1;
+    private int date_back_color_int_2;
 
 
     Meeting_room() {}
@@ -123,7 +134,23 @@ public class Meeting_room {
         this.meeting_status = meeting_status;
     }
 
-//    public String getExtra_column_2() {
+    public boolean isShow_date() {
+        return show_date;
+    }
+
+    public void setShow_date(boolean show_date) {
+        this.show_date = show_date;
+    }
+
+    public String getChanged_date() {
+        return changed_date;
+    }
+
+    public void setChanged_date(String changed_date) {
+        this.changed_date = changed_date;
+    }
+
+    //    public String getExtra_column_2() {
 //        return extra_column_2;
 //    }
 //
@@ -202,6 +229,22 @@ public class Meeting_room {
 
     public void setDrawing_img_state(int drawing_img_state) {
         this.drawing_img_state = drawing_img_state;
+    }
+
+    public int getDate_back_color_int_1() {
+        return date_back_color_int_1;
+    }
+
+    public void setDate_back_color_int_1(int date_back_color_int_1) {
+        this.date_back_color_int_1 = date_back_color_int_1;
+    }
+
+    public int getDate_back_color_int_2() {
+        return date_back_color_int_2;
+    }
+
+    public void setDate_back_color_int_2(int date_back_color_int_2) {
+        this.date_back_color_int_2 = date_back_color_int_2;
     }
 
     public boolean is_first_time_to_listed() {

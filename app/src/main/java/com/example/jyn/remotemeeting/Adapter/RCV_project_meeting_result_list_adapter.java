@@ -176,57 +176,6 @@ public class RCV_project_meeting_result_list_adapter extends RecyclerView.Adapte
             // 임시 meeting_room 객체 생성
             Meeting_room temp_meeting_room = meeting_room_arr.get(pos);
 
-//            //// 메모, 스캔 이미지 파일, 업로드 파일, 드로잉 파일이 존재여부 확인
-//            // 최초로 리스트가 보여질 때, 각 데이터가 있는지 없는지 확인해서 있으면 내용 가져오기
-//            if(temp_meeting_room.getMemo_state() == 0) {
-//                String check_memo = isMemo_exist(context, temp_meeting_room.getMeeting_no());
-//                // 메모가 있다면
-//                if(check_memo != null) {
-//                    meeting_room_arr.get(pos).setMemo(check_memo);
-//                    meeting_room_arr.get(pos).setMemo_state(1);
-//                }
-//                // 메모가 있다면
-//                else if(check_memo == null) {
-//                    meeting_room_arr.get(pos).setMemo_state(-1);
-//                }
-//            }
-//            if(temp_meeting_room.getScanned_img_state() == 0) {
-//                String get_scanned_image_absolutePath = isScanned_image(context, temp_meeting_room.getMeeting_no());
-//                // 스캔한 이미지 파일이 있다면
-//                if(get_scanned_image_absolutePath != null) {
-//                    meeting_room_arr.get(pos).setScanned_img_path(get_scanned_image_absolutePath);
-//                    meeting_room_arr.get(pos).setScanned_img_state(1);
-//                }
-//                // 스캔한 이미지 파일이 있다면
-//                else if(get_scanned_image_absolutePath == null) {
-//                    meeting_room_arr.get(pos).setScanned_img_state(-1);
-//                }
-//            }
-//            if(temp_meeting_room.getUplopaded_img_state() == 0) {
-//                String jsonString_uploaded_fileName = isUploaded_file(temp_meeting_room.getMeeting_no());
-//                // 업로드한 이미지 파일이 있다면
-//                if(jsonString_uploaded_fileName != null) {
-//                    meeting_room_arr.get(pos).setUplopaded_img_fileNames(jsonString_uploaded_fileName);
-//                    meeting_room_arr.get(pos).setUplopaded_img_state(1);
-//                }
-//                // 업로드한 이미지 파일이 없다면
-//                else if(jsonString_uploaded_fileName == null) {
-//                    meeting_room_arr.get(pos).setUplopaded_img_state(-1);
-//                }
-//            }
-//            if(temp_meeting_room.getDrawing_img_state() == 0) {
-//                String isDrawing_image_fileName = isDrawing_image(context, temp_meeting_room.getMeeting_no());
-//                // 드로잉한 이미지 파일이 있다면
-//                if(isDrawing_image_fileName != null) {
-//                    meeting_room_arr.get(pos).setDrawing_img_fileNames(isDrawing_image_fileName);
-//                    meeting_room_arr.get(pos).setDrawing_img_state(1);
-//                }
-//                // 드로잉한 이미지 파일이 없다면
-//                else if(isDrawing_image_fileName == null) {
-//                    meeting_room_arr.get(pos).setDrawing_img_state(-1);
-//                }
-//            }
-
             /** 날짜변경선 표시 하기 */
             // 어레이리스트 첫번째 아이템일 때,
             if(pos == 0) {
@@ -234,38 +183,62 @@ public class RCV_project_meeting_result_list_adapter extends RecyclerView.Adapte
                 holder.date_line_LIN.setVisibility(View.VISIBLE);
 
                 // 표시할 날짜 String 값
-                date_str_pos_0 = extract_date_from_meeting_room_obj(temp_meeting_room.getMeeting_end_time());
-                holder.date_line_txt.setText(date_str_pos_0);
+//                date_str_pos_0 = extract_date_from_meeting_room_obj(temp_meeting_room.getMeeting_end_time());
+//                holder.date_line_txt.setText(date_str_pos_0);
+                holder.date_line_txt.setText(temp_meeting_room.getChanged_date());
 
                 //// 표시할 뷰의 색 넣기
+//                // 뷰 border 컬러
+//                holder.date_line_divider_V_1.setBackgroundColor(alpha_2_project_color_value_hex);
+//                holder.date_line_divider_V_2.setBackgroundColor(alpha_2_project_color_value_hex);
+//                // 뷰 컬러
+//                holder.date_line_txt.setBackgroundColor(alpha_1_project_color_value_hex);
                 // 뷰 border 컬러
-                holder.date_line_divider_V_1.setBackgroundColor(alpha_2_project_color_value_hex);
-                holder.date_line_divider_V_2.setBackgroundColor(alpha_2_project_color_value_hex);
+                holder.date_line_divider_V_1.setBackgroundColor(temp_meeting_room.getDate_back_color_int_2());
+                holder.date_line_divider_V_2.setBackgroundColor(temp_meeting_room.getDate_back_color_int_2());
                 // 뷰 컬러
-                holder.date_line_txt.setBackgroundColor(alpha_1_project_color_value_hex);
+                holder.date_line_txt.setBackgroundColor(temp_meeting_room.getDate_back_color_int_1());
             }
             // 어레이 첫번째 아이템이 아닐 때,
             else if(pos > 0) {
-                // 이전 어레이아이템의 'meeting_end_time' 과 지금 어레이의 아이템의 'meeting_end_time'을 비교,
-                // 날짜가 변경되었을 때만 날짜 변경선을 표시하도록 함
-                String check_date_has_been_changed =
-                        check_date_has_been_changed(
-                                temp_meeting_room.getMeeting_end_time(), meeting_room_arr.get(pos-1).getMeeting_end_time());
-                // 값이 'null' 이 아니라면, 날짜 변경선에 표시할 리턴값이 들어 있는 경우이므로, 데이터를 셋팅한다
-                // 단, 최상단에 표시했던 날짜 변경선과 동일하다면 제외
-                if(check_date_has_been_changed != null && !date_str_pos_0.equals(check_date_has_been_changed)) {
+//                // 이전 어레이아이템의 'meeting_end_time' 과 지금 어레이의 아이템의 'meeting_end_time'을 비교,
+//                // 날짜가 변경되었을 때만 날짜 변경선을 표시하도록 함
+//                String check_date_has_been_changed =
+//                        check_date_has_been_changed(
+//                                temp_meeting_room.getMeeting_end_time(), meeting_room_arr.get(pos-1).getMeeting_end_time());
+//                // 값이 'null' 이 아니라면, 날짜 변경선에 표시할 리턴값이 들어 있는 경우이므로, 데이터를 셋팅한다
+//                // 단, 최상단에 표시했던 날짜 변경선과 동일하다면 제외
+//                if(check_date_has_been_changed != null && !date_str_pos_0.equals(check_date_has_been_changed)) {
+//                    // 뷰 visibility 조절
+//                    holder.date_line_LIN.setVisibility(View.VISIBLE);
+//
+//                    // 표시할 날짜 String 값
+//                    holder.date_line_txt.setText(check_date_has_been_changed);
+//
+//                    //// 표시할 뷰의 색 넣기
+//                    // 뷰 border 컬러
+//                    holder.date_line_divider_V_1.setBackgroundColor(alpha_2_project_color_value_hex);
+//                    holder.date_line_divider_V_2.setBackgroundColor(alpha_2_project_color_value_hex);
+//                    // 뷰 컬러
+//                    holder.date_line_txt.setBackgroundColor(alpha_1_project_color_value_hex);
+//                }
+
+                // 객체에, 날짜변경선을 보여주라고 'true'로 설정되어 있을때만
+                if(temp_meeting_room.isShow_date()) {
+
                     // 뷰 visibility 조절
                     holder.date_line_LIN.setVisibility(View.VISIBLE);
 
                     // 표시할 날짜 String 값
-                    holder.date_line_txt.setText(check_date_has_been_changed);
+                    holder.date_line_txt.setText(temp_meeting_room.getChanged_date());
 
                     //// 표시할 뷰의 색 넣기
                     // 뷰 border 컬러
-                    holder.date_line_divider_V_1.setBackgroundColor(alpha_2_project_color_value_hex);
-                    holder.date_line_divider_V_2.setBackgroundColor(alpha_2_project_color_value_hex);
+                    // 뷰 border 컬러
+                    holder.date_line_divider_V_1.setBackgroundColor(temp_meeting_room.getDate_back_color_int_2());
+                    holder.date_line_divider_V_2.setBackgroundColor(temp_meeting_room.getDate_back_color_int_2());
                     // 뷰 컬러
-                    holder.date_line_txt.setBackgroundColor(alpha_1_project_color_value_hex);
+                    holder.date_line_txt.setBackgroundColor(temp_meeting_room.getDate_back_color_int_1());
                 }
             }
 
